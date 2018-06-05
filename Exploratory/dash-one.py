@@ -5,13 +5,24 @@ from dash.dependencies import Input, Output
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
+import os
+import plotly.graph_objs as go
 
 # specify file parameters
 file_folder = '../stbern-20180302-20180523-csv/'
 file_name = '2018-03-02-2005-sensor.csv'
 
 # read csv
-input_raw_data = pd.read_csv(file_folder+file_name)
+input_raw_data = pd.read_csv(file_folder + file_name)
+
+# combine all data
+for filename in os.listdir(file_folder):
+    if filename.endswith('sensor.csv'):
+        try:
+            temp_df = pd.read_csv(file_folder + filename)
+            input_raw_data = pd.concat([input_raw_data, temp_df])
+        except:
+            print('something wrong with ' + filename)
 
 # convert datetime format
 input_raw_data['gw_timestamp'] = pd.to_datetime(input_raw_data['gw_timestamp'], format='%Y-%m-%dT%H:%M:%S')
@@ -20,9 +31,17 @@ input_raw_data['gw_timestamp'] = pd.to_datetime(input_raw_data['gw_timestamp'], 
 input_raw_data.loc[:, 'value'].replace(255, 1, inplace=True)
 
 # method to get the relevant columns of data
-def get_df(input_location):
-    relevant_data = input_raw_data.loc[input_raw_data['device_loc'] == input_location, ['device_loc','gw_timestamp', 'value']]
+def get_df(input_location, start_date, end_date):
+    relevant_data = input_raw_data.loc[(input_raw_data['device_loc'] == input_location)
+            & (input_raw_data['gw_timestamp'] < end_date)
+            & (input_raw_data['gw_timestamp'] > start_date), ['device_loc','gw_timestamp', 'value']]
     return relevant_data
+
+# generate array for the different available locations
+def get_location_options(data):
+    # print('debug: ', end='')
+    # print(data['device_loc'].unique().tolist())
+    return data['device_loc'].unique().tolist()
 
 # default app object instantiation
 app = dash.Dash()
@@ -44,7 +63,21 @@ app.layout = html.Div(children=[
     # dcc.Input(id='graph_title_input', value='', type='text'),
     # html.Div(id='output2')
     html.P('Enter the location you want to view:'),
-    dcc.Input(id='location_input', value='', type='text'),
+    dcc.Dropdown(
+        id='location_input',
+        options=[{'label': i, 'value': i} for i in get_location_options(input_raw_data)],
+        placeholder='Select a location to view'
+    ),
+    dcc.DatePickerRange(
+        id='date_picker',
+        min_date_allowed=input_raw_data['gw_timestamp'].min(),
+        max_date_allowed=input_raw_data['gw_timestamp'].max(),
+        start_date=input_raw_data['gw_timestamp'].min().replace(hour=0, minute=0, second=0, microsecond=0), # need to truncate the dates here
+        end_date=input_raw_data['gw_timestamp'].max().replace(hour=0, minute=0, second=0, microsecond=0), #  to prevent unconverted data error
+        start_date_placeholder_text='Select start date',
+        end_date_placeholder_text='Select end date',
+        minimum_nights=0
+    ),
     html.Div(id='location_output')
     ])
 
@@ -77,22 +110,35 @@ app.layout = html.Div(children=[
 
 @app.callback(
     Output(component_id='location_output', component_property='children'),
-    [Input(component_id='location_input', component_property='value')])
-def update_graph(input_location):
+    [Input(component_id='location_input', component_property='value'),
+     Input('date_picker', 'start_date'),
+     Input('date_picker', 'end_date')])
+def update_graph(input_location, start_date, end_date):
     '''
         Generates graph based on timestamps and whether the latest sensor reading is on or off
         Shaded area indicates detected movement
     '''
     try:
-        df = get_df(input_location)
+        # add one day to the entered end date as a workaround to allow one day picks (since entered dates are at time 00:00:00)
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        # print('debug ' + str(type(end_date)))
+        df = get_df(input_location, start_date, end_date)
         # df = input_raw_data
         return dcc.Graph(id='firstplot',
                 figure = {
-                    'data':[
-                        {'x':df['gw_timestamp'], 'y':df['value'], 'type':'line', 'name':input_location, 'line':dict(shape='hv'), 'fill':'tozeroy'}
-                        ],
+                    'data':[{
+                        'x':df['gw_timestamp'],
+                        'y':df['value'],
+                        'type':'line',
+                        'name':input_location,
+                        'line':dict(shape='hv'),
+                        'fill':'tozeroy'
+                    }],
                     'layout': {
-                        'title':'Periods with motion detected'
+                        'title':'Periods with motion detected',
+                        'xaxis':{'range':[start_date, end_date]}
                     }
                 })
     except Exception as e:
