@@ -17,7 +17,7 @@ input_raw_data = pd.read_csv(file_folder + file_name)
 
 # combine all data
 for filename in os.listdir(file_folder):
-    if filename.endswith('sensor.csv'):
+    if filename.endswith('2005-sensor.csv'): # for now just try one resident first
         try:
             temp_df = pd.read_csv(file_folder + filename)
             input_raw_data = pd.concat([input_raw_data, temp_df])
@@ -46,40 +46,79 @@ def get_location_options(data):
 # default app object instantiation
 app = dash.Dash()
 
+# Bootstrap sample template for css
+css_source = ['https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css','https://codepen.io/bricakeld/pen/qKZeGq.css']
+for css in css_source:
+    app.css.append_css({'external_url': css})
+
 # define page layout
 app.layout = html.Div(children=[
-    html.H1('Test'),
-    # dcc.Graph(id='example',
-    #         figure = {
-    #             'data':[
-    #                 {'x':[1,2,3,4,5], 'y':[5,34,2,3,4], 'type':'line', 'name':'example_one'}
-    #                 ],
-    #             'layout': {
-    #                 'title':'Random'
-    #             }
-    #         }),
-    # dcc.Input(id='input1', value='Enter something', type='text'),
-    # html.Div(id='output1'),
-    # dcc.Input(id='graph_title_input', value='', type='text'),
-    # html.Div(id='output2')
-    html.P('Enter the location you want to view:'),
-    dcc.Dropdown(
-        id='location_input',
-        options=[{'label': i, 'value': i} for i in get_location_options(input_raw_data)],
-        placeholder='Select a location to view'
-    ),
-    dcc.DatePickerRange(
-        id='date_picker',
-        min_date_allowed=input_raw_data['gw_timestamp'].min(),
-        max_date_allowed=input_raw_data['gw_timestamp'].max(),
-        start_date=input_raw_data['gw_timestamp'].min().replace(hour=0, minute=0, second=0, microsecond=0), # need to truncate the dates here
-        end_date=input_raw_data['gw_timestamp'].max().replace(hour=0, minute=0, second=0, microsecond=0), #  to prevent unconverted data error
-        start_date_placeholder_text='Select start date',
-        end_date_placeholder_text='Select end date',
-        minimum_nights=0
-    ),
-    html.Div(id='location_output')
-    ])
+    html.Div([
+        html.Nav([
+            html.Div([
+                html.Ul([
+                    html.Li([
+                        html.A([
+                            'Dashboard'
+                        ], className = 'nav-link active', href='.')
+                    ], className = 'nav-item'),
+                    html.Li([
+                        html.A([
+                            'End-of-Shift Reports'
+                        ], className = 'nav-link', href='reports')
+                    ], className = 'nav-item')
+                ], className = 'nav flex-column')
+            ], className = 'sidebar-sticky')
+        ], className = 'col-md-2 sidebar'),
+        html.Main([
+            html.Div([
+                html.Div([
+                    html.H1('Home Page')
+                ], className='row'),
+                # dcc.Graph(id='example',
+                #         figure = {
+                #             'data':[
+                #                 {'x':[1,2,3,4,5], 'y':[5,34,2,3,4], 'type':'line', 'name':'example_one'}
+                #                 ],
+                #             'layout': {
+                #                 'title':'Random'
+                #             }
+                #         }),
+                # dcc.Input(id='input1', value='Enter something', type='text'),
+                # html.Div(id='output1'),
+                # dcc.Input(id='graph_title_input', value='', type='text'),
+                # html.Div(id='output2')
+                html.Div([
+                    html.P('Enter the location you want to view:')
+                ], className = 'row'),
+                html.Div([
+                    html.Div([
+                        dcc.Dropdown(
+                            id='location_input',
+                            options=[{'label': i, 'value': i} for i in get_location_options(input_raw_data)],
+                            placeholder='Select a location to view'
+                        )
+                    ], className = 'col-md-6'),
+                    html.Div([
+                        dcc.DatePickerRange(
+                            id='date_picker',
+                            min_date_allowed=input_raw_data['gw_timestamp'].min(),
+                            max_date_allowed=input_raw_data['gw_timestamp'].max(),
+                            start_date=input_raw_data['gw_timestamp'].min().replace(hour=0, minute=0, second=0, microsecond=0), # need to truncate the dates here
+                            end_date=input_raw_data['gw_timestamp'].max().replace(hour=0, minute=0, second=0, microsecond=0), #  to prevent unconverted data error
+                            start_date_placeholder_text='Select start date',
+                            end_date_placeholder_text='Select end date',
+                            minimum_nights=0
+                        )
+                    ], className = 'col-md-6')
+                ], className = 'row'),
+                html.Div([
+                    html.Div(id='location_output', className = 'col-md-12')
+                ], className = 'row')
+            ], className = 'col-md-12')
+        ], role = 'main', className ='col-md-10 ml-sm-auto col-lg-10 px-4')
+    ], className = 'row')
+    ], className = 'container-fluid')
 
 # @app.callback(
 #     Output(component_id='output1', component_property='children'),
