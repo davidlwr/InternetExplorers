@@ -2,7 +2,7 @@ import pandas as pd
 import datetime
 import os
 
-from input_sysmon import input_sysmon
+from apps import input_sysmon
 
 # specify file parameters
 file_folder = '../stbern-20180302-20180523-csv/'
