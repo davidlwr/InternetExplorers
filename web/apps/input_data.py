@@ -2,6 +2,8 @@ import pandas as pd
 import datetime
 import os
 
+from input_sysmon import input_sysmon
+
 # specify file parameters
 file_folder = '../stbern-20180302-20180523-csv/'
 file_name = '2018-03-02-2005-sensor.csv'
@@ -11,7 +13,7 @@ input_raw_data = pd.DataFrame()
 
 # combine and read all data
 for filename in os.listdir(file_folder):
-    if filename.endswith('sensor.csv'): # for now just try one resident first
+    if filename.endswith('sensor.csv'):
         try:
             temp_df = pd.read_csv(file_folder + filename)
             input_raw_data = pd.concat([input_raw_data, temp_df])
@@ -27,7 +29,9 @@ input_raw_data.loc[:, 'value'].replace(255, 1, inplace=True)
 # common variables
 input_raw_max_date = input_raw_data['gw_timestamp'].max()
 input_raw_min_date = input_raw_data['gw_timestamp'].min()
-#print(input_raw_data.dtypes)
+# print(input_raw_data.head())
+# print(input_raw_data.info())
+# print(input_raw_data.index.values)
 
 # parameters for day and night timing
 '''
