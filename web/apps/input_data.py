@@ -2,11 +2,16 @@ import pandas as pd
 import datetime
 import os
 
-from apps import input_sysmon
+if __name__ == '__main__': # we want to import from same directory if using this
+						   # module as-is (for debugging mainly, or for loading data in the future)
+	import input_sysmon
+else: # if called from index.py
+	from apps import input_sysmon
 
 # specify file parameters
 file_folder = '../stbern-20180302-20180523-csv/'
 file_name = '2018-03-02-2005-sensor.csv'
+MOTION_TIMEOUT_MINS = 4 # in minutes
 
 # initialize empty df
 input_raw_data = pd.DataFrame()
@@ -22,6 +27,12 @@ for filename in os.listdir(file_folder):
 
 # convert datetime format
 input_raw_data['gw_timestamp'] = pd.to_datetime(input_raw_data['gw_timestamp'], format='%Y-%m-%dT%H:%M:%S')
+
+# convert timestamp to remove the extra time from sensor timeout
+# only applicable for motion sensors
+input_raw_data.loc[(input_raw_data.value==0)
+		& (input_raw_data.reading_type=='motion'), 'gw_timestamp'] += datetime.timedelta(minutes=-4)
+print(input_raw_data.head())
 
 #convert values to 1 and 0 instead of 255
 input_raw_data.loc[:, 'value'].replace(255, 1, inplace=True)
@@ -85,3 +96,6 @@ def get_location_options():
 # generate array for the different residents
 def get_residents_options():
     return input_raw_data['gw_device'].unique().tolist()
+
+#TODO store the cleaned data somewhere (file/database) so don't have to recalculate
+#     each time we load the dashboard
