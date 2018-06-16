@@ -2,6 +2,9 @@ import pandas as pd
 import datetime
 import os
 
+# pandas settings
+pd.options.mode.chained_assignment = None  # default='warn
+
 if __name__ == '__main__': # we want to import from same directory if using this
 						   # module as-is (for debugging mainly, or for loading data in the future)
 	import input_sysmon
@@ -32,7 +35,7 @@ input_raw_data['gw_timestamp'] = pd.to_datetime(input_raw_data['gw_timestamp'], 
 # only applicable for motion sensors
 input_raw_data.loc[(input_raw_data.value==0)
 		& (input_raw_data.reading_type=='motion'), 'gw_timestamp'] += datetime.timedelta(minutes=-4)
-print(input_raw_data.head())
+# print(input_raw_data.head())
 
 #convert values to 1 and 0 instead of 255
 input_raw_data.loc[:, 'value'].replace(255, 1, inplace=True)
@@ -45,10 +48,8 @@ input_raw_min_date = input_raw_data['gw_timestamp'].min()
 # print(input_raw_data.index.values)
 
 # parameters for day and night timing
-'''
-    In this case daytime refers to the current date's daytime, while nighttime
-    refers to the current date's night till the next date's morning
-'''
+# In this case daytime refers to the current date's daytime, while nighttime
+# refers to the current date's night till the next date's morning
 daytime_start = datetime.time(6, 30)
 daytime_end = datetime.time(21, 30)
 # below is redundant
@@ -67,7 +68,7 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
     Function returns dates and aggregated number of times the sensor was activated
     To get day only, use day_only=True and to get night_only use night_only=True
     '''
-    current_data = get_df_01(input_location, start_date, end_date, gw_device)
+    current_data = get_relevant_data(input_location, start_date, end_date, gw_device)
 
     # group by date only
     if (not day_only) and (not night_only):
@@ -80,7 +81,7 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
     return current_data
 
 # method to get the relevant columns of data
-def get_df_01(input_location, start_date, end_date, gw_device=2005):
+def get_relevant_data(input_location, start_date, end_date, gw_device=2005):
     relevant_data = input_raw_data.loc[(input_raw_data['device_loc'] == input_location)
             & (input_raw_data['gw_timestamp'] < end_date)
             & (input_raw_data['gw_timestamp'] > start_date)
@@ -97,5 +98,26 @@ def get_location_options():
 def get_residents_options():
     return input_raw_data['gw_device'].unique().tolist()
 
+# generate a table of acitivity durations indexed by the start time
+def get_visit_duration_and_start_time(start_date=input_raw_min_date, end_date=input_raw_max_date,
+        input_location='toilet_bathroom', gw_device=2005):
+    '''
+    Function returns a table of start times and the duration of activity detected at the specified location
+    '''
+    current_data = get_relevant_data(input_location, start_date, end_date, gw_device)
+    current_data['visit_duration'] = 0 # create new duration (in seconds) column
+
+    # match the start and end timing of a sensor
+    for i in range(0, len(current_data)-1):
+        if current_data['value'].iloc[i] == 1:
+            current_data['visit_duration'].iloc[i] = (current_data['gw_timestamp'].iloc[i+1] - current_data['gw_timestamp'].iloc[i]).total_seconds()
+
+    # print(current_data.query('value != 0').reset_index(drop = True).head())
+    return current_data.query('value != 0').reset_index(drop = True)
+
 #TODO store the cleaned data somewhere (file/database) so don't have to recalculate
 #     each time we load the dashboard
+
+# below for testing only
+# if __name__ == '__main__':
+#     get_visit_duration_and_start_time()

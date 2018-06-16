@@ -60,7 +60,7 @@ layout = html.Main([
                     dcc.Dropdown(
                         id='resident_input_toilet_numbers',
                         options=[{'label': i, 'value': i} for i in input_data.get_residents_options()],
-                        placeholder='Select a resident to view',
+                        placeholder='Select resident(s) to view',
                         value=[],
                         multi=True
                     )
@@ -81,7 +81,45 @@ layout = html.Main([
             html.Div([
                 html.Div(id='toilet_numbers_output', className = 'col-md-12')
             ], className = 'row')
-        ], id='toilet_numbers_graph', className='container-fluid')
+        ], id='toilet_numbers_graph', className='container-fluid'),
+        html.Div([
+            html.Div([
+                html.H3('View resident\'s activity durations')
+            ], className = 'row'),
+            html.Div([
+                html.Div([
+                    dcc.Dropdown(
+                        id='resident_input_visit_duration',
+                        options=[{'label': i, 'value': i} for i in input_data.get_residents_options()],
+                        placeholder='Select resident(s) to view',
+                        value=[],
+                        multi=True
+                    )
+                ], className = 'col-md-4'),
+                html.Div([
+                    dcc.Dropdown(
+                        id='location_input_visit_duration',
+                        options=[{'label': i, 'value': i} for i in input_data.get_location_options()],
+                        placeholder='Select a location to view'
+                    )
+                ], className = 'col-md-4'),
+                html.Div([
+                    dcc.DatePickerRange(
+                        id='date_picker_visit_duration',
+                        min_date_allowed=input_data.input_raw_min_date,
+                        max_date_allowed=input_data.input_raw_max_date,
+                        start_date=input_data.input_raw_min_date.replace(hour=0, minute=0, second=0, microsecond=0), # need to truncate the dates here
+                        end_date=input_data.input_raw_max_date.replace(hour=0, minute=0, second=0, microsecond=0), #  to prevent unconverted data error
+                        start_date_placeholder_text='Select start date',
+                        end_date_placeholder_text='Select end date',
+                        minimum_nights=0
+                    )
+                ], className = 'col-md-4')
+            ], className = 'row'),
+            html.Div([
+                html.Div(id='visit_duration_output', className = 'col-md-12')
+            ], className = 'row')
+        ], id='visit_duration_graph', className='container-fluid')
     ], className = 'col-md-12')
 ], role = 'main')
 
@@ -102,7 +140,7 @@ def update_graph_01(input_resident,input_location, start_date, end_date):
         modified_date = temp_date + datetime.timedelta(days=1)
         end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
         # print('debug ' + str(type(end_date)))
-        df = input_data.get_df_01(input_location, start_date, end_date, input_resident)
+        df = input_data.get_relevant_data(input_location, start_date, end_date, input_resident)
         # df = input_data.input_raw_data
         return dcc.Graph(id='firstplot',
                 figure = {
@@ -135,7 +173,7 @@ def update_graph_01(input_resident,input_location, start_date, end_date):
     [Input(component_id='resident_input_toilet_numbers', component_property='value'),
      Input('date_picker_toilet_numbers', 'start_date'),
      Input('date_picker_toilet_numbers', 'end_date')])
-def update_graph_01(input_resident, start_date, end_date):
+def update_graph_02(input_resident, start_date, end_date):
     try:
         temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         modified_date = temp_date + datetime.timedelta(days=1)
@@ -155,6 +193,40 @@ def update_graph_01(input_resident, start_date, end_date):
                         },
                         'yaxis': {
                             'title': 'Number'
+                        }
+                    }
+                })
+    except Exception as e:
+        print('ERROR: ', end='')
+        print(e)
+        return ''
+
+@app.callback(
+    Output(component_id='visit_duration_output', component_property='children'),
+    [Input(component_id='resident_input_visit_duration', component_property='value'),
+     Input(component_id='location_input_visit_duration', component_property='value'),
+     Input('date_picker_visit_duration', 'start_date'),
+     Input('date_picker_visit_duration', 'end_date')])
+def update_graph_03(input_resident, input_location, start_date, end_date):
+    try:
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        draw_data = []
+        for r in input_resident:
+            df = input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
+            #print(df.head())
+            draw_data.append({'x': df['gw_timestamp'], 'y': df['visit_duration'], 'mode':'markers', 'name': r})
+        return dcc.Graph(id = 'visit_duration_plot',
+                figure = {
+                    'data':draw_data,
+                    'layout': {
+                        'title':'Duration of activity of residents',
+                        'xaxis': {
+                            'title': 'Start datetime of visit'
+                        },
+                        'yaxis': {
+                            'title': 'Duration of visit'
                         }
                     }
                 })
