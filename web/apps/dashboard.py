@@ -64,7 +64,15 @@ layout = html.Main([
                         value=[],
                         multi=True
                     )
-                ], className = 'col-md-8'),
+                ], className = 'col-md-4'),
+                html.Div([
+                    dcc.Dropdown(
+                        id='filter_input_toilet_numbers',
+                        options=[{'label': i, 'value': j} for i, j in input_data.get_num_visits_filter_options()],
+                        value='None',
+                        clearable=False
+                    )
+                ], className = 'col-md-4'),
                 html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_toilet_numbers',
@@ -172,17 +180,30 @@ def update_graph_01(input_resident,input_location, start_date, end_date):
     Output(component_id='toilet_numbers_output', component_property='children'),
     [Input(component_id='resident_input_toilet_numbers', component_property='value'),
      Input('date_picker_toilet_numbers', 'start_date'),
-     Input('date_picker_toilet_numbers', 'end_date')])
-def update_graph_02(input_resident, start_date, end_date):
+     Input('date_picker_toilet_numbers', 'end_date'),
+     Input('filter_input_toilet_numbers', 'value')])
+def update_graph_02(input_resident, start_date, end_date, filter_input):
     try:
         temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         modified_date = temp_date + datetime.timedelta(days=1)
         end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
         draw_data = []
-        for r in input_resident:
-            df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r)
-            #print(df.head())
-            draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': r})
+        if filter_input == 'None': # default option
+            for r in input_resident:
+                df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r)
+                #print(df.head())
+                draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': r})
+        else:
+            # if user chose both, both if statements below will execute
+            if filter_input != 'Night': # if not night means have to display for 'Day'
+                for r in input_resident:
+                    df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Day')
+                    draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': str(r) + ' - Day'})
+            if filter_input != 'Day': # if not day means have to display for 'Night'
+                for r in input_resident:
+                    df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Night')
+                    draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': str(r) + ' - Night'})
+
         return dcc.Graph(id = 'toilet_numbers_plot',
                 figure = {
                     'data':draw_data,

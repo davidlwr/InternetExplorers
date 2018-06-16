@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import datetime
 import os
 
@@ -60,25 +61,37 @@ nighttime_end = daytime_start
 def date_only(original_date):
     return original_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
+# generate array for the different filtering options
+def get_num_visits_filter_options():
+    '''Returns labels and values in an array of tuples'''
+    return [('No Day/Night Filter', 'None'), ('Day Only', 'Day'), ('Night Only', 'Night'), ('Both Day and Night', 'Both')]
+
 ### find out number of times activated by date
 # first mark all 'activation points', index dependent on raw data input
 def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max_date,
-        input_location='toilet_bathroom', gw_device=2005, day_only=False, night_only=False):
+        input_location='toilet_bathroom', gw_device=2005, time_period=None, offset=True):
     '''
     Function returns dates and aggregated number of times the sensor was activated
-    To get day only, use day_only=True and to get night_only use night_only=True
+    To get day only, use time_period='Day' and to get night_only use time_period='Night'
+    To report night numbers as the night of the previous day, use offset=True
     '''
     current_data = get_relevant_data(input_location, start_date, end_date, gw_device)
 
+    if time_period == 'Day':
+        current_data = current_data.loc[(current_data['gw_timestamp'].dt.time >= daytime_start)
+                & (current_data['gw_timestamp'].dt.time < daytime_end)]
+    elif time_period == 'Night':
+        current_data = current_data.loc[(current_data['gw_timestamp'].dt.time < daytime_start)
+                | (current_data['gw_timestamp'].dt.time > daytime_end)]
+        if offset:
+            # shift the date of those at night to be one day before
+            current_data['gw_timestamp'] = np.where(current_data['gw_timestamp'].dt.time < daytime_start,
+                    current_data['gw_timestamp'] - datetime.timedelta(days=1), current_data['gw_timestamp'])
+
     # group by date only
-    if (not day_only) and (not night_only):
-        # change datetime format to date only
-        current_data['gw_date_only'] = current_data['gw_timestamp'].apply(date_only)
-        #print(current_data)
-        result_data = current_data.groupby(['gw_date_only'], as_index=False)['value'].sum()
-        # print(result_data.head())
-        return result_data
-    return current_data
+    current_data['gw_date_only'] = current_data['gw_timestamp'].apply(date_only)
+    result_data = current_data.groupby(['gw_date_only'], as_index=False)['value'].sum()
+    return result_data
 
 # method to get the relevant columns of data
 def get_relevant_data(input_location, start_date, end_date, gw_device=2005):
@@ -90,8 +103,6 @@ def get_relevant_data(input_location, start_date, end_date, gw_device=2005):
 
 # generate array for the different available locations
 def get_location_options():
-    # print('debug: ', end='')
-    # print(data['device_loc'].unique().tolist())
     return input_raw_data['device_loc'].unique().tolist()
 
 # generate array for the different residents
@@ -120,4 +131,4 @@ def get_visit_duration_and_start_time(start_date=input_raw_min_date, end_date=in
 
 # below for testing only
 # if __name__ == '__main__':
-#     get_visit_duration_and_start_time()
+#     get_num_visits_by_date(time_period='Night', offset=True)
