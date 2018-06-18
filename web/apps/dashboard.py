@@ -87,6 +87,22 @@ layout = html.Main([
                 ], className = 'col-md-4')
             ], className = 'row'),
             html.Div([
+                html.Div([
+                    dcc.Checklist(
+                        id='offset_checkbox_toilet_numbers',
+                        options=[{'label': 'Early mornings to be reported as night of previous date', 'value': 'offset'}],
+                        values=[],
+                    )
+                ], className = 'col-md-6 text-center'),
+                html.Div([
+                    dcc.Checklist(
+                        id='ignore_checkbox_toilet_numbers',
+                        options=[{'label': 'Ignore durations shorter than 3 seconds', 'value': 'ignore'}],
+                        values=[],
+                    )
+                ], className = 'col-md-6 text-center')
+            ], className = 'row'),
+            html.Div([
                 html.Div(id='toilet_numbers_output', className = 'col-md-12')
             ], className = 'row')
         ], id='toilet_numbers_graph', className='container-fluid'),
@@ -181,8 +197,10 @@ def update_graph_01(input_resident,input_location, start_date, end_date):
     [Input(component_id='resident_input_toilet_numbers', component_property='value'),
      Input('date_picker_toilet_numbers', 'start_date'),
      Input('date_picker_toilet_numbers', 'end_date'),
-     Input('filter_input_toilet_numbers', 'value')])
-def update_graph_02(input_resident, start_date, end_date, filter_input):
+     Input('filter_input_toilet_numbers', 'value'),
+     Input('offset_checkbox_toilet_numbers', 'values'), # if incoming list is empty means don't offset
+     Input('ignore_checkbox_toilet_numbers', 'values')])
+def update_graph_02(input_resident, start_date, end_date, filter_input, offset_checkbox, ignore_checkbox):
     try:
         temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         modified_date = temp_date + datetime.timedelta(days=1)
@@ -190,18 +208,18 @@ def update_graph_02(input_resident, start_date, end_date, filter_input):
         draw_data = []
         if filter_input == 'None': # default option
             for r in input_resident:
-                df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r)
+                df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, ignore_short_durations=ignore_checkbox)
                 #print(df.head())
                 draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': r})
         else:
             # if user chose both, both if statements below will execute
             if filter_input != 'Night': # if not night means have to display for 'Day'
                 for r in input_resident:
-                    df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Day')
+                    df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Day', ignore_short_durations=ignore_checkbox)
                     draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': str(r) + ' - Day'})
             if filter_input != 'Day': # if not day means have to display for 'Night'
                 for r in input_resident:
-                    df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Night')
+                    df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Night', offset=offset_checkbox, ignore_short_durations=ignore_checkbox) # offset only relevant at night
                     draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': str(r) + ' - Night'})
 
         return dcc.Graph(id = 'toilet_numbers_plot',

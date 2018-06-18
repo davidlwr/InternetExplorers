@@ -69,13 +69,21 @@ def get_num_visits_filter_options():
 ### find out number of times activated by date
 # first mark all 'activation points', index dependent on raw data input
 def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max_date,
-        input_location='toilet_bathroom', gw_device=2005, time_period=None, offset=True):
+        input_location='toilet_bathroom', gw_device=2005, time_period=None, offset=True,
+        ignore_short_durations=False, min_duration=3):
     '''
     Function returns dates and aggregated number of times the sensor was activated
     To get day only, use time_period='Day' and to get night_only use time_period='Night'
     To report night numbers as the night of the previous day, use offset=True
+    To ignore short durations, use ignore_short_durations=True, and set the minimum duration to be included using min_duration
     '''
     current_data = get_relevant_data(input_location, start_date, end_date, gw_device)
+    if ignore_short_durations:
+        duration_data = get_visit_duration_and_start_time(start_date, end_date, input_location, gw_device)
+        current_data = pd.merge(current_data, duration_data, on=['gw_timestamp', 'value'])
+        current_data.rename(columns={'value_x':'value'})
+        current_data = current_data[current_data.visit_duration >= min_duration]
+        # print(current_data)
 
     if time_period == 'Day':
         current_data = current_data.loc[(current_data['gw_timestamp'].dt.time >= daytime_start)
@@ -131,4 +139,4 @@ def get_visit_duration_and_start_time(start_date=input_raw_min_date, end_date=in
 
 # below for testing only
 # if __name__ == '__main__':
-#     get_num_visits_by_date(time_period='Night', offset=True)
+#     get_num_visits_by_date(ignore_short_durations=True)
