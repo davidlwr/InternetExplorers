@@ -20,9 +20,6 @@ class sensor_log_DAO(object):
         self.min_datetime = None
         self.set_min_max_datetime()
 
-        self.location_options = None
-        self.set_location_options()
-
         self.gateway_options = None     # formerly known as 'residents'
         self.set_gateway_options()
 
@@ -36,9 +33,12 @@ class sensor_log_DAO(object):
         factory = connection_manager()
         connection = factory.connection
 
-        query = """SELECT MAX(server_timestamp) as 'max' , 
-                          MIN(server_timestamp) as 'min' 
-                          FROM {};""".format(table_name)
+        query = """SELECT MAX({}) as 'max' , 
+                          MIN({}) as 'min' 
+                          FROM {};"""                       \
+                    .format(table_name,                     \
+                            Log.gateway_timestamp_tname,    \
+                            Log.gateway_timestamp_tname)
 
         # Get cursor
         with connection.cursor() as cursor:
@@ -53,16 +53,20 @@ class sensor_log_DAO(object):
             return result['max'], result['min']
 
 
-    def set_location_options(self):
+    def get_gateway_location_options(self, gateway_id):
         '''
-        Sets obj vars and returns list of distinct sensor location options found in the database
+       Returns list of distinct sensor location options found in the database
+
+        Keyword arguments:
+        gateway_id -- gateway_id can be used to represent a person
         '''
 
          # Get connection, which incidentally closes itself during garbage collection
         factory = connection_manager()
         connection = factory.connection
 
-        query = """SELECT DISTINCT `sensor_location` AS 'locations' FROM ;""".format(table_name)
+        query = """SELECT DISTINCT `{}` AS 'locations' FROM {} WHERE {} = {};"""                           \
+                    .format(Log.sensor_location_tname, table_name, Log.gateway_id_tname, gateway_id)
 
         # Get cursor
         with connection.cursor() as cursor:
@@ -72,9 +76,6 @@ class sensor_log_DAO(object):
             locations = []
             for d in result:
                 locations.append(d['locations'])
-
-            #set class vars
-            self.location_options = locations
 
             # return
             return locations
@@ -89,7 +90,8 @@ class sensor_log_DAO(object):
         factory = connection_manager()
         connection = factory.connection
 
-        query = """SELECT DISTINCT `gateway_id` AS 'gateways' FROM ;""".format(table_name)
+        query = """SELECT DISTINCT `{}` AS 'gateways' FROM {};"""
+                    .format(Log.gateway_id_tname, table_name)
 
         # Get cursor
         with connection.cursor() as cursor:
@@ -109,7 +111,7 @@ class sensor_log_DAO(object):
 
     def load_csv(self, folder):
         '''
-        This method loads a local csv file to the database, and updates the obj vars: min / max datetime, location_options, gateway_options
+        This method loads a local csv file to the database, and updates the obj vars: min / max datetime, gateway_options
 
         Keyword arguments:
         folder -- path to folder containing csv files
@@ -127,34 +129,42 @@ class sensor_log_DAO(object):
             if filename.endswith("-sensor.csv"):
                 all_file_paths.append(filepath.replace("\\", "\\\\"))
 
-        load_sql = """LOAD DATA LOCAL INFILE '{}' 
-                    INTO TABLE {} 
-                    FIELDS TERMINATED BY ',' 
-                    ENCLOSED BY '' 
-                    IGNORE 1 LINES 
-                    (@device_id, @device_loc, @gw_device, @gw_timestamp, @key, @reading_type, @server_timestamp, @value) 
-                    SET sensor_id = @device_id, 
-                        sensor_location = @device_loc, 
-                        gateway_id = CAST(@gw_device AS UNSIGNED), 
-                        gateway_timestamp = STR_TO_DATE(@gw_timestamp,'%Y-%m-%dT%H:%i:%s'), 
-                        `key` = @key, 
-                        reading_type = @reading_type, 
-                        server_timestamp = STR_TO_DATE(@server_timestamp,'%Y-%m-%dT%H:%i:%s'), 
-                        value =CAST(@value AS UNSIGNED);
-                    """
-
         # Get cursor
         with connection.cursor() as cursor:
 
             # run queries
             for path in all_file_paths:
-                cursor.execute(load_sql.format(path, table_name))
+
+                load_sql = """LOAD DATA LOCAL INFILE '{}' 
+                            INTO TABLE {} 
+                            FIELDS TERMINATED BY ',' 
+                            ENCLOSED BY '' 
+                            IGNORE 1 LINES 
+                            (@device_id, @device_loc, @gw_device, @gw_timestamp, @key, @reading_type, @server_timestamp, @value) 
+                            SET `{}` = IF(@device_id    = '', NULL, @device_id), 
+                                `{}` = IF(@device_loc   = '', NULL, @device_id), 
+                                `{}` = IF(@gw_device    = '', NULL, CAST(@gw_device AS UNSIGNED)), 
+                                `{}` = IF(@gw_timestamp = '', NULL, STR_TO_DATE(@gw_timestamp,'%Y-%m-%dT%H:%i:%s')), 
+                                `{}` = IF(@key          = '', NULL, @key), 
+                                `{}` = IF(@reading_type = '', NULL, @reading_type), 
+                                `{}` = IF(@server_timestamp = '', NULL, STR_TO_DATE(@server_timestamp,'%Y-%m-%dT%H:%i:%s')), 
+                                `{}` = IF(@value        = '', NULL, CAST(@value AS UNSIGNED));
+                            """.format(path, 
+                                       table_name, 
+                                       Log.sensor_id_tname,
+                                       Log.sensor_location_tname,
+                                       Log.gateway_id_tname,
+                                       Log.gateway_timestamp_tname,
+                                       Log.key_tname,
+                                       Log.server_timestamp_tname,
+                                       Log.value_tname)
+
+                cursor.execute(load_sql)
                 # you might be wondering here why I dont use batch queries. 
-                # Its bcause the library uses %s as place holders, AND SO DOES MYSQL >:(
+                # Its because the library uses %s as place holders, AND SO DOES MYSQL >:(
 
         # Reset params
         self.set_min_max_datetime()
-        self.set_location_options()
         self.set_gateway_options()
 
 
@@ -171,14 +181,14 @@ class sensor_log_DAO(object):
                 """.format(table_name, sensor_location, start_datetime, end_datetime, gateway_id)
 
         Keyword arguments:
-        sensor_location -- based off self.location_options
+        sensor_location -- based off self.get_gateway_location_options
         start_datetime  -- datetime obj
         end_datetime    -- datetime obj
         gateway_id      -- based off self.gateway_options
         '''
 
         query = """
-                SELECT * FROM 
+                SELECT * FROM {}
                 WHERE `sensor_location` = \"{}\"
                 AND `gateway_timestamp` > '{}'
                 AND `gateway_timestamp` < '{}'
@@ -222,7 +232,7 @@ class sensor_log_DAO(object):
         i.e. Activities that can be extrapolated from the sensor log database
         
         Keyword arguments:
-        sensor_location -- For a list, see self.sensor_location_options
+        sensor_location -- based off self.get_gateway_location_options
         start_datetime  -- datetime obj
         end_datetime    -- datetime obj
         gateway_id      -- For a list see self.gateway_id_options

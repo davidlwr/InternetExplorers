@@ -27,29 +27,36 @@ class sysmon_log_DAO(object):
             if filename.edswith("-sysmon.csv"): 
                 all_file_paths.append(filepath.replace("\\", "\\\\"))
 
-
-        load_sql = """LOAD DATA LOCAL INFILE '{}' 
-                    INTO TABLE {} 
-                    FIELDS TERMINATED BY ',' 
-                    ENCLOSED BY '' 
-                    IGNORE 1 LINES 
-                    (@device_id, @device_loc, @gw_device, @gw_timestamp, @key, @reading_type, @server_timestamp, @value) 
-                    SET sensor_id = @device_id, 
-                        sensor_location = @device_loc, 
-                        gateway_id = CAST(@gw_device AS UNSIGNED), 
-                        gateway_timestamp = STR_TO_DATE(@gw_timestamp,'%Y-%m-%dT%H:%i:%s'), 
-                        `key` = @key, 
-                        reading_type = @reading_type, 
-                        server_timestamp = STR_TO_DATE(@server_timestamp,'%Y-%m-%dT%H:%i:%s'), 
-	                    value = IF(@value LIKE 'None', Null, CAST(@value AS DECIMAL(12,2)));
-                    """
-
         # Get cursor
         with connection.cursor() as cursor:
             # run queries
             for path in all_file_paths:
-                cursor.execute(load_sql.format(path, table_name))
-                # you might be wondering here why I dont use batch queries. 
-                # Its bcause the library uses %s as place holders, AND SO DOES MYSQL >:(
+                
+                load_sql = """LOAD DATA LOCAL INFILE '{}' 
+                            INTO TABLE {} 
+                            FIELDS TERMINATED BY ',' 
+                            ENCLOSED BY '' 
+                            IGNORE 1 LINES 
+                            (@device_id, @device_loc, @gw_device, @gw_timestamp, @key, @reading_type, @server_timestamp, @value) 
+                            SET `{}` = IF(@device_id    = '', NULL, @device_id), 
+                                `{}` = IF(@device_loc   = '', NULL, @device_loc), 
+                                `{}` = IF(@gw_device    = '', NULL, CAST(@gw_device AS UNSIGNED)), 
+                                `{}` = IF(@gw_timestamp = '', NULL, STR_TO_DATE(@gw_timestamp,'%Y-%m-%dT%H:%i:%s')), 
+                                `{}` = IF(@key          = '', NULL, @key), 
+                                `{}` = IF(@reading_type = ''. NULL, @reading_type), 
+                                `{}` = IF(@server_timestamp = ''. NULL, STR_TO_DATE(@server_timestamp,'%Y-%m-%dT%H:%i:%s')), 
+                                `{}` = IF(@value        = '', NULL, CAST(@value AS DECIMAL(12,2)));
+                            """.format(path, 
+                                        table_name, 
+                                        Log.sensor_id_tname,
+                                        Log.sensor_location_tname,
+                                        Log.gateway_id_tname,
+                                        Log.gateway_timestamp_tname,
+                                        Log.key_tname,
+                                        Log.server_timestamp_tname,
+                                        Log.value_tname)
+
+                cursor.execute(load_sql)
+
 
 
