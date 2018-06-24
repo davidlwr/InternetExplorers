@@ -167,6 +167,30 @@ class sensor_log_DAO(object):
         self.set_min_max_datetime()
         self.set_gateway_options()
 
+    def insert_log(self, log):
+        '''
+        INSERTs a log entry into the database
+
+        Returns success boolean
+        '''
+
+        # Get connection, which incidentally closes itself during garbage collection
+        factory = connection_manager()
+        connection = factory.connection
+
+        query = "INSERT INTO {} VALUES({}, {}, {}, {}, {}, {}, {}, {})"         \
+                    .format(table_name, log.sensor_id, log.sensor_location,     \
+                            log.gateway_id, log.gateway_timestamp, log.key,     \
+                            log.reading_type, log.server_timestamp, log.value)
+
+        with connection.cursor() as cursor:
+            try:
+                cursor.execute(query)
+            except Exception as error:
+                print(error)
+                raise
+            
+
 
     def get_logs(self, sensor_location, start_datetime, end_datetime, gateway_id):
         '''
@@ -223,7 +247,6 @@ class sensor_log_DAO(object):
             return logs
 
 
-    # previously known as get_num_activities_by_date
     def get_activities_per_period(self, sensor_location, start_datetime, 
                                      end_datetime, gateway_id, time_period, 
                                      offset=False, min_secs=3):
@@ -276,5 +299,7 @@ class sensor_log_DAO(object):
         
         
 
+dao = sensor_log_DAO()
+dao.insert_log()
         
 

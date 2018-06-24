@@ -59,4 +59,26 @@ class sysmon_log_DAO(object):
                 cursor.execute(load_sql)
 
 
+    def insert_log(self, log):
+        '''
+        INSERTs a log entry into the database
+
+        Returns success boolean
+        '''
+
+        # Get connection, which incidentally closes itself during garbage collection
+        factory = connection_manager()
+        connection = factory.connection
+
+        query = "INSERT INTO {} VALUES({}, {}, {}, {}, {}, {}, {}, {})"         \
+                    .format(table_name, log.sensor_id, log.sensor_location,     \
+                            log.gateway_id, log.gateway_timestamp, log.key,     \
+                            log.reading_type, log.server_timestamp, log.value)
+
+        with connection.cursor() as cursor:
+            try:
+                cursor.execute(query)
+            except Exception as error:
+                print(error)
+                raise
 
