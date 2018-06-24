@@ -1,11 +1,17 @@
 
 class sysmon_log_DAO(object):
+    '''
+    This class handles connection between the app and the database table
+    '''
+
+    table_name = "stbern.SYSMON_LOG"
 
     def load_csv(self, folder):
         '''
         This method loads a local csv file to the database
 
-        :param csv_file:    path to folder containing csv files
+        Keyword arguments:
+        csv_file -- Path to folder containing csv files
         '''
 
         # Get connection, which incidentally closes itself during garbage collection
@@ -23,7 +29,7 @@ class sysmon_log_DAO(object):
 
 
         load_sql = """LOAD DATA LOCAL INFILE '{}' 
-                    INTO TABLE stbern.SYSMON_LOG 
+                    INTO TABLE {} 
                     FIELDS TERMINATED BY ',' 
                     ENCLOSED BY '' 
                     IGNORE 1 LINES 
@@ -42,7 +48,7 @@ class sysmon_log_DAO(object):
         with connection.cursor() as cursor:
             # run queries
             for path in all_file_paths:
-                cursor.execute(load_sql.format(path))
+                cursor.execute(load_sql.format(path, table_name))
                 # you might be wondering here why I dont use batch queries. 
                 # Its bcause the library uses %s as place holders, AND SO DOES MYSQL >:(
 

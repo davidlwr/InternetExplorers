@@ -6,8 +6,11 @@ from Entities.log import Log
 from Entities.activity import Activity
 
 class sensor_log_DAO(object):
+    '''
+    This class handles the connection between the app and the datebase table
+    '''
 
-    table_name = ""
+    table_name = "stbern.SENSOR_LOG"
 
     def __init__(self):
         '''
@@ -26,9 +29,7 @@ class sensor_log_DAO(object):
     
     def set_min_max_datetime(self):
         '''
-        Sets min and max datetime vars 
-
-        :return: max_datetime, min_datetime
+        Sets obj vars and returns max_datetime and min_datetime found in the database
         '''
 
          # Get connection, which incidentally closes itself during garbage collection
@@ -37,7 +38,7 @@ class sensor_log_DAO(object):
 
         query = """SELECT MAX(server_timestamp) as 'max' , 
                           MIN(server_timestamp) as 'min' 
-                          FROM stbern.sensor_log;"""
+                          FROM {};""".format(table_name)
 
         # Get cursor
         with connection.cursor() as cursor:
@@ -54,16 +55,14 @@ class sensor_log_DAO(object):
 
     def set_location_options(self):
         '''
-        Sets list of distinct sensor location options
-
-        :return: locations_list
+        Sets obj vars and returns list of distinct sensor location options found in the database
         '''
 
          # Get connection, which incidentally closes itself during garbage collection
         factory = connection_manager()
         connection = factory.connection
 
-        query = """SELECT DISTINCT `sensor_location` AS 'locations' FROM stbern.sensor_log;"""
+        query = """SELECT DISTINCT `sensor_location` AS 'locations' FROM ;""".format(table_name)
 
         # Get cursor
         with connection.cursor() as cursor:
@@ -83,16 +82,14 @@ class sensor_log_DAO(object):
     
     def set_gateway_options(self):
         '''
-        Sets list of distinct resident options
-
-        :return: resident_options_list
+        Sets obj vars and returns list of distinct resident options found in the database
         '''
 
          # Get connection, which incidentally closes itself during garbage collection
         factory = connection_manager()
         connection = factory.connection
 
-        query = """SELECT DISTINCT `gateway_id` AS 'gateways' FROM stbern.sensor_log;"""
+        query = """SELECT DISTINCT `gateway_id` AS 'gateways' FROM ;""".format(table_name)
 
         # Get cursor
         with connection.cursor() as cursor:
@@ -112,9 +109,10 @@ class sensor_log_DAO(object):
 
     def load_csv(self, folder):
         '''
-        This method loads a local csv file to the database
+        This method loads a local csv file to the database, and updates the obj vars: min / max datetime, location_options, gateway_options
 
-        :param folder:    path to folder containing csv files
+        Keyword arguments:
+        folder -- path to folder containing csv files
         '''
         
         # Get connection, which incidentally closes itself during garbage collection
@@ -130,7 +128,7 @@ class sensor_log_DAO(object):
                 all_file_paths.append(filepath.replace("\\", "\\\\"))
 
         load_sql = """LOAD DATA LOCAL INFILE '{}' 
-                    INTO TABLE stbern.SYSMON_LOG 
+                    INTO TABLE {} 
                     FIELDS TERMINATED BY ',' 
                     ENCLOSED BY '' 
                     IGNORE 1 LINES 
@@ -150,7 +148,7 @@ class sensor_log_DAO(object):
 
             # run queries
             for path in all_file_paths:
-                cursor.execute(load_sql.format(path))
+                cursor.execute(load_sql.format(path, table_name))
                 # you might be wondering here why I dont use batch queries. 
                 # Its bcause the library uses %s as place holders, AND SO DOES MYSQL >:(
 
@@ -161,14 +159,31 @@ class sensor_log_DAO(object):
 
 
     def get_logs(self, sensor_location, start_datetime, end_datetime, gateway_id):
+        '''
+        Returns a list of logs found in the database according to the parameters given
 
-        query = """
-                SELECT * FROM stbern.sensor_log
+                query = """
+                SELECT * FROM 
                 WHERE `sensor_location` = \"{}\"
                 AND `gateway_timestamp` > '{}'
                 AND `gateway_timestamp` < '{}'
                 AND `gateway_id` = {}
-                """.format(sensor_location, start_datetime, end_datetime, gateway_id)
+                """.format(table_name, sensor_location, start_datetime, end_datetime, gateway_id)
+
+        Keyword arguments:
+        sensor_location -- based off self.location_options
+        start_datetime  -- datetime obj
+        end_datetime    -- datetime obj
+        gateway_id      -- based off self.gateway_options
+        '''
+
+        query = """
+                SELECT * FROM 
+                WHERE `sensor_location` = \"{}\"
+                AND `gateway_timestamp` > '{}'
+                AND `gateway_timestamp` < '{}'
+                AND `gateway_id` = {}
+                """.format(table_name, sensor_location, start_datetime, end_datetime, gateway_id)
         # Get connection, which incidentally closes itself during garbage collection
         factory = connection_manager()
         connection = factory.connection
@@ -198,10 +213,27 @@ class sensor_log_DAO(object):
             return logs
 
 
-    def get_activities(self, sensor_location, start_datetime, end_datetime, gateway_id):
+    # previously known as get_num_activities_by_date
+    def get_activities_per_period(self, sensor_location, start_datetime, 
+                                     end_datetime, gateway_id, time_period, 
+                                     offset=False, min_secs=3):
+        '''
+        Returns list of Entities.activity objects extrapolated fom sesnsor_logs found in the database queried according to the params given
+        i.e. Activities that can be extrapolated from the sensor log database
+        
+        Keyword arguments:
+        sensor_location -- For a list, see self.sensor_location_options
+        start_datetime  -- datetime obj
+        end_datetime    -- datetime obj
+        gateway_id      -- For a list see self.gateway_id_options
+        offset          -- If True, considers the previous dates night period as part of this day. 
+        min_secs        -- Ignores activities that are of seconds < min_secs. (default 3)
+        '''
+
         # Get all logs
         logs = self.get_logs(sensor_location=sensor_location, start_datetime=start_datetime, end_datetime=end_datetime, gateway_id=gateway_id)
 
+        # Extrpolate actities
         activities = []
         for i in range(len(logs)):
             if i+1 < len(logs) and logs[i].value == 255:
@@ -211,31 +243,6 @@ class sensor_log_DAO(object):
                                         gateway_id=gateway_id)
                 activities.append(activity_obj)
 
-        # Return
-        return activities
-
-
-    # previously known as get_num_activities_by_date
-    def get_num_activities_per_period(self, sensor_location, start_datetime, 
-                                     end_datetime, gateway_id, time_period, 
-                                     offset, min_secs=3):
-        '''
-        Function returns dates and aggregated numbe of times the sensor was activated. 
-        i.e. the number of Activities that can be extrapolated from the sensor data
-        
-        :param sensor_location: For a list, see self.sensor_location_options
-        :param start_datetime: datetime obj
-        :param end_datetime: datetime obj
-        :param gateway_id: For a list see self.gateway_id_options
-        :param offset: If True, considers the previous dates night period as part of this day. 
-        :param min_secs: Ignores activities that are of seconds < min_secs.
-        '''
-
-        # Get all Activities
-        activities = self.get_activities(sensor_location=sensor_location, 
-                                         start_datetime=start_datetime, 
-                                         end_datetime=end_datetime, 
-                                         gateway_id=gateway_id)
         # offset option
         if offset:
             previous_day_activities = elf.get_activities(sensor_location=sensor_location, 
@@ -260,20 +267,4 @@ class sensor_log_DAO(object):
         
 
         
-# TESTS
-# dao = sensor_log_DAO()
-# print(dao.min_date)
-# print(dao.max_date)
-# print(dao.set_min_max_datetime)
-# print(dao.min_date)
-# print(dao.max_date)
-# dao.load_csv(folder="C:\\Users\\David\\Desktop\\Anomaly Detection Tests\\data\\stbern-20180302-20180523-csv")
-# print(dao.set_location_options())
-# print('check0')
-# print(dao.set_gateway_options())
-# print('check1')
-# print(dao.get_logs('door', dao.min_datetime, dao.max_datetime, "2005"))
-# print(dao.get_num_activities_per_period('door', dao.min_datetime, 
-                                    #  dao.max_datetime, '2006', None, 
-                                    #  False, min_secs=3))
 
