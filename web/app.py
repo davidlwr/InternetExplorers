@@ -2,6 +2,8 @@ import dash
 import flask
 
 server = flask.Flask(__name__)
+
+# default app
 app = dash.Dash(__name__, server=server)
 # server = app.server
 app.config.suppress_callback_exceptions = True

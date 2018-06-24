@@ -5,10 +5,13 @@ import pandas as pd
 
 # internal imports
 from app import app
-from apps import input_data, dashboard, reports
+from apps import input_data, dashboard, reports, residents_overview
 
 global current_page
 current_page = 'dashboard'
+
+# residents app
+# residents_app = dash.Dash(__name__, server=app.server, url_base_pathname='/residents')
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -24,6 +27,11 @@ app.layout = html.Div([
                     html.Li([
                         html.Div([
                             dcc.Link('Shift Reports', href='/reports') # {isActive}'.format(isActive = ' active' if current_page == 'reports' else ''), href='/reports')
+                        ], className = 'nav-link')
+                    ], className = 'nav-item'),
+                    html.Li([
+                        html.Div([
+                            dcc.Link('Residents Overview', href='/residents') # {isActive}'.format(isActive = ' active' if current_page == 'reports' else ''), href='/reports')
                         ], className = 'nav-link')
                     ], className = 'nav-item')
                 ], className = 'nav flex-column')
@@ -42,6 +50,9 @@ def display_page(pathname):
     elif pathname == '/reports':
         current_page = 'reports'
         return reports.layout
+    elif pathname == '/residents':
+        current_page = 'residents overview'
+        return residents_overview.layout
     else:
         return '404'
 
