@@ -11,19 +11,6 @@ current_page = 'dashboard'
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
-    # html.A(html.Button('Log Out!'), href='/logout', style={'display': 'none'}, id='hidden-link'),
-    # html.Form(
-    #     method='Post',
-    #     children=[
-    #         html.Button(
-    #             children='Login',
-    #             n_clicks=0,
-    #             type='submit',
-    #             id='submit-button'
-    #         ),
-    #
-    #     ]
-    # ),
     html.Div([
         html.Nav([
             html.Div([
