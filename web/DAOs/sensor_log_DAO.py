@@ -170,8 +170,6 @@ class sensor_log_DAO(object):
     def insert_log(self, log):
         '''
         INSERTs a log entry into the database
-
-        Returns success boolean
         '''
 
         # Get connection, which incidentally closes itself during garbage collection

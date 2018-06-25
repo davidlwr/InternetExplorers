@@ -71,7 +71,7 @@ class Log(object):
 
     def __repr__(self):
         '''
-        Override python built in function to get string prepresentation of oject
+        Override python built in function to get string representation of oject
         '''
         return self.__str__()
 
