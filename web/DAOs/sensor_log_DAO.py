@@ -36,9 +36,9 @@ class sensor_log_DAO(object):
         query = """SELECT MAX({}) as 'max' , 
                           MIN({}) as 'min' 
                           FROM {};"""                       \
-                    .format(table_name,                     \
+                    .format(Log.gateway_timestamp_tname,    \
                             Log.gateway_timestamp_tname,    \
-                            Log.gateway_timestamp_tname)
+                            sensor_log_DAO.table_name)
 
         # Get cursor
         with connection.cursor() as cursor:
@@ -65,8 +65,8 @@ class sensor_log_DAO(object):
         factory = connection_manager()
         connection = factory.connection
 
-        query = """SELECT DISTINCT `{}` AS 'locations' FROM {} WHERE {} = {};"""                           \
-                    .format(Log.sensor_location_tname, table_name, Log.gateway_id_tname, gateway_id)
+        query = "SELECT DISTINCT `{}` AS 'locations' FROM {} WHERE {} = {};"   \
+                    .format(Log.sensor_location_tname, sensor_log_DAO.table_name, Log.gateway_id_tname, gateway_id)
 
         # Get cursor
         with connection.cursor() as cursor:
@@ -90,8 +90,8 @@ class sensor_log_DAO(object):
         factory = connection_manager()
         connection = factory.connection
 
-        query = """SELECT DISTINCT `{}` AS 'gateways' FROM {};"""
-                    .format(Log.gateway_id_tname, table_name)
+        query = "SELECT DISTINCT `{}` AS 'gateways' FROM {};"   \
+                    .format(Log.gateway_id_tname, sensor_log_DAO.table_name)
 
         # Get cursor
         with connection.cursor() as cursor:
@@ -134,7 +134,6 @@ class sensor_log_DAO(object):
 
             # run queries
             for path in all_file_paths:
-
                 load_sql = """LOAD DATA LOCAL INFILE '{}' 
                             INTO TABLE {} 
                             FIELDS TERMINATED BY ',' 
@@ -150,22 +149,24 @@ class sensor_log_DAO(object):
                                 `{}` = IF(@server_timestamp = '', NULL, STR_TO_DATE(@server_timestamp,'%Y-%m-%dT%H:%i:%s')), 
                                 `{}` = IF(@value        = '', NULL, CAST(@value AS UNSIGNED));
                             """.format(path, 
-                                       table_name, 
+                                       sensor_log_DAO.table_name, 
                                        Log.sensor_id_tname,
                                        Log.sensor_location_tname,
                                        Log.gateway_id_tname,
                                        Log.gateway_timestamp_tname,
                                        Log.key_tname,
+                                       Log.reading_type_tname,
                                        Log.server_timestamp_tname,
                                        Log.value_tname)
 
                 cursor.execute(load_sql)
                 # you might be wondering here why I dont use batch queries. 
                 # Its because the library uses %s as place holders, AND SO DOES MYSQL >:(
-
+                    
         # Reset params
         self.set_min_max_datetime()
         self.set_gateway_options()
+
 
     def insert_log(self, log):
         '''
@@ -176,11 +177,11 @@ class sensor_log_DAO(object):
         factory = connection_manager()
         connection = factory.connection
 
-        query = "INSERT INTO {} VALUES({}, {}, {}, {}, {}, {}, {}, {})"         \
-                    .format(table_name, log.sensor_id, log.sensor_location,     \
-                            log.gateway_id, log.gateway_timestamp, log.key,     \
-                            log.reading_type, log.server_timestamp, log.value)
-
+        query = "INSERT INTO {} VALUES('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}')"                      \
+                    .format(sensor_log_DAO.table_name, log.sensor_id, log.sensor_location,                   \
+                            log.gateway_id, log.gateway_timestamp.strftime('%Y-%m-%d %H:%M:%S'), log.key,    \
+                            log.reading_type, log.server_timestamp.strftime('%Y-%m-%d %H:%M:%S'), log.value)
+        print(query)
         with connection.cursor() as cursor:
             try:
                 cursor.execute(query)
@@ -189,14 +190,13 @@ class sensor_log_DAO(object):
                 raise
             
 
-
     def get_logs(self, sensor_location, start_datetime, end_datetime, gateway_id):
         '''
         Returns a list of logs found in the database according to the parameters given
 
                 query = """
                 SELECT * FROM 
-                WHERE `sensor_location` = \"{}\"
+                WHERE `sensor_location` = '{}'
                 AND `gateway_timestamp` > '{}'
                 AND `gateway_timestamp` < '{}'
                 AND `gateway_id` = {}
@@ -211,11 +211,11 @@ class sensor_log_DAO(object):
 
         query = """
                 SELECT * FROM {}
-                WHERE `sensor_location` = \"{}\"
+                WHERE `sensor_location` = '{}'
                 AND `gateway_timestamp` > '{}'
                 AND `gateway_timestamp` < '{}'
                 AND `gateway_id` = {}
-                """.format(table_name, sensor_location, start_datetime, end_datetime, gateway_id)
+                """.format(sensor_log_DAO.table_name, sensor_location, start_datetime, end_datetime, gateway_id)
         # Get connection, which incidentally closes itself during garbage collection
         factory = connection_manager()
         connection = factory.connection
@@ -245,9 +245,7 @@ class sensor_log_DAO(object):
             return logs
 
 
-    def get_activities_per_period(self, sensor_location, start_datetime, 
-                                     end_datetime, gateway_id, time_period, 
-                                     offset=False, min_secs=3):
+    def get_activities_per_period(self, sensor_location, start_datetime, end_datetime, gateway_id, time_period=None, offset=False, min_secs=3):
         '''
         Returns list of Entities.activity objects extrapolated fom sesnsor_logs found in the database queried according to the params given
         i.e. Activities that can be extrapolated from the sensor log database
@@ -258,6 +256,7 @@ class sensor_log_DAO(object):
         end_datetime    -- datetime obj
         gateway_id      -- For a list see self.gateway_id_options
         offset          -- If True, considers the previous dates night period as part of this day. 
+        timeperiod      -- 'Day' or 'Night'
         min_secs        -- Ignores activities that are of seconds < min_secs. (default 3)
         '''
 
@@ -276,12 +275,12 @@ class sensor_log_DAO(object):
 
         # offset option
         if offset:
-            previous_day_activities = elf.get_activities(sensor_location=sensor_location, 
-                                                        start_datetime=start_datetime - datetime.timedelta(days=1), 
-                                                        end_datetime=end_datetime -  + datetime.timedelta(days=1),
-                                                        gateway_id=gateway_id)
+            previous_day_activities = self.get_activities_per_period(sensor_location=sensor_location, 
+                                                                     start_datetime=start_datetime - datetime.timedelta(days=1), 
+                                                                     end_datetime=end_datetime -  + datetime.timedelta(days=1),
+                                                                     gateway_id=gateway_id, time_period='Night')
             previous_night_activities = [activity for activity in previous_day_activities if not activity.in_daytime()]
-            activities = activites + previous_night_activities
+            activities = previous_day_activities + previous_night_activities
         
         # Drration filter
         if min_secs > 0:
@@ -289,15 +288,27 @@ class sensor_log_DAO(object):
 
         # time period filter
         if time_period == 'Day':
-            activites = [activity for activity in activities if activity.in_daytime()]
+            activities = [activity for activity in activities if activity.in_daytime()]
         elif time_period == 'Night':
-            activites = [activity for activity in activities if not activity.in_daytime()]
+            activities = [activity for activity in activities if not activity.in_daytime()]
 
         return activities
         
         
-
+# Tests
 dao = sensor_log_DAO()
-dao.insert_log()
-        
+# print(dao.max_datetime, dao.min_datetime, dao.gateway_options)
+# dao.load_csv("C:\\Users\\David\\Desktop\\Anomaly Detection Tests\\data\\stbern-20180302-20180523-csv")
+# print(dao.max_datetime, dao.min_datetime, dao.gateway_options)
 
+# Insert log
+# log = Log(sensor_id="1993", sensor_location="bukit timah", gateway_id="1994", gateway_timestamp=datetime.datetime.now(), key="7", reading_type="fun", server_timestamp=datetime.datetime.now(), value=9000)
+# dao.insert_log(log)
+
+# Get log
+# log = dao.get_logs(sensor_location="2005-d-01", start_datetime="2018-01-02 14:55:04", end_datetime="2018-04-02 14:55:04", gateway_id=2005)
+# print(log)
+
+# Get activities per period
+# activities = dao.get_activities_per_period(sensor_location="2005-m-01", start_datetime=dao.min_datetime, end_datetime=dao.max_datetime, gateway_id=2005)
+# print(activities)

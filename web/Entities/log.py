@@ -14,7 +14,6 @@ class Log(object):
     reading_type_tname      = "reading_type"
     server_timestamp_tname  = "server_timestamp"
     value_tname             = "value"
-
     '''
 
     # Table col names
@@ -36,12 +35,12 @@ class Log(object):
 
         Keyword arguments:
         sensor_id         -- (default None)
-        sensor_location   -- (default None)
+        sensor_location   -- str, location description (default None)
         gateway_id        -- (default None)
-        gateway_timestamp -- (default None)
+        gateway_timestamp -- Datetime obj (default None)
         key               -- (default None)
         reading_type      -- (default None)
-        server_timestamp  -- (default None)
+        server_timestamp  -- datetime obj (default None)
         value             -- (default None)
         '''        
         self.sensor_id         = sensor_id
@@ -58,7 +57,7 @@ class Log(object):
         '''
         changes datetime to date only
         '''
-        return original_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        return date_time.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
     def __str__(self):
@@ -75,4 +74,3 @@ class Log(object):
         '''
         return self.__str__()
 
-# print(Log.sensor_id_tname)
