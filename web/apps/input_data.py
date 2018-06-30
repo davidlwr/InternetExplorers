@@ -44,6 +44,10 @@ input_raw_data.loc[(input_raw_data.value==0)
 #convert values to 1 and 0 instead of 255
 input_raw_data.loc[:, 'value'].replace(255, 1, inplace=True)
 
+# write to a file, uncomment to use, otherwise leave for implementation of some download/bootstrap function
+# if __name__ == '__main__':
+#     input_raw_data.to_csv("D:/FYP/Data/python_df_output.csv") # replace path with your own path
+
 # common variables
 input_raw_max_date = input_raw_data['gw_timestamp'].max()
 input_raw_min_date = input_raw_data['gw_timestamp'].min()
@@ -115,6 +119,9 @@ def get_relevant_data(input_location, start_date, end_date, gw_device=2005, grou
             & (input_raw_data['gw_timestamp'] < end_date)
             & (input_raw_data['gw_timestamp'] > start_date)
             & (input_raw_data['gw_device'] == gw_device), ['device_loc','gw_device','gw_timestamp', 'value']]
+
+    relevant_data = input_sysmon.remove_disconnected_periods(relevant_data)
+
     if grouped and ('toilet' in input_location):
         relevant_data = get_grouped_data(relevant_data)
     return relevant_data
@@ -155,7 +162,7 @@ def get_grouped_data(current_data, remove_all=False):
     # get the duration between the two records
     # if below the thresholds, remove the two records
     current_data.reset_index(drop=True, inplace=True)
-    print(current_data)
+    # print(current_data)
     to_process = True # to track consecutive inactive periods
     current_data['todrop']=False
     for i in range(0, len(current_data)-1):
@@ -182,5 +189,10 @@ def get_grouped_data(current_data, remove_all=False):
 #     each time we load the dashboard
 
 # below for testing only
-# if __name__ == '__main__':
-#     get_num_visits_by_date(ignore_short_durations=True)
+if __name__ == '__main__':
+    testing_data = get_relevant_data('toilet_bathroom', input_raw_min_date, input_raw_max_date)
+    testing_data = input_sysmon.remove_disconnected_periods(testing_data)
+
+    # test to check that final data has all 1's followed by 0's
+    testing_data = get_grouped_data(testing_data)
+    # print(testing_data)
