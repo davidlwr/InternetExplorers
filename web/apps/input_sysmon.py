@@ -27,6 +27,9 @@ for filename in os.listdir(file_folder):
 # first get only disconnected and uptime rows
 sysmon_disconnected_data = sysmon_data.loc[sysmon_data['reading_type'].isin(['disconnected'])]
 
+# convert datetime format
+sysmon_disconnected_data['gw_timestamp'] = pd.to_datetime(sysmon_disconnected_data['gw_timestamp'], format='%Y-%m-%dT%H:%M:%S')
+
 # remove duplicates
 sysmon_disconnected_data.drop_duplicates(['device_id','device_loc','gw_device','gw_timestamp','key','reading_type'], inplace=True)
 sysmon_disconnected_data.reset_index(drop=True)
@@ -46,9 +49,11 @@ def remove_disconnected_periods(current_data):
         return current_data
 
     current_data.reset_index(drop=True)
-    # filter out sysmon data for what is relevant in the current data first
+    # filter out sysmon data for what is relevant in the current data first (by time and location)
     current_user = current_data['gw_device'].iloc[0]
-    sysmon_relevant_data = sysmon_disconnected_data[sysmon_disconnected_data['gw_device'] == current_user]
+    sysmon_relevant_data = sysmon_disconnected_data[(sysmon_disconnected_data['gw_device'] == current_user)
+            & (sysmon_disconnected_data['gw_timestamp'] > current_data['gw_timestamp'].min())
+            & (sysmon_disconnected_data['gw_timestamp'] < current_data['gw_timestamp'].max())]
 
     # issue where motion is considered active when sensor is disconnected
     previous_disconnection = current_data['gw_timestamp'].min()
