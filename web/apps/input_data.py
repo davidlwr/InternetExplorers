@@ -44,10 +44,6 @@ input_raw_data.loc[(input_raw_data.value==0)
 #convert values to 1 and 0 instead of 255
 input_raw_data.loc[:, 'value'].replace(255, 1, inplace=True)
 
-# write to a file, uncomment to use, otherwise leave for implementation of some download/bootstrap function
-# if __name__ == '__main__':
-#     input_raw_data.to_csv("D:/FYP/Data/python_df_output.csv") # replace path with your own path
-
 # common variables
 input_raw_max_date = input_raw_data['gw_timestamp'].max()
 input_raw_min_date = input_raw_data['gw_timestamp'].min()
@@ -157,6 +153,7 @@ def get_grouped_data(current_data, remove_all=False):
     Function removes inactivity durations that are under the timeout limit + the group threshold limit
     Will not remove two consecutive inactive periods by default, use remove_all=True to remove all inactive periods below the limit
     To be used before calculating number of visits
+    Assumes that data is filtered to only one user and one location
     '''
     # loop through all rows and if row is to show inactivity, check that next record is for acitivity
     # get the duration between the two records
@@ -187,6 +184,16 @@ def get_grouped_data(current_data, remove_all=False):
 
 #TODO store the cleaned data somewhere (file/database) so don't have to recalculate
 #     each time we load the dashboard
+
+# write to a file, uncomment to use, otherwise leave for implementation of some download/bootstrap function
+# if __name__ == '__main__':
+#     # loop through each possible user and location pair
+#     to_file_data = pd.DataFrame()
+#     for user in input_raw_data.gw_device.unique():
+#         for location in input_raw_data.device_loc.unique():
+#             to_file_data = pd.concat([to_file_data, get_relevant_data(location, input_raw_min_date, input_raw_max_date, user, grouped=True)], ignore_index=True)
+# 
+#     to_file_data.to_csv("D:/FYP/Data/python_df_output.csv") # replace path with your own path
 
 # below for testing only
 if __name__ == '__main__':
