@@ -192,8 +192,8 @@ def get_grouped_data(current_data, remove_all=False):
 #     for user in input_raw_data.gw_device.unique():
 #         for location in input_raw_data.device_loc.unique():
 #             to_file_data = pd.concat([to_file_data, get_relevant_data(location, input_raw_min_date, input_raw_max_date, user, grouped=True)], ignore_index=True)
-# 
-#     to_file_data.to_csv("D:/FYP/Data/python_df_output.csv") # replace path with your own path
+#
+#     to_file_data.to_csv("D:/FYP/Data/python_df_output.csv", index=False) # replace path with your own path
 
 # below for testing only
 if __name__ == '__main__':
