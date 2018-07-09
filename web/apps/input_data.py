@@ -195,11 +195,33 @@ def get_grouped_data(current_data, remove_all=False):
 #
 #     to_file_data.to_csv("D:/FYP/Data/python_df_output.csv", index=False) # replace path with your own path
 
+# separate method for moving averages so that moving average will always take advantage of the full range of data available
+def get_visit_numbers_moving_average(gw_device, input_location='toilet_bathroom', time_period=None,
+        offset=True, ignore_short_durations=False, min_duration=3, grouped=False, days=7):
+    '''
+    Run once to get the moving average of number of location visits based on the available parameters
+    To get day only, use time_period='Day' and to get night_only use time_period='Night'
+    To report night numbers as the night of the previous day, use offset=True
+    To ignore short durations, use ignore_short_durations=True, and set the minimum duration to be included using min_duration
+    Use days to indicate moving average window, default 7 for weekly
+    Returns data with moving_average column
+    '''
+    result_data = get_num_visits_by_date(gw_device=gw_device, input_location=input_location, time_period=time_period,
+            offset=offset, ignore_short_durations=ignore_short_durations, min_duration=min_duration, grouped=grouped)
+    # print(result_data)
+    r = result_data['value'].rolling(window=7, min_periods=0)
+    result_data['moving_average'] = r.mean()
+    return result_data
+
 # below for testing only
 if __name__ == '__main__':
-    testing_data = get_relevant_data('toilet_bathroom', input_raw_min_date, input_raw_max_date)
-    testing_data = input_sysmon.remove_disconnected_periods(testing_data)
+    # testing_data = get_relevant_data('toilet_bathroom', input_raw_min_date, input_raw_max_date)
+    # testing_data = input_sysmon.remove_disconnected_periods(testing_data)
 
     # test to check that final data has all 1's followed by 0's
-    testing_data = get_grouped_data(testing_data)
+    # testing_data = get_grouped_data(testing_data)
+
+    # test rolling means
+    rolling_data = get_visit_numbers_moving_average(2005, days=21)
+    print(rolling_data)
     # print(testing_data)
