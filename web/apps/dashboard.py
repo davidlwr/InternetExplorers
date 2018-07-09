@@ -233,11 +233,11 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
             # if user chose both, both if statements below will execute
             if filter_input != 'Night': # if not night means have to display for 'Day'
                 for r in input_resident:
-                    df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Day', ignore_short_durations=ignore_checkbox)
+                    df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Day', ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
                     draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': str(r) + ' - Day'})
             if filter_input != 'Day': # if not day means have to display for 'Night'
                 for r in input_resident:
-                    df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Night', offset=offset_checkbox, ignore_short_durations=ignore_checkbox) # offset only relevant at night
+                    df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Night', offset=offset_checkbox, ignore_short_durations=ignore_checkbox, grouped=group_checkbox) # offset only relevant at night
                     draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': str(r) + ' - Night'})
 
         return dcc.Graph(id = 'toilet_numbers_plot',
