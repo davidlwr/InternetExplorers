@@ -132,12 +132,12 @@ def get_residents_options():
 
 # generate a table of acitivity durations indexed by the start time
 def get_visit_duration_and_start_time(start_date=input_raw_min_date, end_date=input_raw_max_date,
-        input_location='toilet_bathroom', gw_device=2005):
+        input_location='toilet_bathroom', gw_device=2005, grouped=False):
     '''
     Function returns a table of start times and the duration of activity detected at the specified location
-    If intending to group data, should call get_grouped_data first before calling this function
+    NOTE: If intending to group data, should call get_grouped_data first before calling this function
     '''
-    current_data = get_relevant_data(input_location, start_date, end_date, gw_device)
+    current_data = get_relevant_data(input_location, start_date, end_date, gw_device, grouped)
     current_data['visit_duration'] = 0 # create new duration (in seconds) column
 
     # match the start and end timing of a sensor
@@ -197,7 +197,7 @@ def get_grouped_data(current_data, remove_all=False):
 
 # separate method for moving averages so that moving average will always take advantage of the full range of data available
 def get_visit_numbers_moving_average(gw_device, input_location='toilet_bathroom', time_period=None,
-        offset=True, ignore_short_durations=False, min_duration=3, grouped=False, days=7):
+        offset=True, ignore_short_durations=False, min_duration=3, grouped=False, days=7, result_data=None):
     '''
     Run once to get the moving average of number of location visits based on the available parameters
     To get day only, use time_period='Day' and to get night_only use time_period='Night'
@@ -206,12 +206,24 @@ def get_visit_numbers_moving_average(gw_device, input_location='toilet_bathroom'
     Use days to indicate moving average window, default 7 for weekly
     Returns data with moving_average column
     '''
-    result_data = get_num_visits_by_date(gw_device=gw_device, input_location=input_location, time_period=time_period,
+    if result_data is None:
+        result_data = get_num_visits_by_date(gw_device=gw_device, input_location=input_location, time_period=time_period,
             offset=offset, ignore_short_durations=ignore_short_durations, min_duration=min_duration, grouped=grouped)
     # print(result_data)
-    r = result_data['value'].rolling(window=7, min_periods=0)
+    r = result_data['value'].rolling(window=days, min_periods=0)
     result_data['moving_average'] = r.mean()
     return result_data
+
+def get_door_pivots(gw_device, input_location='bedroom_master'):
+    '''
+    Returns door timings with matched opening and closing
+    '''
+    raw_door_inputs = get_relevant_data(input_location='door', start_date=input_raw_min_date, end_date=input_raw_max_date, gw_device=gw_device)
+    # pivot raw door inputs
+
+
+    # after that loop through every door row and concat
+    #+valid motion readings (based on each time the door is closed) together
 
 # below for testing only
 if __name__ == '__main__':

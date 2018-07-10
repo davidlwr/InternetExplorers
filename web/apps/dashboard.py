@@ -119,6 +119,22 @@ layout = html.Main([
                 ], className = 'col-md-4 text-center')
             ], className = 'row'),
             html.Div([
+                html.Div([
+                    dcc.Checklist(
+                        id='seven_checkbox_toilet_numbers',
+                        options=[{'label': 'Include 7 day moving average', 'value': 'seven'}],
+                        values=['seven'],
+                    )
+                ], className = 'col-md-6 text-center'),
+                html.Div([
+                    dcc.Checklist(
+                        id='twentyone_checkbox_toilet_numbers',
+                        options=[{'label': 'Include 21 day moving average', 'value': 'twentyone'}],
+                        values=['twentyone'],
+                    )
+                ], className = 'col-md-6 text-center')
+            ], className = 'row'),
+            html.Div([
                 html.Div(id='toilet_numbers_output', className = 'col-md-12')
             ], className = 'row')
         ], id='toilet_numbers_graph', className='container-fluid'),
@@ -217,8 +233,10 @@ def update_graph_01(input_resident,input_location, start_date, end_date, group_c
      Input('filter_input_toilet_numbers', 'value'),
      Input('offset_checkbox_toilet_numbers', 'values'), # if incoming list is empty means don't offset
      Input('ignore_checkbox_toilet_numbers', 'values'),
-     Input('group_checkbox_toilet_numbers', 'values')])
-def update_graph_02(input_resident, start_date, end_date, filter_input, offset_checkbox, ignore_checkbox, group_checkbox):
+     Input('group_checkbox_toilet_numbers', 'values'),
+     Input('seven_checkbox_toilet_numbers', 'values'),
+     Input('twentyone_checkbox_toilet_numbers', 'values')])
+def update_graph_02(input_resident, start_date, end_date, filter_input, offset_checkbox, ignore_checkbox, group_checkbox, seven_checkbox, twentyone_checkbox):
     try:
         temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         modified_date = temp_date + datetime.timedelta(days=1)
@@ -229,16 +247,60 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                 df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
                 #print(df.head())
                 draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': r})
+                if seven_checkbox:
+                    # get moving averages
+                    moving_averages_7 = input_data.get_visit_numbers_moving_average(r, days=7, ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
+
+                    # filter relevant dates
+                    moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (moving_averages_7['gw_date_only'] >= start_date)]
+                    draw_data.append({'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'], 'mode':'lines+markers', 'name': str(r)+' 7D MA'})
+                if twentyone_checkbox:
+                    # get moving averages
+                    moving_averages_21 = input_data.get_visit_numbers_moving_average(r, days=21, ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
+
+                    # filter relevant dates
+                    moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (moving_averages_21['gw_date_only'] >= start_date)]
+                    draw_data.append({'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'], 'mode':'lines+markers', 'name': str(r)+' 21D MA'})
+
         else:
             # if user chose both, both if statements below will execute
             if filter_input != 'Night': # if not night means have to display for 'Day'
                 for r in input_resident:
                     df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Day', ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
                     draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': str(r) + ' - Day'})
+                    if seven_checkbox:
+                        # get moving averages
+                        moving_averages_7 = input_data.get_visit_numbers_moving_average(r, days=7, time_period='Day', ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
+
+                        # filter relevant dates
+                        moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (moving_averages_7['gw_date_only'] >= start_date)]
+                        draw_data.append({'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'], 'mode':'lines+markers', 'name': str(r)+' 7D MA Day'})
+                    if twentyone_checkbox:
+                        # get moving averages
+                        moving_averages_21 = input_data.get_visit_numbers_moving_average(r, days=21, time_period='Day', ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
+
+                        # filter relevant dates
+                        moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (moving_averages_21['gw_date_only'] >= start_date)]
+                        draw_data.append({'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'], 'mode':'lines+markers', 'name': str(r)+' 21D MA Day'})
+
             if filter_input != 'Day': # if not day means have to display for 'Night'
                 for r in input_resident:
                     df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Night', offset=offset_checkbox, ignore_short_durations=ignore_checkbox, grouped=group_checkbox) # offset only relevant at night
                     draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': str(r) + ' - Night'})
+                    if seven_checkbox:
+                        # get moving averages
+                        moving_averages_7 = input_data.get_visit_numbers_moving_average(r, days=7, time_period='Night', offset=offset_checkbox, ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
+
+                        # filter relevant dates
+                        moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (moving_averages_7['gw_date_only'] >= start_date)]
+                        draw_data.append({'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'], 'mode':'lines+markers', 'name': str(r)+' 7D MA Night'})
+                    if twentyone_checkbox:
+                        # get moving averages
+                        moving_averages_21 = input_data.get_visit_numbers_moving_average(r, days=21, time_period='Night', offset=offset_checkbox, ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
+
+                        # filter relevant dates
+                        moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (moving_averages_21['gw_date_only'] >= start_date)]
+                        draw_data.append({'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'], 'mode':'lines+markers', 'name': str(r)+' 21D MA Night'})
 
         return dcc.Graph(id = 'toilet_numbers_plot',
                 figure = {
