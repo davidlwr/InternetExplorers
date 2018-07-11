@@ -4,8 +4,8 @@ from dash.dependencies import Input, Output
 import pandas as pd
 
 # internal imports
-from app import app
-from apps import input_data, dashboard, reports, residents_overview
+from app import app, server
+from apps import input_data, dashboard, reports, residents_overview, sample_form
 
 global current_page
 current_page = 'dashboard'
@@ -31,7 +31,7 @@ app.layout = html.Div([
                     ], className = 'nav-item'),
                     html.Li([
                         html.Div([
-                            dcc.Link('Residents Overview', href='/residents') # {isActive}'.format(isActive = ' active' if current_page == 'reports' else ''), href='/reports')
+                            html.A('Residents Overview', href='/anotherflask') # {isActive}'.format(isActive = ' active' if current_page == 'reports' else ''), href='/reports')
                         ], className = 'nav-link')
                     ], className = 'nav-item')
                 ], className = 'nav flex-column')

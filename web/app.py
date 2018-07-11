@@ -2,6 +2,7 @@ import dash
 import flask
 
 server = flask.Flask(__name__)
+server.config['SECRET_KEY'] = 'userandomtogeneratesomethinghere'
 
 # default app
 app = dash.Dash(__name__, server=server)
