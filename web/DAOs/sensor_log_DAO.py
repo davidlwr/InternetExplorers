@@ -181,7 +181,7 @@ class sensor_log_DAO(object):
                     .format(sensor_log_DAO.table_name, log.sensor_id, log.sensor_location,                   \
                             log.gateway_id, log.gateway_timestamp.strftime('%Y-%m-%d %H:%M:%S'), log.key,    \
                             log.reading_type, log.server_timestamp.strftime('%Y-%m-%d %H:%M:%S'), log.value)
-        print(query)
+
         with connection.cursor() as cursor:
             try:
                 cursor.execute(query)
@@ -296,7 +296,7 @@ class sensor_log_DAO(object):
         
         
 # Tests
-dao = sensor_log_DAO()
+# dao = sensor_log_DAO()
 # print(dao.max_datetime, dao.min_datetime, dao.gateway_options)
 # dao.load_csv("C:\\Users\\David\\Desktop\\Anomaly Detection Tests\\data\\stbern-20180302-20180523-csv")
 # print(dao.max_datetime, dao.min_datetime, dao.gateway_options)
