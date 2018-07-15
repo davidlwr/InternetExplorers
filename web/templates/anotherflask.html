@@ -1,0 +1,15 @@
+{% from "_formhelpers.html" import render_field %}
+<html>
+<head>
+<title>Sample Title</title>
+</head>
+<body>
+	<form method="POST" action="/anotherflask">
+	   <dl>
+	    {{ form.csrf_token }}
+	    {{ render_field(form.sample_name) }}
+	    {{ render_field(form.sample_submit) }}
+	    </dl>
+	</form>
+</body>
+</html>
