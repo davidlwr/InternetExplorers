@@ -59,6 +59,8 @@ daytime_end = datetime.time(21, 30)
 # below is redundant
 nighttime_start = daytime_end
 nighttime_end = daytime_start
+default_sleep_start = datetime.time(22, 0)
+default_sleep_end = datetime.time(6, 30)
 
 # replace date to be date only
 def date_only(original_date):
@@ -116,8 +118,10 @@ def get_relevant_data(input_location, start_date, end_date, gw_device=2005, grou
             & (input_raw_data['gw_timestamp'] > start_date)
             & (input_raw_data['gw_device'] == gw_device), ['device_loc','gw_device','gw_timestamp', 'value']]
 
+    # TODO: for sensors that are still active at the end of the query period, make it inactive at the end date
     relevant_data = input_sysmon.remove_disconnected_periods(relevant_data)
 
+    # TODO: make grouping applicable for bedroom motion as well
     if grouped and ('toilet' in input_location):
         relevant_data = get_grouped_data(relevant_data)
     return relevant_data
@@ -146,6 +150,7 @@ def get_visit_duration_and_start_time(start_date=input_raw_min_date, end_date=in
             current_data['visit_duration'].iloc[i] = (current_data['gw_timestamp'].iloc[i+1] - current_data['gw_timestamp'].iloc[i]).total_seconds()
 
     # print(current_data.query('value != 0').reset_index(drop = True).head())
+    # TODO: check that if a motion is cut off at the end of the query period the correct duration is reported (similar to check end and check start in get_average_longest_sleep)
     return current_data.query('value != 0').reset_index(drop = True)
 
 def get_grouped_data(current_data, remove_all=False):
@@ -225,6 +230,151 @@ def get_door_pivots(gw_device, input_location='bedroom_master'):
     # after that loop through every door row and concat
     #+valid motion readings (based on each time the door is closed) together
 
+def get_average_longest_sleep(gw_device, start_date, end_date, use_door=False):
+    '''
+    Get the average longest uninterrupted sleep duration (in seconds) per night as a measure of sleep quality
+    NOTE: Intended usage is to be called weekly (called for each week, possibly excluding weekend nights) to analyse changes in sleep quality across weeks
+    '''
+    # TODO: consider dates where no data could be obtained - ignore in average calculations
+
+    start_time = default_sleep_start
+    end_time = default_sleep_end
+
+    date_range = pd.date_range(start_date, end_date - datetime.timedelta(days=1))
+    total_days = 0
+    total_longest = 0 # in seconds
+
+    current_data = get_relevant_data('bedroom_master', start_date, end_date + datetime.timedelta(days=1), gw_device, True)
+    # group true so that motion close together is considered more significant, resulting in lower sleep quality (e.g. tossing in bed)
+    #+NOTE: not implemented yet
+    for single_date in date_range:
+        if use_door:
+            # TODO: use door to obtain the sleep start and end time
+            #+but this is problematic because sometimes there are missing door data to correctly know sleeping hours
+            start_time = default_sleep_start # replace with use door
+            end_time = default_sleep_end # replace with use door
+
+        total_days += 1
+        # get latest reading before start
+        temp_data = current_data[current_data.gw_timestamp < datetime.datetime.combine(single_date, start_time)]
+        # print(temp_data)
+        last_active_value = temp_data.loc[temp_data['gw_timestamp'].idxmax()].value
+        print("DEBUG: last active value", last_active_value)
+        current_longest = 0
+        night_data = current_data[(current_data.gw_timestamp > datetime.datetime.combine(single_date, start_time))
+                & (current_data.gw_timestamp < datetime.datetime.combine(single_date + datetime.timedelta(days=1), end_time))]
+        print(night_data)
+        night_data.reset_index(drop=True, inplace=True)
+
+        loop_start_index = 0
+        loop_end_index = len(night_data) - 1
+
+        # check start
+        # check previous value first to see if there is currently motion or not at this point in time
+        #+if yes, start adding the duration from start time
+        if last_active_value == 0:
+            # start counting duration right away
+            for i in range(0, loop_end_index):
+                if night_data['value'].iloc[i] == 1:
+                    loop_start_index = i + 1
+                    current_longest = (night_data['gw_timestamp'].iloc[i] - datetime.datetime.combine(single_date, start_time)).total_seconds()
+                    print("see this once per day only")
+                    break
+
+        # else can just start counting from the next occurrence of 0
+        # loop through each period of no motion
+        for i in range(loop_start_index, loop_end_index):
+            if night_data['value'].iloc[i] == 0:
+                current_duration = (night_data['gw_timestamp'].iloc[i+1] - night_data['gw_timestamp'].iloc[i]).total_seconds()
+                if current_duration > current_longest:
+                    current_longest = current_duration
+
+        # print("DEBUG: len(data)", night_data['gw_timestamp'].iloc[loop_end_index])
+        #+range is exclusive for the 2nd argument
+
+        #check end
+        if night_data['value'].iloc[loop_end_index] == 0:
+            current_duration = (datetime.datetime.combine(single_date + datetime.timedelta(days=1), end_time) - night_data['gw_timestamp'].iloc[loop_end_index]).total_seconds()
+            if current_duration > current_longest:
+                current_longest = current_duration
+        print("DEBUG: current longest", current_longest)
+        total_longest += current_longest
+
+    print("DEBUG: total_days", total_days)
+    average_longest = total_longest / total_days # in seconds
+    return average_longest
+
+# NOTE: bedroom motion that last 1 second at night may just mean the resident rolling in bed
+#+unless they occur in quick succession then that may mean inability to sleep
+#+otherwise should ignore
+
+def motion_duration_during_sleep(gw_device, start_date, end_date, use_door=False):
+    '''
+    Get the average total motion duration detected during sleep as a measure of sleep quality
+    NOTE: Intended to be used weekly (called for each week, possibly excluding weekend nights) to analyse changes in sleep quality across weeks
+    '''
+    # NOTE: can easily reprogram to give average sleep non-motion if required
+    start_time = default_sleep_start
+    end_time = default_sleep_end
+
+    date_range = pd.date_range(start_date, end_date - datetime.timedelta(days=1))
+    total_days = 0
+    total_motion_aggregated = 0
+
+    current_data = get_relevant_data('bedroom_master', start_date, end_date + datetime.timedelta(days=1), gw_device, True)
+    # group true so that motion close together is considered more significant, resulting in lower sleep quality (e.g. tossing in bed)
+    #+NOTE: not implemented yet
+
+    # for each day, get visit duration and sum up total motion duration
+    #+then get the average amongst all the days
+    #+this can be used for each week to update the stats on overview page
+    for single_date in date_range:
+        if use_door:
+            # TODO: use door to obtain the sleep start and end time
+            #+but this is problematic because sometimes there are missing door data to correctly know sleeping hours
+            start_time = default_sleep_start # replace with use door
+            end_time = default_sleep_end # replace with use door
+
+        total_days += 1
+        total_motion_daily = 0
+
+        # get latest reading before start
+        temp_data = current_data[current_data.gw_timestamp < datetime.datetime.combine(single_date, start_time)]
+        # print(temp_data)
+        last_active_value = temp_data.loc[temp_data['gw_timestamp'].idxmax()].value
+        print("DEBUG: last active value", last_active_value)
+
+        night_data = current_data[(current_data.gw_timestamp > datetime.datetime.combine(single_date, start_time))
+                & (current_data.gw_timestamp < datetime.datetime.combine(single_date + datetime.timedelta(days=1), end_time))]
+        print(night_data)
+        night_data.reset_index(drop=True, inplace=True)
+
+        loop_start_index = 0
+        loop_end_index = len(night_data) - 1
+
+        # check start
+        if last_active_value == 1:
+            for i in range(0, loop_end_index):
+                if night_data['value'].iloc[i] == 0:
+                    loop_start_index = i + 1
+                    total_motion_daily += (night_data['gw_timestamp'].iloc[i] - datetime.datetime.combine(single_date, start_time)).total_seconds()
+                    print("see this once per day only")
+                    break
+
+        # loop through each period of motion
+        for i in range(loop_start_index, loop_end_index):
+            if night_data['value'].iloc[i] == 1:
+                total_motion_daily += (night_data['gw_timestamp'].iloc[i+1] - night_data['gw_timestamp'].iloc[i]).total_seconds()
+
+        # check end
+        if night_data['value'].iloc[loop_end_index] == 1:
+            total_motion_daily += (datetime.datetime.combine(single_date + datetime.timedelta(days=1), end_time) - night_data['gw_timestamp'].iloc[loop_end_index]).total_seconds()
+        print("DEBUG: daily total motion", total_motion_daily)
+        total_motion_aggregated += total_motion_daily
+
+    average_motion = total_motion_aggregated / total_days
+    return average_motion
+    # TODO: can replace this to be as a percentage of sleeping hours
 # below for testing only
 if __name__ == '__main__':
     # testing_data = get_relevant_data('toilet_bathroom', input_raw_min_date, input_raw_max_date)
@@ -234,6 +384,14 @@ if __name__ == '__main__':
     # testing_data = get_grouped_data(testing_data)
 
     # test rolling means
-    rolling_data = get_visit_numbers_moving_average(2005, days=21)
-    print(rolling_data)
+    # rolling_data = get_visit_numbers_moving_average(2005, days=21)
+    # print(rolling_data)
     # print(testing_data)
+
+    # test average longest uninterrupted sleep
+    # result = get_average_longest_sleep(2005, datetime.date(2018, 5, 1), datetime.date(2018, 5, 3))
+    # print("result", result)
+
+    # test average motion duration during sleep
+    result = motion_duration_during_sleep(2005, datetime.date(2018, 5, 1), datetime.date(2018, 5, 3))
+    print("result", result)
