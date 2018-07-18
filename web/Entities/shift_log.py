@@ -42,7 +42,7 @@ class Shift_log(object):
         self.temp_3pm         = temp_3pm
         self.bp_weekly        = bp_weekly
 
-        self.var_list = [self.datetime.strftime('%Y-%m-%d %H:%M:%S'), self.patient_id, self.num_falls, \
+        self.var_list = [self.datetime, self.patient_id, self.num_falls, \
                          self.num_near_falls, self.food_consumption, self.num_toilet_visit, self.temp_3pm, self.bp_weekly]
 
 

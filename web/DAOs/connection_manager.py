@@ -22,8 +22,8 @@ class connection_manager(object):
         host            = "localhost"
         port            = 3306
         database        = "stbern"
-        username        = "root"
-        password        = ""
+        username        = "internetexplorer"
+        password        = "int3rn3t"
 
         # LOOK INTO CURSORS
         self.connection = pymysql.connect(host=host,

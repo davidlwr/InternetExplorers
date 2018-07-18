@@ -2,14 +2,31 @@ from flask import render_template, Flask, request
 from flask_wtf import Form
 from wtforms import StringField, PasswordField, SubmitField, RadioField, FloatField
 from wtforms.fields.html5 import DateField
-from wtforms.fields.html5 import IntegerRangeField
+from wtforms_sqlalchemy.fields import QuerySelectField
+from flask_sqlalchemy import SQLAlchemy
 from wtforms.validators import InputRequired
 
 from app import app, server
+from DAOs.shift_log_DAO import shift_log_DAO
+from Entities.shift_log import Shift_log
+
+db = SQLAlchemy(server)
+
+
+class Patient(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(45))
+    age = db.Column(db.Integer)
+    fall_risk = db.Column(db.String(45))
+    status = db.Column(db.String(45))
+
+
+def patient_query():
+    return Patient.query
 
 
 class SampleForm(Form):
-    name = StringField('Resident Name', validators=[InputRequired('Resident name is required!')])
+    name = QuerySelectField(query_factory=patient_query, allow_blank=True, get_label='name')
     date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')])
     falls = RadioField('Number of Slips/Falls of Resident',
                        choices=[(0, '0'), (1, '1'), (2, '2'), (3, '3')], coerce=int)
@@ -31,7 +48,7 @@ def showForms():
         if form.validate_on_submit():
             # handle submitted data here
             # process form here
-            submitted_name = form.name.data
+            submitted_name = form.name.data.id
             submitted_date = form.date.data
             submitted_falls = form.falls.data
             submitted_near_falls = form.near_falls.data
@@ -40,7 +57,12 @@ def showForms():
             submitted_toilet_visits = request.form.get('toilet_visits', default_value)
             submitted_temperature = form.temperature.data
             submitted_bp = form.bp.data
-            print(submitted_name)
+
+            shiftLogDAO = shift_log_DAO()
+            shiftLog = Shift_log(submitted_date, submitted_name, submitted_falls, submitted_near_falls,
+                                 submitted_consumption, submitted_toilet_visits, submitted_temperature,
+                                 submitted_bp)
+            shiftLogDAO.insert_shift_log(shiftLog)
             return render_template('sample.html', name=submitted_name, date=submitted_date, falls=submitted_falls,
                                    near_falls=submitted_near_falls, consumption=submitted_consumption,
                                    toilet_visits=submitted_toilet_visits, temperature=submitted_temperature,
