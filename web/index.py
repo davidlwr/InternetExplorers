@@ -1,10 +1,12 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+from flask import Flask, flash, redirect, render_template, request, abort, session
 
 # internal imports
-from app import app
-from apps import input_data, dashboard, reports
+from app import app, server
+from apps import dashboard
+# from apps import input_data, dashboard, reports
 
 global current_page
 current_page = 'dashboard'
@@ -39,18 +41,29 @@ app.layout = html.Div([
 ], className='container-fluid')
 
 
-@app.callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')])
-def display_page(pathname):
-    if pathname == '/app1' or pathname == '/' or pathname == '/dashboard':
-        current_page = 'dashboard'
-        return dashboard.layout
-    elif pathname == '/reports':
-        current_page = 'reports'
-        return reports.layout
+@server.route('/app1')
+def dashboard2():
+    print("here")
+    if not session.get('logged_in'):
+        return render_template('login.html')
     else:
-        return '404'
+        return app.index()
+        
+# @app.callback(Output('page-content', 'children'),
+              # [Input('url', 'pathname')])
+# def display_page(pathname):
+    # if pathname == '/app1' or pathname == '/dashboard':
+        # if not session.get('logged_in'):
+            # return render_template('login.html')
+        # else:
+            # current_page = 'dashboard'
+            # return app.layout
+    # elif pathname == '/reports':
+        # current_page = 'reports'
+        # return reports.layout
+    # else:
+        # return '404'
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    server.run(debug=True)
