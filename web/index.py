@@ -24,7 +24,7 @@ app.layout = html.Div([
                     ], className='nav-item'),
                     html.Li([
                         html.Div([
-                            dcc.Link('Shift Reports', href='/reports')
+                            html.A('Shift Reports', href='/reports')
                             # {isActive}'.format(isActive = ' active' if current_page == 'reports' else ''), href='/reports')
                         ], className='nav-link')
                     ], className='nav-item'),
@@ -48,7 +48,15 @@ def dashboard2():
         return render_template('login.html')
     else:
         return app.index()
-        
+
+@server.route('/reports')
+def reports_method():
+    print("here reports")
+    if not session.get('logged_in'):
+        return render_template('login.html')
+    else:
+        return "render reports template here"
+
 # @app.callback(Output('page-content', 'children'),
               # [Input('url', 'pathname')])
 # def display_page(pathname):

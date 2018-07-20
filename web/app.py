@@ -2,7 +2,7 @@ from flask import Flask
 from flask import Flask, flash, redirect, render_template, request, session, abort
 import os
 from dash import Dash
- 
+
 server = Flask(__name__)
 
 # config
@@ -22,15 +22,15 @@ def home():
         return render_template('login.html')
     else:
         return "Hello Boss!  <a href='/logout'>Logout</a>"
- 
+
 @server.route('/login', methods=['POST'])
 def do_admin_login():
     if request.form['password'] == 'password' and request.form['username'] == 'admin':
         session['logged_in'] = True
     else:
         flash('wrong password!')
-    return home()
- 
+    return redirect("/app1")
+
 @server.route("/logout")
 def logout():
     session['logged_in'] = False
