@@ -1,0 +1,14 @@
+<!doctype html>
+<title>Hello from Flask</title>
+{% if name %}
+  <h1>Hello {{ name }}!</h1>
+  <h1>Date: {{ date }}!</h1>
+  <h1>Falls: {{ falls }}!</h1>
+  <h1>Near_falls: {{ near_falls }}!</h1>
+  <h1>Consumption: {{ consumption }}!</h1>
+  <h1>Toilet Visits: {{ toilet_visits }}!</h1>
+  <h1>Temperature: {{ temperature }}!</h1>
+  <h1>Blood Pressure: {{ bp }}!</h1>
+{% else %}
+  <h1>Hello, World!</h1>
+{% endif %}
