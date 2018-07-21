@@ -3,8 +3,9 @@ from connection_manager import connection_manager
 import secrets
 import string
 import sys
-sys.path.append("..")
-from Entities.risk_assesment import Risk_assesment
+
+sys.path.append('../Entities')
+from risk_assesment import Risk_assesment
 
 class risk_assesment_DAO(object):
     '''
@@ -80,12 +81,12 @@ class risk_assesment_DAO(object):
 
     
 
-# TEST-1 insert
-dao = risk_assesment_DAO()
-obj = Risk_assesment(datetime.datetime.now(), 101, 64.5)
-print("Inserting obj: " + str(obj))
-dao.insert_risk_assessment(obj)
+# # TEST-1 insert
+# dao = risk_assesment_DAO()
+# obj = Risk_assesment(datetime.datetime.now(), 101, 64.5)
+# print("Inserting obj: " + str(obj))
+# dao.insert_risk_assessment(obj)
 
-# TEST-2 set min max
-dao.set_min_max_datetime()
-print("min - max datetime in dao: {}, {}".format(dao.min_datetime, dao.max_datetime))
+# # TEST-2 set min max
+# dao.set_min_max_datetime()
+# print("min - max datetime in dao: {}, {}".format(dao.min_datetime, dao.max_datetime))

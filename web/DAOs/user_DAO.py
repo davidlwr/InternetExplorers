@@ -1,10 +1,10 @@
-import datetime, os
+import datetime, os, sys
 from connection_manager import connection_manager
 import secrets
 import string
-import sys
-sys.path.append("..")
-from Entities.user import User
+
+sys.path.append('../Entities')
+from user import User
 
 class user_DAO(object):
     '''
@@ -66,6 +66,10 @@ class user_DAO(object):
     def insert_user(self, user, password):
         '''
         INSERTs a user entry into the database
+
+        Inputs:
+        user (Entities.User)
+        password (str)
         '''
 
         # Generate Hash
@@ -88,15 +92,15 @@ class user_DAO(object):
                 raise
 
 
-# TESTS
-dao = user_DAO()
+# # TESTS
+# dao = user_DAO()
 
-# Insert
-user = User("usernayme", "nayme", "emayle", "1", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-dao.insert_user(user, "password1234")
-print("insert done...")
+# # Insert
+# user = User("usernayme", "nayme", "emayle", "1", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+# dao.insert_user(user, "password1234")
+# print("insert done...")
 
-# Authenticate
-user = dao.authenticate("usernayme", "password1234")
-print(user)
-print("auth done...")
+# # Authenticate
+# user = dao.authenticate("usernayme", "password1234")
+# print(user)
+# print("auth done...")

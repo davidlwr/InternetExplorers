@@ -1,5 +1,4 @@
 
-
 class User(object):
     '''
     This class represents a row entry of the DB tables for 'USER'
@@ -30,11 +29,11 @@ class User(object):
         Constructor method
 
         Keyword arguments:
-        username     -- username for user's account 
-        name         -- full name of staff
-        email        -- email of staff
-        staff_type   -- 0 = nurse, 1 = doctor: See class static vars
-        last_sign_in -- last sign in to account (default None)
+        username (str)     -- username for user's account 
+        name (str)         -- full name of staff
+        email (str)        -- email of staff
+        staff_type (str)   -- 0 = nurse, 1 = doctor: See class static vars
+        last_sign_in (datetime) -- last sign in to account (default None)
         '''       
         self.username = username
         self.name = name

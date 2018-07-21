@@ -1,9 +1,8 @@
-import datetime, os
+import datetime, os, sys
 from connection_manager import connection_manager
-import sys
-sys.path.append("..")
-from Entities.log import Log
-from Entities.activity import Activity
+
+sys.path.append('../Entities')
+from sysmon_log import Sysmon_Log
 
 class sysmon_log_DAO(object):
     '''
@@ -54,14 +53,14 @@ class sysmon_log_DAO(object):
                                 `{}` = IF(@value        = '', NULL, CAST(@value AS DECIMAL(12,2)));
                             """.format(path, 
                                         sysmon_log_DAO.table_name, 
-                                        Log.sensor_id_tname,
-                                        Log.sensor_location_tname,
-                                        Log.gateway_id_tname,
-                                        Log.gateway_timestamp_tname,
-                                        Log.key_tname,
-                                        Log.reading_type_tname,
-                                        Log.server_timestamp_tname,
-                                        Log.value_tname)
+                                        Sysmon_Log.sensor_id_tname,
+                                        Sysmon_Log.sensor_location_tname,
+                                        Sysmon_Log.gateway_id_tname,
+                                        Sysmon_Log.gateway_timestamp_tname,
+                                        Sysmon_Log.key_tname,
+                                        Sysmon_Log.reading_type_tname,
+                                        Sysmon_Log.server_timestamp_tname,
+                                        Sysmon_Log.value_tname)
 
                 cursor.execute(load_sql)
 
@@ -94,5 +93,5 @@ class sysmon_log_DAO(object):
 # dao.load_csv("C:\\Users\\David\\Desktop\\Anomaly Detection Tests\\data\\stbern-20180302-20180523-csv")
 
 # # Insert log
-# log = Log(sensor_id="1993", sensor_location="bukit timah", gateway_id="1994", gateway_timestamp=datetime.datetime.now(), key="7", reading_type="fun", server_timestamp=datetime.datetime.now(), value=9000)
+# log = Sysmon_Log(sensor_id="1993", sensor_location="bukit timah", gateway_id="1994", gateway_timestamp=datetime.datetime.now(), key="7", reading_type="fun", server_timestamp=datetime.datetime.now(), value=9000)
 # dao.insert_log(log)
