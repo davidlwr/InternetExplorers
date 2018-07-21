@@ -3,7 +3,6 @@ from connection_manager import connection_manager
 import secrets
 import string
 
-
 sys.path.append('../Entities')
 from shift_log import Shift_log
 
@@ -45,11 +44,12 @@ class shift_log_DAO(object):
             result = cursor.fetchone()
 
             #set class vars
-            self.max_datetime = result['max']
-            self.min_datetime = result['min']
-
-            # return
-            return result['max'], result['min']
+            if result != None:
+                self.max_datetime = result['max']
+                self.min_datetime = result['min']
+                return result['max'], result['min']
+            else:
+                return None, None
 
 
     def insert_shift_log(self, shift_log):

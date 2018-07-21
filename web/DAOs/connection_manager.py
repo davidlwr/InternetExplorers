@@ -11,13 +11,6 @@ class connection_manager(object):
     
     def __init__(self, read_timeout=30, write_timeout=30, connect_timeout=30, local_infile=True, cursorclass=pymysql.cursors.DictCursor):
 
-        # SETTINGS
-        # Note: I really should move these into a settings folder file, but for now this is fine 
-        # host            = "stbernsensor.cdc1tjbn622d.ap-southeast-1.rds.amazonaws.com"
-        # port            = "3306"
-        # username        = "IE_memeber"
-        # password        = "IEgroupmember"
-
         host            = "127.0.0.1"
         port            = 3306
         database        = "stbern"

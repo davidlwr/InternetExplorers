@@ -2,15 +2,6 @@
 class User(object):
     '''
     This class represents a row entry of the DB tables for 'USER'
-
-    Class static variables:
-    username_tname                  = "username"
-    name_tname                      = "name"
-    email_tname                     = "email"
-    encrypted_password_tname        = "encrypted_password"
-    encrypted_password_token_tname  = "encrypted_password_token"
-    last_sign_in_tname              = "last_sign_in"
-    staff_type_tname                = "staff_type"
     '''
 
     username_tname                  = "username"

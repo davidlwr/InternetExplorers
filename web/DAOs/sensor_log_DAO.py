@@ -24,6 +24,9 @@ class sensor_log_DAO(object):
     def set_min_max_datetime(self):
         '''
         Sets obj vars and returns max_datetime and min_datetime found in the database
+
+        Return:
+        (max (datetime), min (datetime)) or (None, None) if None found
         '''
 
          # Get connection, which incidentally closes itself during garbage collection
@@ -43,11 +46,12 @@ class sensor_log_DAO(object):
             result = cursor.fetchone()
 
             #set class vars
-            self.max_datetime = result['max']
-            self.min_datetime = result['min']
-
-            # return
-            return result['max'], result['min']
+            if result != None:
+                self.max_datetime = result['max']
+                self.min_datetime = result['min']
+                return result['max'], result['min']
+            else:
+                return None, None
 
 
     def insert_sensor_log(self, sensor_log):
@@ -100,15 +104,15 @@ class sensor_log_DAO(object):
             result = cursor.fetchall()
 
             logs = []
-            for d in result:
-                uuid               = d[Sensor_Log.uuid_tname]
-                node_id            = d[Sensor_Log.node_id_tname]
-                event              = d[Sensor_Log.event_tname]
-                recieved_timestamp = d[Sensor_Log.recieved_timestamp_tname]
+            if result != None:
+                for d in result:
+                    uuid               = d[Sensor_Log.uuid_tname]
+                    node_id            = d[Sensor_Log.node_id_tname]
+                    event              = d[Sensor_Log.event_tname]
+                    recieved_timestamp = d[Sensor_Log.recieved_timestamp_tname]
 
-
-                row_log_obj = Sensor_Log(uuid=uuid, node_id=node_id, event=event, recieved_timestamp=recieved_timestamp)
-                logs.append(row_log_obj)
+                    row_log_obj = Sensor_Log(uuid=uuid, node_id=node_id, event=event, recieved_timestamp=recieved_timestamp)
+                    logs.append(row_log_obj)
             return logs
 
 
