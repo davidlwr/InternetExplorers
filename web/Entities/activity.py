@@ -12,7 +12,7 @@ class Activity(object):
         Constructor, object can be created either by passing all params except start_log and end_log. 
             or by passing only start_log and end_log
 
-        Keyword arguments:
+        Inputs:
         uuid (str) -- (default None)
         start_datetime (datetime)  -- datetime obj (default None)
         end_datetime (datetime)    -- datetime obj (default None)

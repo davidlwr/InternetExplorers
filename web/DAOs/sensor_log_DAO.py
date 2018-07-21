@@ -11,6 +11,8 @@ class sensor_log_DAO(object):
     '''
 
     table_name = "stbern.SENSOR_LOG"
+    TIMEPERIOD_DAY = 'Day'
+    TIMEPERIOD_NIGHT = 'Night'
 
     def __init__(self):
         '''

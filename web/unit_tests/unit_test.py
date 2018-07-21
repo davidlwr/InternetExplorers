@@ -154,10 +154,10 @@ class Unit_Test(unittest.TestCase):
         try: 
             r = dao.authenticate(username=user, password=passw)
             self.assertIsNotNone(r, msg='auth failed when should have passed')
-            # self.assertEqual(r.username, user, msg='failed to retrieve user from successfull auth')
-            # self.assertEqual(r.name, name, msg='failed to retrieve user from successfull auth')
-            # self.assertEqual(r.email, email, msg='failed to retrieve user from successfull auth')
-            # self.assertEqual(r.staff_type, staff_type, msg='failed to retrieve user from successfull auth')
+            self.assertEqual(r.username, user, msg='failed to retrieve user from successfull auth')
+            self.assertEqual(r.name, name, msg='failed to retrieve user from successfull auth')
+            self.assertEqual(r.email, email, msg='failed to retrieve user from successfull auth')
+            self.assertEqual(r.staff_type, staff_type, msg='failed to retrieve user from successfull auth')
         except Exception as e: e_flag = True 
         self.assertFalse(e_flag, msg=f"auth exception 1")
 
@@ -169,6 +169,68 @@ class Unit_Test(unittest.TestCase):
         except Exception as e: e_flag = True 
         self.assertFalse(e_flag, msg=f"auth exception 2")   
 
+
+    def test_sensor_log_DAO(self):
+        uuid1 = "uuid-01"
+        node_id1 = 1
+        event1 = 0
+        ts1 =  datetime.datetime(year=2018, month=1, day=2, hour=1, minute=0, second=0)
+        obj1 = Sensor_Log(uuid=uuid1, node_id=node_id1, event=event1, recieved_timestamp=ts1)
+
+        uuid2 = "uuid-01"
+        node_id2 = 2
+        event2 = 225
+        ts2 =  datetime.datetime(year=2018, month=1, day=2, hour=1, minute=0, second=2)
+        obj2 = Sensor_Log(uuid=uuid2, node_id=node_id2, event=event2, recieved_timestamp=ts2)
+
+        dao = sensor_log_DAO()
+
+        # test insert
+        e_flag = False
+        try: 
+            dao.insert_sensor_log(obj1)
+            dao.insert_sensor_log(obj2)
+        except: e_flag = True 
+        self.assertFalse(e_flag, msg=f"insert exception")
+
+        # test min max datetime
+        e_flag = False
+        try: 
+            min_dt, max_dt = dao.set_min_max_datetime()
+            self.assertEqual(min_dt, ts1, msg='wrong min datetime')
+            self.assertEqual(max_dt, ts2, msg='wrong max datetime')
+        except: e_flag = True 
+        self.assertFalse(e_flag, msg=f"min max datetime exception")
+
+        # test get log
+        e_flag = False
+        try: 
+            min_dt = datetime.datetime(year=2018, month=1, day=1, hour=1, minute=0, second=2)
+            max_dt = datetime.datetime(year=2018, month=1, day=3, hour=1, minute=0, second=2)
+            logs = dao.get_logs(uuid1, min_dt, max_dt)
+            self.assertEqual(len(logs), 2, msg='Failed to get 2 sensor logs')
+        except: e_flag = True 
+        self.assertFalse(e_flag, msg=f"get sensor log exception")
+        
+        # test get activities per period
+        e_flag = False
+        try: 
+            min_dt = datetime.datetime(year=2018, month=1, day=1, hour=1, minute=0, second=2)
+            max_dt = datetime.datetime(year=2018, month=1, day=3, hour=1, minute=0, second=2)
+
+            # test day and night filter
+            act1 = dao.get_activities_per_period(uuid1, min_dt, max_dt, time_period='Day', min_secs=1)
+            self.assertEqual(len(act1), 0, msg='Day Night filter broken, should be zero')
+
+            # test min secs filter
+            act2 = dao.get_activities_per_period(uuid1, min_dt, max_dt, time_period='Night', min_secs=3)
+            self.assertEqual(len(act1), 0, msg='Min secs filter broken, should be zero')
+            
+            # test correct
+            act3 = dao.get_activities_per_period(uuid1, min_dt, max_dt, time_period='Night', min_secs=1)
+            self.assertEqual(len(act1), 2, msg='Get activites broken, should be 2')
+        except: e_flag = True 
+        self.assertFalse(e_flag, msg=f"get sensor log exception")
 
 
 # Run tests
