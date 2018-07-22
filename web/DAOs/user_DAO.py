@@ -18,7 +18,7 @@ class user_DAO(object):
         Returns None or User. Authenticates a username and password combination
             User:  Successfull authentication
             None:  Wrong username / password
-        
+
         Kyeword arguments:
         username -- str
         password -- str
@@ -39,9 +39,9 @@ class user_DAO(object):
 
             if len(result) <= 0:    # No username found
                 return None
-            
+
             salt = result[User.encrypted_password_token_tname]
-            
+
             # Encrypt given password and authenticate
             query = "SELECT * FROM {} WHERE {} = '{}' AND {} = SHA1(CONCAT('{}', '{}'))"   \
                         .format(user_DAO.table_name, User.username_tname, username, User.encrypted_password_tname, salt, password)
@@ -89,14 +89,15 @@ class user_DAO(object):
 
 
 # TESTS
-dao = user_DAO()
+if __name__ == '__main__':
+    dao = user_DAO()
 
-# Insert
-user = User("usernayme", "nayme", "emayle", "1", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-dao.insert_user(user, "password1234")
-print("insert done...")
+    # Insert
+    user = User("usernayme", "nayme", "emayle", "1", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    dao.insert_user(user, "password1234")
+    print("insert done...")
 
-# Authenticate
-user = dao.authenticate("usernayme", "password1234")
-print(user)
-print("auth done...")
+    # Authenticate
+    user = dao.authenticate("usernayme", "password1234")
+    print(user)
+    print("auth done...")

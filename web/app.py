@@ -1,10 +1,11 @@
 import dash
 import flask
+from flask_sqlalchemy import SQLAlchemy
 
 server = flask.Flask(__name__)
 server.config['SECRET_KEY'] = 'userandomtogeneratesomethinghere'
 server.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://internetexplorer:int3rn3t@127.0.0.1:3306/stbern'
-
+db = SQLAlchemy(server)
 
 # default app
 app = dash.Dash(__name__, server=server, url_base_pathname='/insertsomeotherrandomstringhere')

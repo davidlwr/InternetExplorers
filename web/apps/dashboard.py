@@ -18,7 +18,7 @@ app.layout = html.Div([
                 html.Ul([
                     html.Li([
                         html.Div([
-                            html.A('Dashboard', href='/dashboard')
+                            html.A('Graphs', href='/graphs')
                         ], className='nav-link')
                     ], className='nav-item'),
                     html.Li([

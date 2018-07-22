@@ -6,11 +6,9 @@ from wtforms_sqlalchemy.fields import QuerySelectField
 from flask_sqlalchemy import SQLAlchemy
 from wtforms.validators import InputRequired
 
-from app import app, server
+from app import app, server, db
 from DAOs.shift_log_DAO import shift_log_DAO
 from Entities.shift_log import Shift_log
-
-db = SQLAlchemy(server)
 
 
 class Patient(db.Model):
