@@ -1,0 +1,39 @@
+{% from "_formhelpers.html" import render_field %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="https://unpkg.com/react-select@1.0.0-rc.3/dist/react-select.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/react-virtualized@9.9.0/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/react-virtualized-select@3.1.0/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/rc-slider@6.1.2/assets/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/dash-core-components@0.23.0/dash_core_components/react-dates@12.3.0.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://codepen.io/bricakeld/pen/qKZeGq.css">
+</head>
+
+<body>
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endfor %}
+    <div class="row align-items-center">
+        <div class="container col-md-3 col-lg-3">
+
+            <form class="form-signin" method="POST" action="/login">
+                <h2 class="form-signin-heading">Please sign in</h2>
+                {{ form.csrf_token }}
+                {{ form.hidden_tag() }}
+                {{ render_field(form.username) }}
+                {{ render_field(form.password) }}
+                {{ render_field(form.remember) }}
+                <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+            </form>
+
+        </div>
+    </div>
+</body>
+</html>
