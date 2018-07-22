@@ -7,7 +7,7 @@ server.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://internetexplorer:int3rn3t@12
 
 
 # default app
-app = dash.Dash(__name__, server=server)
+app = dash.Dash(__name__, server=server, url_base_pathname='/insertsomeotherrandomstringhere')
 # server = app.server
 app.config.suppress_callback_exceptions = True
 

@@ -1,0 +1,59 @@
+{% from "_formhelpers.html" import render_field %}
+<html>
+<head>
+    <title>End of Shift Forms</title>
+    <link rel="stylesheet" href="https://unpkg.com/react-select@1.0.0-rc.3/dist/react-select.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/react-virtualized@9.9.0/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/react-virtualized-select@3.1.0/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/rc-slider@6.1.2/assets/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/dash-core-components@0.23.0/dash_core_components/react-dates@12.3.0.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://codepen.io/bricakeld/pen/qKZeGq.css">
+</head>
+<body>
+    <nav class="col-md-2 col-xs-12 sidebar">
+        <div class="sidebar-sticky-top">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <div class="nav-link">
+                        <a href="/dashboard">Dashboard</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <div class="nav-link">
+                        <a href="/reports">Shift Reports</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <div class="nav-link">
+                        <a href="/eosforms">End of Shift Forms</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <main class="col-md-10 ml-sm-auto col-lg-10">
+        <form method="POST" action="/eosforms">
+            <dl>
+                {{ form.csrf_token }}
+                {{ render_field(form.name) }}
+                {{ render_field(form.date) }}
+                {{ render_field(form.falls) }}
+                {{ render_field(form.near_falls) }}
+                {{ render_field(form.consumption) }}
+                <dt>Number of time of toilet visit for (Urinal/Bowel)
+                    <dd>
+                        <select id="toilet_visits", name="toilet_visits">
+                            {% for x in range(0, 20):%}
+                            <option value="{{x}}">{{x}}</option>
+                            {% endfor %}
+                        </select>
+                    </dd>
+                    {{ render_field(form.temperature) }}
+                    {{ render_field(form.bp) }}
+                    {{ render_field(form.submit) }}
+                </dl>
+            </form>
+        </main>
+    </body>
+    </html>

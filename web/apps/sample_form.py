@@ -41,7 +41,7 @@ class SampleForm(Form):
 
 
 # settle routing
-@server.route("/anotherflask", methods=['GET', 'POST'])
+@server.route("/eosforms", methods=['GET', 'POST'])
 def showForms():
     form = SampleForm()
     if request.method == 'POST':
@@ -68,9 +68,9 @@ def showForms():
                                    toilet_visits=submitted_toilet_visits, temperature=submitted_temperature,
                                    bp=submitted_bp)
         else:
-            return render_template('anotherflask.html', form=form)
+            return render_template('eosforms.html', form=form)
     else:
-        return render_template('anotherflask.html', form=form)
+        return render_template('eosforms.html', form=form)
 
 # @server.route("/donewithform")
 # def processForms():
