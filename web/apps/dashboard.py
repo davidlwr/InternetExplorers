@@ -30,7 +30,11 @@ app.layout = html.Div([
                     html.Li([
                         html.Div([
                             html.A('End of Shift Forms', href='/eosforms')
-                            # {isActive}'.format(isActive = ' active' if current_page == 'reports' else ''), href='/reports')
+                        ], className='nav-link')
+                    ], className='nav-item'),
+                    html.Li([
+                        html.Div([
+                            html.A('Logout', href='/logout')
                         ], className='nav-link')
                     ], className='nav-item')
                 ], className='nav flex-column')

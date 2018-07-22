@@ -20,19 +20,19 @@ class User(object):
         Constructor method
 
         Keyword arguments:
-        username (str)     -- username for user's account 
+        username (str)     -- username for user's account
         name (str)         -- full name of staff
         email (str)        -- email of staff
         staff_type (str)   -- 0 = nurse, 1 = doctor: See class static vars
         last_sign_in (datetime) -- last sign in to account (default None)
-        '''       
+        '''
         self.username = username
         self.name = name
         self.email = email
         self.last_sign_in = last_sign_in
         self.staff_type = staff_type
 
-    
+
     def __str__(self):
         '''
         String representation of object
@@ -41,9 +41,26 @@ class User(object):
         return "USER - username: {}, name: {}, email: {}, last_sign_in: {}, staff_type: {}" \
                 .format(self.username, self.name, self.email, self.last_sign_in, self.staff_type)
 
-    
+
     def __repr__(self):
         '''
         Override python built in function to get string representation of object
         '''
         return self.__str__()
+
+    # below to comply with flask-login API
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return self.username

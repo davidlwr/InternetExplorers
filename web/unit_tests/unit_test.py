@@ -6,7 +6,7 @@ from activity import Activity
 from risk_assesment import Risk_assesment
 from sensor_log import Sensor_Log
 from shift_log import Shift_log
-from sysmon_log import Sysmon_Log 
+from sysmon_log import Sysmon_Log
 from user import User
 
 sys.path.append('../DAOs')
@@ -109,7 +109,7 @@ class Unit_Test(unittest.TestCase):
 
 
     def test_entity_user(self):
-        
+
         user = "xXxiao_shadow_flamezXx"
         name = "David Liu"
         email = "xiao_flamez@gmail.com"
@@ -139,35 +139,35 @@ class Unit_Test(unittest.TestCase):
         email = "xiao_flamez@gmail.com"
         staff_type = 0
         dt = datetime.datetime(year=2018, month=1, day=2, hour=1, minute=0, second=0)
-        
+
         obj = User(username=user, name=name, email=email, staff_type=staff_type, last_sign_in=dt)
         dao = user_DAO()
 
         e_flag = False
         # Insert
         try: dao.insert_user(obj, passw)
-        except Exception as e: e_flag = True 
+        except Exception as e: e_flag = True
         self.assertFalse(e_flag, msg=f"insert exception")
 
         # Auth true
         e_flag = False
-        try: 
+        try:
             r = dao.authenticate(username=user, password=passw)
             self.assertIsNotNone(r, msg='auth failed when should have passed')
             self.assertEqual(r.username, user, msg='failed to retrieve user from successfull auth')
             self.assertEqual(r.name, name, msg='failed to retrieve user from successfull auth')
             self.assertEqual(r.email, email, msg='failed to retrieve user from successfull auth')
-            self.assertEqual(r.staff_type, staff_type, msg='failed to retrieve user from successfull auth')
-        except Exception as e: e_flag = True 
+            self.assertEqual(int(r.staff_type), staff_type, msg='failed to retrieve user from successfull auth')
+        except Exception as e: e_flag = True
         self.assertFalse(e_flag, msg=f"auth exception 1")
 
         # Auth false
         e_flag = False
-        try: 
+        try:
             r = dao.authenticate(username=user, password='wrong_pass')
             self.assertIsNone(r, msg='auth passed when should have failed')
-        except Exception as e: e_flag = True 
-        self.assertFalse(e_flag, msg=f"auth exception 2")   
+        except Exception as e: e_flag = True
+        self.assertFalse(e_flag, msg=f"auth exception 2")
 
 
     def test_sensor_log_DAO(self):
@@ -187,34 +187,34 @@ class Unit_Test(unittest.TestCase):
 
         # test insert
         e_flag = False
-        try: 
+        try:
             dao.insert_sensor_log(obj1)
             dao.insert_sensor_log(obj2)
-        except: e_flag = True 
+        except: e_flag = True
         self.assertFalse(e_flag, msg=f"insert exception")
 
         # test min max datetime
         e_flag = False
-        try: 
+        try:
             min_dt, max_dt = dao.set_min_max_datetime()
             self.assertEqual(min_dt, ts1, msg='wrong min datetime')
             self.assertEqual(max_dt, ts2, msg='wrong max datetime')
-        except: e_flag = True 
+        except: e_flag = True
         self.assertFalse(e_flag, msg=f"min max datetime exception")
 
         # test get log
         e_flag = False
-        try: 
+        try:
             min_dt = datetime.datetime(year=2018, month=1, day=1, hour=1, minute=0, second=2)
             max_dt = datetime.datetime(year=2018, month=1, day=3, hour=1, minute=0, second=2)
             logs = dao.get_logs(uuid1, min_dt, max_dt)
             self.assertEqual(len(logs), 2, msg='Failed to get 2 sensor logs')
-        except: e_flag = True 
+        except: e_flag = True
         self.assertFalse(e_flag, msg=f"get sensor log exception")
-        
+
         # test get activities per period
         e_flag = False
-        try: 
+        try:
             min_dt = datetime.datetime(year=2018, month=1, day=1, hour=1, minute=0, second=2)
             max_dt = datetime.datetime(year=2018, month=1, day=3, hour=1, minute=0, second=2)
 
@@ -225,11 +225,11 @@ class Unit_Test(unittest.TestCase):
             # test min secs filter
             act2 = dao.get_activities_per_period(uuid1, min_dt, max_dt, time_period='Night', min_secs=3)
             self.assertEqual(len(act1), 0, msg='Min secs filter broken, should be zero')
-            
+
             # test correct
             act3 = dao.get_activities_per_period(uuid1, min_dt, max_dt, time_period='Night', min_secs=1)
             self.assertEqual(len(act1), 2, msg='Get activites broken, should be 2')
-        except: e_flag = True 
+        except: e_flag = True
         self.assertFalse(e_flag, msg=f"get sensor log exception")
 
 

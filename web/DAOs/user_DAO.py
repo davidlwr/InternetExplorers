@@ -1,10 +1,9 @@
 import datetime, os, sys
-from connection_manager import connection_manager
+from DAOs.connection_manager import connection_manager
 import secrets
 import string
 
-sys.path.append('../Entities')
-from user import User
+from Entities.user import User
 
 class user_DAO(object):
     '''
@@ -61,7 +60,7 @@ class user_DAO(object):
                 return User(username=username, name=name, email=email, last_sign_in=last_sign_in, staff_type=staff_type)
 
 
-    # NOTE: On salting and hasing: https://stackoverflow.com/questions/685855/how-do-i-authenticate-a-user-in-php-mysql
+    # NOTE: On salting and hashing: https://stackoverflow.com/questions/685855/how-do-i-authenticate-a-user-in-php-mysql
     def insert_user(self, user, password):
         '''
         INSERTs a user entry into the database
@@ -90,6 +89,33 @@ class user_DAO(object):
                 print(error)
                 raise
 
+    # below to comply with flask-login API
+    def get_user_by_id(self, input_username):
+        '''
+        Returns a User object that corresponds to a row entry in the table, by id
+        Returns None if no such id exists
+        '''
+        query = "select * from {} where {} = '{}'".format(user_DAO.table_name, User.username_tname, input_username)
+        # print(query)
+
+        # Get connection, which incidentally closes itself during garbage collection
+        factory    = connection_manager()
+        connection = factory.connection
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            result = cursor.fetchone()
+
+            if result is None:
+                return None
+            else:
+                username     = result[User.username_tname]
+                name         = result[User.name_tname]
+                email        = result[User.email_tname]
+                last_sign_in = result[User.last_sign_in_tname]
+                staff_type   = result[User.staff_type_tname]
+
+                return User(username=username, name=name, email=email, last_sign_in=last_sign_in, staff_type=staff_type)
 
 # # # TESTS
 # dao = user_DAO()

@@ -5,6 +5,7 @@ from wtforms.fields.html5 import DateField
 from wtforms_sqlalchemy.fields import QuerySelectField
 from flask_sqlalchemy import SQLAlchemy
 from wtforms.validators import InputRequired
+import flask_login
 
 from app import app, server, db
 from DAOs.shift_log_DAO import shift_log_DAO
@@ -40,6 +41,7 @@ class SampleForm(Form):
 
 # settle routing
 @server.route("/eosforms", methods=['GET', 'POST'])
+@flask_login.login_required
 def showForms():
     form = SampleForm()
     if request.method == 'POST':
