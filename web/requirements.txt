@@ -28,3 +28,4 @@ seaborn==0.8.1
 sklearn==0.0
 virtualenv==16.0.0
 PyMySQL
+paho-mqtt

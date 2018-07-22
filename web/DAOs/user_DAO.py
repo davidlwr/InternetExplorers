@@ -1,10 +1,10 @@
-import datetime, os
+import datetime, os, sys
 from connection_manager import connection_manager
 import secrets
 import string
-import sys
-sys.path.append("..")
-from Entities.user import User
+
+sys.path.append('../Entities')
+from user import User
 
 class user_DAO(object):
     '''
@@ -33,11 +33,11 @@ class user_DAO(object):
             # Get salt
             query = "SELECT {} FROM {} WHERE {} = '{}'"      \
                         .format(User.encrypted_password_token_tname, user_DAO.table_name, User.username_tname, username)
-            print(query)
+            # print(query)
             cursor.execute(query)
             result = cursor.fetchone()
 
-            if len(result) <= 0:    # No username found
+            if result == None:    # No username found
                 return None
             
             salt = result[User.encrypted_password_token_tname]
@@ -46,11 +46,10 @@ class user_DAO(object):
             query = "SELECT * FROM {} WHERE {} = '{}' AND {} = SHA1(CONCAT('{}', '{}'))"   \
                         .format(user_DAO.table_name, User.username_tname, username, User.encrypted_password_tname, salt, password)
 
-            print(query)
             cursor.execute(query)
             result = cursor.fetchone()
 
-            if len(result) <= 0:
+            if result == None:
                 return None
             else:
                 username     = result[User.username_tname]
@@ -66,6 +65,10 @@ class user_DAO(object):
     def insert_user(self, user, password):
         '''
         INSERTs a user entry into the database
+
+        Inputs:
+        user (Entities.User)
+        password (str)
         '''
 
         # Generate Hash
@@ -88,15 +91,17 @@ class user_DAO(object):
                 raise
 
 
-# TESTS
-dao = user_DAO()
+# # # TESTS
+# dao = user_DAO()
 
-# Insert
-user = User("usernayme", "nayme", "emayle", "1", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-dao.insert_user(user, "password1234")
-print("insert done...")
+# # # Insert
+# user = User("usernayme", "nayme", "emayle", "1", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+# dao.insert_user(user, "password1234")
+# print("insert done...")
 
-# Authenticate
-user = dao.authenticate("usernayme", "password1234")
-print(user)
-print("auth done...")
+# # # Authenticate
+# user = dao.authenticate("usernayme", "password1234")
+# print(user)
+# print("auth done...")
+
+# r = dao.authenticate(username="xXxiao_shadow_flamezXx", password='wrong_pass')

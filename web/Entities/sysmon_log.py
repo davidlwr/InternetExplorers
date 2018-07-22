@@ -1,9 +1,8 @@
 import datetime
-import pandas as pd
 
-class Log(object):
+class Sysmon_Log(object):
     '''
-    This class represents a row entry of the DB tables for BOTH 'SENSOR_LOG' and 'SYSMON_LOG'
+    This class represents a row entry of the DB table 'SYSMON_LOG'
 
     Class static variables:
     sensor_id_tname         = "sensor_id"
@@ -27,21 +26,21 @@ class Log(object):
     value_tname             = "value"
 
     # write param defs
-    def __init__(self, sensor_id=None, sensor_location=None, gateway_id=None,   \
-                gateway_timestamp=None, key=None, reading_type=None,            \
-                server_timestamp=None, value=None):
+    def __init__(self, sensor_id, gateway_id, reading_type, value, sensor_location=None,   \
+                gateway_timestamp=None, key=None, server_timestamp=None):
         '''
         Constructor method
 
         Keyword arguments:
-        sensor_id         -- (default None)
+        sensor_id         -- 
+        gateway_id        -- 
+        reading_type      --
+        value             -- 
         sensor_location   -- str, location description (default None)
-        gateway_id        -- (default None)
         gateway_timestamp -- Datetime obj (default None)
         key               -- (default None)
-        reading_type      -- (default None)
         server_timestamp  -- datetime obj (default None)
-        value             -- (default None)
+        
         '''        
         self.sensor_id         = sensor_id
         self.sensor_location   = sensor_location
@@ -64,8 +63,7 @@ class Log(object):
         '''
         String representation of object
         '''
-        return "LOG: sens_id: {}, sens_loc: {}, gw_id: {}, gw_ts: {}, value: {}" \
-                .format(self.sensor_id, self.sensor_location, self.gateway_id, self.gateway_timestamp, self.value)
+        return f"LOG: sens_id: {self.sensor_id}, sens_loc: {self.sensor_location}, gw_id: {self.gateway_id}, gw_ts: {self.gateway_timestamp.strftime('%Y-%m-%d %H:%M:%S')}, value: {self.value}"
 
 
     def __repr__(self):
