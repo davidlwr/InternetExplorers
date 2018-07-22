@@ -3,8 +3,7 @@ from DAOs.connection_manager import connection_manager
 import secrets
 import string
 
-sys.path.append('../Entities')
-from shift_log import Shift_log
+from Entities.shift_log import Shift_log
 
 class shift_log_DAO(object):
     '''
@@ -31,8 +30,8 @@ class shift_log_DAO(object):
         factory = connection_manager()
         connection = factory.connection
 
-        query = """SELECT MAX({}) as 'max' , 
-                          MIN({}) as 'min' 
+        query = """SELECT MAX({}) as 'max' ,
+                          MIN({}) as 'min'
                           FROM {};"""                    \
                     .format(Shift_log.datetime_tname,    \
                             Shift_log.datetime_tname,    \
