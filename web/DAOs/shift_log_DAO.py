@@ -1,10 +1,10 @@
-import datetime, os
+import datetime, os, sys
 from DAOs.connection_manager import connection_manager
 import secrets
 import string
-import sys
-sys.path.append("..")
-from Entities.shift_log import Shift_log
+
+sys.path.append('../Entities')
+from shift_log import Shift_log
 
 class shift_log_DAO(object):
     '''
@@ -44,11 +44,12 @@ class shift_log_DAO(object):
             result = cursor.fetchone()
 
             #set class vars
-            self.max_datetime = result['max']
-            self.min_datetime = result['min']
-
-            # return
-            return result['max'], result['min']
+            if result != None:
+                self.max_datetime = result['max']
+                self.min_datetime = result['min']
+                return result['max'], result['min']
+            else:
+                return None, None
 
 
     def insert_shift_log(self, shift_log):
@@ -58,7 +59,7 @@ class shift_log_DAO(object):
         Keyword arguments:
         shift_log -- Entities.shift_log, class vars used to create a new DB row
         '''
-        query = """INSERT INTO {} VALUES(%s, %s, %s, %s, %s, %s, %s, %s)""" \
+        query = """INSERT INTO {} VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)""" \
                     .format(shift_log_DAO.table_name)
 
         # Get connection, which incidentally closes itself during garbage collection

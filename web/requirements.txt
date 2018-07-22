@@ -33,4 +33,6 @@ seaborn==0.8.1
 sklearn==0.0
 SQLAlchemy==1.2.0b3
 virtualenv==16.0.0
+PyMySQL
 WTForms==2.2.1
+paho-mqtt
