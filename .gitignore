@@ -1,3 +1,4 @@
 /web/__pycache__
 /web/apps/__pycache__
 stbern-20180302-20180523-csv
+*.pyc
