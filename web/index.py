@@ -7,6 +7,7 @@ from wtforms.validators import InputRequired, Email, Length
 from flask import render_template, Flask, request, flash, redirect, url_for, abort
 from flask_sqlalchemy import SQLAlchemy
 from urllib.parse import urlparse, urljoin
+from dash_flask_login import FlaskLoginAuth
 
 # internal imports
 from app import app, server
@@ -17,6 +18,9 @@ from DAOs.user_DAO import user_DAO
 login_manager = flask_login.LoginManager()
 login_manager.init_app(server)
 login_manager.login_view = '/login'
+
+# Create FlaskLoginAuth object to require login for Dash Apps
+auth = FlaskLoginAuth(app)
 
 # utlity method for security
 def is_safe_url(target):
