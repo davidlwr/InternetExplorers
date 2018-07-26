@@ -128,7 +128,20 @@ def get_relevant_data(input_location, start_date, end_date, gw_device=2005, grou
 
 # generate array for the different available locations
 def get_location_options():
-    return input_raw_data['device_loc'].unique().tolist()
+    locations = input_raw_data['uuid'].unique().tolist()
+    output = []
+    for i in range(len(locations)):
+        if "m-01" in locations[i]:
+            if "m-01" not in output:
+                output.append("m-01")
+        elif "m-02" in locations[i]:
+            if "m-02" not in output:
+                output.append("m-02")
+        elif "d-01" in locations[i]:
+            if "d-01" not in output:
+                output.append("d-01")
+
+    return output
 
 # generate array for the different residents
 def get_residents_options():
@@ -149,7 +162,7 @@ def get_visit_duration_and_start_time(start_date=input_raw_min_date, end_date=in
         if current_data['value'].iloc[i] == 1:
             current_data['visit_duration'].iloc[i] = (current_data['gw_timestamp'].iloc[i+1] - current_data['gw_timestamp'].iloc[i]).total_seconds()
 
-    # print(current_data.query('value != 0').reset_index(drop = True).head())
+    # print(current_data.query('event != 0').reset_index(drop = True).head())
     # TODO: check that if a motion is cut off at the end of the query period the correct duration is reported (similar to check end and check start in get_average_longest_sleep)
     return current_data.query('value != 0').reset_index(drop = True)
 
@@ -181,7 +194,7 @@ def get_grouped_data(current_data, remove_all=False):
                     print('check data - missing active (ON) reading:')
                     print(current_data['gw_timestamp'].iloc[i])
         else:
-            if current_data['value'].iloc[i] == 0:
+            if current_data['event'].iloc[i] == 0:
                 to_process = True
     current_data = current_data[current_data.todrop == False]
     current_data.drop(columns=['todrop'], inplace=True)
@@ -215,7 +228,7 @@ def get_visit_numbers_moving_average(gw_device, input_location='toilet_bathroom'
         result_data = get_num_visits_by_date(gw_device=gw_device, input_location=input_location, time_period=time_period,
             offset=offset, ignore_short_durations=ignore_short_durations, min_duration=min_duration, grouped=grouped)
     # print(result_data)
-    r = result_data['value'].rolling(window=days, min_periods=0)
+    r = result_data['event'].rolling(window=days, min_periods=0)
     result_data['moving_average'] = r.mean()
     return result_data
 
@@ -256,7 +269,7 @@ def get_average_longest_sleep(gw_device, start_date, end_date, use_door=False):
 
         total_days += 1
         # get latest reading before start
-        temp_data = current_data[current_data.gw_timestamp < datetime.datetime.combine(single_date, start_time)]
+        temp_data = current_data[current_data.recieved_timestamp < datetime.datetime.combine(single_date, start_time)]
         # print(temp_data)
         last_active_value = temp_data.loc[temp_data['gw_timestamp'].idxmax()].value
         print("DEBUG: last active value", last_active_value)
@@ -275,7 +288,7 @@ def get_average_longest_sleep(gw_device, start_date, end_date, use_door=False):
         if last_active_value == 0:
             # start counting duration right away
             for i in range(0, loop_end_index):
-                if night_data['value'].iloc[i] == 1:
+                if night_data['event'].iloc[i] == 1:
                     loop_start_index = i + 1
                     current_longest = (night_data['gw_timestamp'].iloc[i] - datetime.datetime.combine(single_date, start_time)).total_seconds()
                     print("see this once per day only")
@@ -339,7 +352,7 @@ def motion_duration_during_sleep(gw_device, start_date, end_date, use_door=False
         total_motion_daily = 0
 
         # get latest reading before start
-        temp_data = current_data[current_data.gw_timestamp < datetime.datetime.combine(single_date, start_time)]
+        temp_data = current_data[current_data.recieved_timestamp < datetime.datetime.combine(single_date, start_time)]
         # print(temp_data)
         last_active_value = temp_data.loc[temp_data['gw_timestamp'].idxmax()].value
         print("DEBUG: last active value", last_active_value)
@@ -355,7 +368,7 @@ def motion_duration_during_sleep(gw_device, start_date, end_date, use_door=False
         # check start
         if last_active_value == 1:
             for i in range(0, loop_end_index):
-                if night_data['value'].iloc[i] == 0:
+                if night_data['event'].iloc[i] == 0:
                     loop_start_index = i + 1
                     total_motion_daily += (night_data['gw_timestamp'].iloc[i] - datetime.datetime.combine(single_date, start_time)).total_seconds()
                     print("see this once per day only")

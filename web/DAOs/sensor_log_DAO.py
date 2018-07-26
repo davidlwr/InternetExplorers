@@ -1,35 +1,36 @@
 import datetime, os, sys
-from connection_manager import connection_manager
+import pandas as pd
+from DAOs.connection_manager import connection_manager
 
-sys.path.append('../Entities')
-from sensor_log import Sensor_Log
-from activity import Activity
+from Entities.sensor_log import Sensor_Log
+from Entities.activity import Activity
 
 
 class sensor_log_DAO(object):
-    '''
+    """
     This class handles the connection between the app and the datebase table
-    '''
+    """
 
     table_name = "stbern.SENSOR_LOG"
     TIMEPERIOD_DAY = 'Day'
     TIMEPERIOD_NIGHT = 'Night'
 
     def __init__(self):
-        '''
+        """
         initialize by setting descriptive vars
-        '''
+        """
         self.max_datetime = None
         self.min_datetime = None
-        self.set_min_max_datetime()
+        self.set_min_max_datetime
 
+    @property
     def set_min_max_datetime(self):
-        '''
+        """
         Sets obj vars and returns max_datetime and min_datetime found in the database
 
         Return:
         (max (datetime), min (datetime)) or (None, None) if None found
-        '''
+        """
 
         # Get connection, which incidentally closes itself during garbage collection
         factory = connection_manager()
@@ -55,13 +56,14 @@ class sensor_log_DAO(object):
             else:
                 return None, None
 
-    def insert_sensor_log(self, sensor_log):
-        '''
+    @staticmethod
+    def insert_sensor_log(sensor_log):
+        """
         INSERTs a log entry into the database
 
         Inputs:
         sensor_log (Entities.shift_log)
-        '''
+        """
 
         query = "INSERT INTO {} VALUES(%s, %s, %s, %s)" \
             .format(sensor_log_DAO.table_name)
@@ -78,14 +80,14 @@ class sensor_log_DAO(object):
                 # raise
 
     def get_logs(self, uuid, start_datetime, end_datetime):
-        '''
+        """
         Returns a list of logs found in the database according to the parameters given
 
         Inputs:
         uuid (str) -- Sensor identifier
         start_datetime (datetime)
         end_datetime (datetime)
-        '''
+        """
 
         query = """
                 SELECT * FROM {}
@@ -119,17 +121,17 @@ class sensor_log_DAO(object):
             return logs
 
     def get_activities_per_period(self, uuid, start_datetime, end_datetime, time_period=None, min_secs=3):
-        '''
+        """
         Returns list of Entities.activity objects extrapolated fom sesnsor_logs found in the database queried according to the params given
         i.e. Activities that can be extrapolated from the sensor log database
-        
+
         Keyword arguments:
         uuid (str)           -- sensor identifier
         start_datetime (datetime)  -- datetime obj
         end_datetime  (datetime)   -- datetime obj
         timeperiod (str)      -- 'Day' or 'Night'
         min_secs (int)        -- Ignores activities that are of seconds < min_secs. (default 3)
-        '''
+        """
 
         # Get all logs
         logs = self.get_logs(uuid=uuid, start_datetime=start_datetime, end_datetime=end_datetime)
@@ -157,41 +159,18 @@ class sensor_log_DAO(object):
 
     @staticmethod
     def get_all_logs():
-        '''
-        Returns a list of logs found in the database according to the parameters given
+        """
+        Returns all logs in a dataframe
+        """
 
-        Inputs:
-        uuid (str) -- Sensor identifier
-        start_datetime (datetime)
-        end_datetime (datetime)
-        '''
-
-        query = """
-                SELECT * FROM {}
-                """.format(sensor_log_DAO.table_name)
+        query = "SELECT * FROM {}".format(sensor_log_DAO.table_name)
 
         # Get connection, which incidentally closes itself during garbage collection
         factory = connection_manager()
         connection = factory.connection
 
-        # Get cursor
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            result = cursor.fetchall()
+        return pd.read_sql_query(query, connection)
 
-            allLogs = []
-            if result is not None:
-                for d in result:
-                    uuid = d[Sensor_Log.uuid_tname]
-                    node_id = d[Sensor_Log.node_id_tname]
-                    event = d[Sensor_Log.event_tname]
-                    recieved_timestamp = d[Sensor_Log.recieved_timestamp_tname]
-
-                    row_log_obj = Sensor_Log(uuid=uuid, node_id=node_id, event=event,
-                                             recieved_timestamp=recieved_timestamp)
-                    allLogs.append(row_log_obj)
-
-            return allLogs
 
 # Tests
 # dao = sensor_log_DAO()
