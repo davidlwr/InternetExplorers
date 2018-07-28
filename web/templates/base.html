@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/rc-slider@6.1.2/assets/index.css">
     <link rel="stylesheet" href="https://unpkg.com/dash-core-components@0.23.0/dash_core_components/react-dates@12.3.0.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://codepen.io/bricakeld/pen/qKZeGq.css"> <!-- set to reference url_for static css and put into git -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='extra.css') }}"> <!-- set to reference url_for static css and put into git -->
 </head>
 <body> <!-- common sidebar -->
     <nav class="col-md-2 col-xs-12 sidebar">
