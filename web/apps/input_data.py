@@ -82,6 +82,7 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
     To report night numbers as the night of the previous day, use offset=True
     To ignore short durations, use ignore_short_durations=True, and set the minimum duration to be included using min_duration
     '''
+    # NOTE: last day of the returned output is not accurate if offset is used because the next day's data is needed to get the current night's data
     current_data = get_relevant_data(input_location, start_date, end_date, gw_device, grouped)
     if ignore_short_durations:
         duration_data = get_visit_duration_and_start_time(start_date, end_date, input_location, gw_device)
@@ -104,6 +105,11 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
     # group by date only
     current_data['gw_date_only'] = current_data['gw_timestamp'].apply(date_only)
     result_data = current_data.groupby(['gw_date_only'], as_index=False)['value'].sum()
+
+    if time_period == 'Night' and offset:
+        # here means the morning of the first day is not needed
+        result_data = result_data.iloc[1:]
+        result_data.reset_index(drop=True, inplace=True)
     return result_data
 
 # method to get the relevant columns of data
@@ -375,6 +381,43 @@ def motion_duration_during_sleep(gw_device, start_date, end_date, use_door=False
     average_motion = total_motion_aggregated / total_days
     return average_motion
     # TODO: can replace this to be as a percentage of sleeping hours
+
+def get_nightly_toilet_indicator(user_id, current_sys_time=None):
+    '''
+    Returns what the colour of the toilet status indicator should be for a particular elderly
+    To be called by the overview page
+    Checks status for the past week
+    0 - Green, 1 - Yellow, 2 - Orange, 3 - Red
+    '''
+    alerts_of_interest = [] # add alerts here, can use in the next layer to priortise things to show also
+    if current_sys_time is None: # used in testing - pass in a different time for simulation
+        current_sys_time = datetime.datetime.now()
+    three_weeks_ago = current_sys_time + datetime.timedelta(days=-21)
+    one_week_ago = current_sys_time + datetime.timedelta(days=-7)
+
+    # get standard deviation for the past 3 weeks first
+    std_calc_data = get_num_visits_by_date(start_date=three_weeks_ago, end_date=current_sys_time, gw_device=user_id, time_period='Night', offset=True, grouped=True)
+    # print(std_calc_data)
+    three_week_std = std_calc_data['value'].std()
+    print("3 week std", three_week_std)
+
+    # compare difference in MA with 0.66 * SD (for ~75% confidence)
+    three_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
+            offset=True, grouped=True, days=21)
+    one_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
+            offset=True, grouped=True, days=7)
+    # print(three_week_MA)
+    current_date = current_sys_time.date()
+    # print("current_date", current_date)
+    # print(three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'])
+    # print(one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'])
+    difference_MA = one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0] - three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
+    print("difference_MA", difference_MA)
+    if difference_MA > 0.66 * three_week_std:
+        alerts_of_interest.append("short MA > long MA")
+
+    return len(alerts_of_interest)
+
 # below for testing only
 if __name__ == '__main__':
     # testing_data = get_relevant_data('toilet_bathroom', input_raw_min_date, input_raw_max_date)
@@ -393,5 +436,9 @@ if __name__ == '__main__':
     # print("result", result)
 
     # test average motion duration during sleep
-    result = motion_duration_during_sleep(2005, datetime.date(2018, 5, 1), datetime.date(2018, 5, 3))
-    print("result", result)
+    # result = motion_duration_during_sleep(2005, datetime.date(2018, 5, 1), datetime.date(2018, 5, 3))
+    # print("result", result)
+
+    # test getting indicators
+    result = get_nightly_toilet_indicator(2005, input_raw_max_date) # + datetime.timedelta(days=-2))
+    print ("result", result)
