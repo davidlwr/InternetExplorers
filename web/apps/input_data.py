@@ -5,16 +5,17 @@ import datetime
 import os
 import scipy.stats
 
-from DAOs.sensor_log_DAO import sensor_log_DAO
-
 # pandas settings
 pd.options.mode.chained_assignment = None  # default='warn
 
 if __name__ == '__main__':  # we want to import from same directory if using this
     # module as-is (for debugging mainly, or for loading data in the future)
     import input_sysmon
+    sys.path.append(".")
+    from DAOs.sensor_log_DAO import sensor_log_DAO
 else:  # if called from index.py
     from apps import input_sysmon
+    from DAOs.sensor_log_DAO import sensor_log_DAO
 
 # specify file parameters
 file_folder = '../stbern-20180302-20180523-csv/'
@@ -100,7 +101,7 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
         current_data = pd.merge(current_data, duration_data, on=['recieved_timestamp', 'event'])
         current_data.rename(columns={'value_x': 'event'})
         current_data = current_data[current_data.visit_duration >= min_duration]
-        # print(current_data)
+        print(current_data)
 
     if time_period == 'Day':
         current_data = current_data.loc[(current_data['recieved_timestamp'].dt.time >= daytime_start)
@@ -463,9 +464,9 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     # 1st check
     para_SD_threshold = 0.66 # changeable: if difference in moving averages is higher than this multiplied by the std, alert
     # get standard deviation for the past 3 weeks first
-    std_calc_data = get_num_visits_by_date(start_date=three_weeks_ago, end_date=current_sys_time, gw_device=user_id, time_period='Night', offset=True, grouped=True)
-    # print(std_calc_data)
-    three_week_std = std_calc_data['value'].std()
+    std_calc_data = get_num_visits_by_date(start_date=three_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+    print(std_calc_data)
+    three_week_std = std_calc_data['event'].std()
     print("3 week std", three_week_std)
 
     # compare difference in MA with 0.66 * SD (for ~75% confidence)
@@ -494,18 +495,18 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
 
 
     # get night usage
-    past_month_data_night = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, gw_device=user_id, time_period='Night', offset=True, grouped=True)
+    past_month_data_night = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
 
     # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
-    past_month_data_both = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, gw_device=user_id, offset=True, grouped=True)
-    past_month_data_both['threshold_cmp_value'] = past_month_data_both.apply(lambda row: row['value'] * para_ratio_threshold, axis=1)
+    past_month_data_both = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, offset=True, grouped=True)
+    past_month_data_both['threshold_cmp_value'] = past_month_data_both.apply(lambda row: row['event'] * para_ratio_threshold, axis=1)
     # print(past_month_data_both)
     # alert if difference in average over the past week is statistically significant beyond the para_ratio_threshold, 95% confidence interval
 
     _confidence_interval = 0.95
     _alpha = 0.05
     # use paired t-tests and check for ratio difference of 0.3
-    (_t_stat, _p_value) = scipy.stats.ttest_rel(past_month_data_night['value'], past_month_data_both['threshold_cmp_value'])
+    (_t_stat, _p_value) = scipy.stats.ttest_rel(past_month_data_night['event'], past_month_data_both['threshold_cmp_value'])
     if (_t_stat > 0) and (_p_value < (_alpha / 2)):
         alerts_of_interest.append(f"night toilet usage higher than {para_ratio_threshold * 100}% of day usage")
     print(alerts_of_interest)
