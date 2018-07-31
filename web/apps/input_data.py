@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import os
+import scipy.stats
 
 # pandas settings
 pd.options.mode.chained_assignment = None  # default='warn
@@ -228,6 +229,7 @@ def get_visit_numbers_moving_average(gw_device, input_location='toilet_bathroom'
 def get_door_pivots(gw_device, input_location='bedroom_master'):
     '''
     Returns door timings with matched opening and closing
+    NOTE: not implemented yet
     '''
     raw_door_inputs = get_relevant_data(input_location='door', start_date=input_raw_min_date, end_date=input_raw_max_date, gw_device=gw_device)
     # pivot raw door inputs
@@ -388,13 +390,23 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     To be called by the overview page
     Checks status for the past week
     0 - Green, 1 - Yellow, 2 - Orange, 3 - Red
+
+    With changeable parameters for the different checks
+    NOTE: function assumes that readings for the elderly is normal at the start, and may alert only upon changes
+
+    Nocturia information obtained from https://www.mdedge.com/ccjm/article/89117/geriatrics/nocturia-elderly-wake-call
     '''
     alerts_of_interest = [] # add alerts here, can use in the next layer to priortise things to show also
     if current_sys_time is None: # used in testing - pass in a different time for simulation
         current_sys_time = datetime.datetime.now()
     three_weeks_ago = current_sys_time + datetime.timedelta(days=-21)
     one_week_ago = current_sys_time + datetime.timedelta(days=-7)
+    four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
 
+    # this part can be a separate method for each check
+
+    # 1st check
+    para_SD_threshold = 0.66 # changeable: if difference in moving averages is higher than this multiplied by the std, alert
     # get standard deviation for the past 3 weeks first
     std_calc_data = get_num_visits_by_date(start_date=three_weeks_ago, end_date=current_sys_time, gw_device=user_id, time_period='Night', offset=True, grouped=True)
     # print(std_calc_data)
@@ -411,11 +423,37 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     # print("current_date", current_date)
     # print(three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'])
     # print(one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'])
-    difference_MA = one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0] - three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
-    print("difference_MA", difference_MA)
-    if difference_MA > 0.66 * three_week_std:
+    difference_MA = (one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
+            - three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'].values[0])
+    # print("difference_MA", difference_MA)
+    if difference_MA > para_SD_threshold * three_week_std:
         alerts_of_interest.append("short MA > long MA")
 
+    # now check for ratio of night to day toilet usage | can be split to new method
+    # NOTE: we use 4 weeks approx. equal to a month and ~30 (28) for good sample size
+    para_ratio_threshold = 0.3 # changeable: if night usage is higher than this ratio of total usage, alert
+                               # here we use number of toilet visits as a proxy for urinal volume
+                               # nocturnal bladder capacity is usually higher than in the day, so if the amount
+                               #+is really that high, nocturia index is much likely to be that high
+                               # can be customised based on different patients and estimated nocturnal bladder capacity
+
+
+    # get night usage
+    past_month_data_night = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, gw_device=user_id, time_period='Night', offset=True, grouped=True)
+
+    # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
+    past_month_data_both = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, gw_device=user_id, offset=True, grouped=True)
+    past_month_data_both['threshold_cmp_value'] = past_month_data_both.apply(lambda row: row['value'] * para_ratio_threshold, axis=1)
+    # print(past_month_data_both)
+    # alert if difference in average over the past week is statistically significant beyond the para_ratio_threshold, 95% confidence interval
+
+    _confidence_interval = 0.95
+    _alpha = 0.05
+    # use paired t-tests and check for ratio difference of 0.3
+    (_t_stat, _p_value) = scipy.stats.ttest_rel(past_month_data_night['value'], past_month_data_both['threshold_cmp_value'])
+    if (_t_stat > 0) and (_p_value < (_alpha / 2)):
+        alerts_of_interest.append(f"night toilet usage higher than {para_ratio_threshold * 100}% of day usage")
+    print(alerts_of_interest)
     return len(alerts_of_interest)
 
 # below for testing only
@@ -440,5 +478,6 @@ if __name__ == '__main__':
     # print("result", result)
 
     # test getting indicators
-    result = get_nightly_toilet_indicator(2005, input_raw_max_date) # + datetime.timedelta(days=-2))
-    print ("result", result)
+    # result = get_nightly_toilet_indicator(2005, input_raw_max_date) # + datetime.timedelta(days=-2))
+    # print ("result", result)
+    pass # prevents error when no debug tests are being done
