@@ -234,8 +234,8 @@ def update_graph_01(input_resident,input_location, start_date, end_date, group_c
         return dcc.Graph(id='firstplot',
                 figure = {
                     'data':[{
-                        'x':df['gw_timestamp'],
-                        'y':df['value'],
+                        'x':df['recieved_timestamp'],
+                        'y':df['event'],
                         'type':'line',
                         'name':input_location,
                         'line':dict(shape='hv'),
@@ -278,7 +278,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
             for r in input_resident:
                 df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
                 #print(df.head())
-                draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': r})
+                draw_data.append({'x': df['gw_date_only'], 'y': df['event'], 'mode':'lines+markers', 'name': r})
                 if seven_checkbox:
                     # get moving averages
                     moving_averages_7 = input_data.get_visit_numbers_moving_average(r, days=7, ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
@@ -299,7 +299,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
             if filter_input != 'Night': # if not night means have to display for 'Day'
                 for r in input_resident:
                     df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Day', ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
-                    draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': str(r) + ' - Day'})
+                    draw_data.append({'x': df['gw_date_only'], 'y': df['event'], 'mode':'lines+markers', 'name': str(r) + ' - Day'})
                     if seven_checkbox:
                         # get moving averages
                         moving_averages_7 = input_data.get_visit_numbers_moving_average(r, days=7, time_period='Day', ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
@@ -318,7 +318,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
             if filter_input != 'Day': # if not day means have to display for 'Night'
                 for r in input_resident:
                     df = input_data.get_num_visits_by_date(start_date, end_date, 'toilet_bathroom', r, time_period='Night', offset=offset_checkbox, ignore_short_durations=ignore_checkbox, grouped=group_checkbox) # offset only relevant at night
-                    draw_data.append({'x': df['gw_date_only'], 'y': df['value'], 'mode':'lines+markers', 'name': str(r) + ' - Night'})
+                    draw_data.append({'x': df['gw_date_only'], 'y': df['event'], 'mode':'lines+markers', 'name': str(r) + ' - Night'})
                     if seven_checkbox:
                         # get moving averages
                         moving_averages_7 = input_data.get_visit_numbers_moving_average(r, days=7, time_period='Night', offset=offset_checkbox, ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
@@ -367,7 +367,7 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
         for r in input_resident:
             df = input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
             #print(df.head())
-            draw_data.append({'x': df['gw_timestamp'], 'y': df['visit_duration'], 'mode':'markers', 'name': r})
+            draw_data.append({'x': df['recieved_timestamp'], 'y': df['visit_duration'], 'mode':'markers', 'name': r})
         return dcc.Graph(id = 'visit_duration_plot',
                 figure = {
                     'data':draw_data,
