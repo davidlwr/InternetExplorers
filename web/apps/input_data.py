@@ -39,12 +39,12 @@ input_raw_data = sensor_log_DAO.get_all_logs()
 #             print('something wrong with ' + filename)
 
 #convert datetime format
-#input_raw_data['recieved_timestamp'] = pd.to_datetime(input_raw_data['recieved_timestamp'], format='%Y-%m-%dT%H:%M:%S')
+input_raw_data['recieved_timestamp'] = pd.to_datetime(input_raw_data['recieved_timestamp'], format='%Y-%m-%dT%H:%M:%S')
 
 # convert timestamp to remove the extra time from sensor timeout
 # only applicable for motion sensors
 input_raw_data.loc[(input_raw_data.event == 0)
-                   & ('-m-' in input_raw_data.uuid), 'recieved_timestamp'] += datetime.timedelta(minutes=-MOTION_TIMEOUT_MINS)
+                   & (input_raw_data.uuid.str.contains("-m-")), 'recieved_timestamp'] += datetime.timedelta(minutes=-MOTION_TIMEOUT_MINS)
 # print(input_raw_data.head())
 
 # convert events to 1 and 0 instead of 255
@@ -86,23 +86,25 @@ def get_num_visits_filter_options():
 def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max_date,
                            input_location='m-02', node_id=2005, time_period=None, offset=True,
                            ignore_short_durations=False, min_duration=3, grouped=False):
-    '''
+    """
     Function returns dates and aggregated number of times the sensor was activated
     To get day only, use time_period='Day' and to get night_only use time_period='Night'
     To report night numbers as the night of the previous day, use offset=True
     To ignore short durations, use ignore_short_durations=True, and set the minimum duration to be included using min_duration
-    '''
+    """
 
     # NOTE: last day of the returned output is not accurate if offset is used because the next day's data is needed to get the current night's data
     current_data = get_relevant_data(input_location, start_date, end_date, node_id, grouped)
+    # print(current_data)
 
     if ignore_short_durations:
         duration_data = get_visit_duration_and_start_time(start_date, end_date, input_location, node_id)
         current_data = pd.merge(current_data, duration_data, on=['recieved_timestamp', 'event'])
-        current_data.rename(columns={'value_x': 'event'})
+        current_data.rename(columns={'event_x': 'event'})
+        # print(current_data)
         current_data = current_data[current_data.visit_duration >= min_duration]
-        print(current_data)
 
+    # print(current_data)
     if time_period == 'Day':
         current_data = current_data.loc[(current_data['recieved_timestamp'].dt.time >= daytime_start)
                                         & (current_data['recieved_timestamp'].dt.time < daytime_end)]
@@ -112,8 +114,7 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
         if offset:
             # shift the date of those at night to be one day before
             current_data['recieved_timestamp'] = np.where(current_data['recieved_timestamp'].dt.time < daytime_start,
-                                                          current_data['recieved_timestamp'] - datetime.timedelta(
-                                                              days=1),
+                                                          current_data['recieved_timestamp'] - datetime.timedelta(days=1),
                                                           current_data['recieved_timestamp'])
 
     # group by date only
@@ -124,6 +125,8 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
         # here means the morning of the first day is not needed
         result_data = result_data.iloc[1:]
         result_data.reset_index(drop=True, inplace=True)
+
+    # print(result_data)
     return result_data
 
 
@@ -186,9 +189,7 @@ def get_visit_duration_and_start_time(start_date=input_raw_min_date, end_date=in
     # match the start and end timing of a sensor
     for i in range(0, len(current_data) - 1):
         if current_data['event'].iloc[i] == 1:
-            current_data['visit_duration'].iloc[i] = (
-                    current_data['recieved_timestamp'].iloc[i + 1] - current_data['recieved_timestamp'].iloc[
-                i]).total_seconds()
+            current_data['visit_duration'].iloc[i] = (current_data['recieved_timestamp'].iloc[i + 1] - current_data['recieved_timestamp'].iloc[i]).total_seconds()
 
     # print(current_data.query('event != 0').reset_index(drop = True).head())
     # TODO: check that if a motion is cut off at the end of the query period the correct duration is reported (similar to check end and check start in get_average_longest_sleep)
