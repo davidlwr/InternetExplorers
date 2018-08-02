@@ -9,6 +9,9 @@ import datetime
 from app import app
 from apps import input_data
 
+
+locationMap = input_data.get_location_options()
+
 # define page layout
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -60,7 +63,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='location_input',
-                                options=[{'label': i, 'value': i} for i in input_data.get_location_options()],
+                                options=[{'label': i, 'value': locationMap[i]} for i in locationMap],
                                 placeholder='Select a location to view'
                             )
                         ], className = 'col-md-4'),
@@ -185,7 +188,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='location_input_visit_duration',
-                                options=[{'label': i, 'value': i} for i in input_data.get_location_options()],
+                                options=[{'label': i, 'value': locationMap[i]} for i in locationMap],
                                 placeholder='Select a location to view'
                             )
                         ], className = 'col-md-4'),

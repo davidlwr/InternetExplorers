@@ -156,17 +156,17 @@ def get_relevant_data(input_location, start_date, end_date, node_id=2005, groupe
 # generate array for the different available locations
 def get_location_options():
     locations = input_raw_data['uuid'].unique().tolist()
-    output = []
+    output = {}
     for i in range(len(locations)):
         if "m-01" in locations[i]:
-            if "m-01" not in output:
-                output.append("m-01")
+            if "Bedroom" not in output:
+                output["Bedroom"] = "m-01"
         elif "m-02" in locations[i]:
-            if "m-02" not in output:
-                output.append("m-02")
+            if "Toilet" not in output:
+                output["Toilet"] = "m-02"
         elif "d-01" in locations[i]:
-            if "d-01" not in output:
-                output.append("d-01")
+            if "Door" not in output:
+                output["Door"] = "d-01"
 
     return output
 
