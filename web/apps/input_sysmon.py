@@ -69,7 +69,7 @@ def remove_disconnected_periods(current_data):
         try:
             current_index = current_data[(current_data['recieved_timestamp'] < current_disconnection)
                                          & (current_data['recieved_timestamp'] > previous_disconnection)][
-                'gw_timestamp'].idxmax()
+                'recieved_timestamp'].idxmax()
         except Exception:
             # print('log: ', 'exception on getting idxmax()')
             continue
@@ -88,7 +88,7 @@ def remove_disconnected_periods(current_data):
         # select earliest row after the disconnection, but before the next disconnection and get its value
         try:
             current_index = current_data[(current_data['recieved_timestamp'] > current_disconnection)
-                                         & (current_data['recieved_timestamp'] < next_disconnection)]['gw_timestamp'].idxmin()
+                                         & (current_data['recieved_timestamp'] < next_disconnection)]['recieved_timestamp'].idxmin()
         except Exception:
             # print('log', 'exception on getting idxmin()')
             continue
