@@ -18,6 +18,7 @@ RUN pip3 install mysqlclient==1.3.12 Flask-Login==0.4.1
 RUN pip3 install dash-renderer==0.13.0
 COPY . /app
 WORKDIR /app
+EXPOSE 80
 RUN pip3 install -r requirements.txt
 ENTRYPOINT ["python3.6"]
 CMD ["index.py"]
