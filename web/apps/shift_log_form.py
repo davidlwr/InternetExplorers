@@ -1,11 +1,12 @@
 from flask import render_template, Flask, request
 from flask_wtf import Form
-from wtforms import StringField, PasswordField, SubmitField, RadioField, FloatField
+from wtforms import StringField, PasswordField, SubmitField, RadioField, FloatField, SelectField
 from wtforms.fields.html5 import DateField
 from wtforms_sqlalchemy.fields import QuerySelectField
 from flask_sqlalchemy import SQLAlchemy
 from wtforms.validators import InputRequired
 import flask_login
+from datetime import datetime
 
 from app import app, server, db
 from DAOs.shift_log_DAO import shift_log_DAO
@@ -24,9 +25,16 @@ def patient_query():
     return Patient.query
 
 
-class SampleForm(Form):
-    name = QuerySelectField(query_factory=patient_query, allow_blank=True, get_label='name')
+class ShiftLogForm(Form):
+    name = QuerySelectField(query_factory=patient_query, allow_blank=False, get_label='name')
     date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')])
+    timeNow = datetime.time(datetime.now())
+    today7pm = timeNow.replace(hour=19, minute=0, second=0, microsecond=0)
+    dayNightSelector = 1
+    if timeNow < today7pm:
+        dayNightSelector = 1
+
+    time = RadioField('Shift', choices=[(1, 'Day'), (2, 'Night')], coerce=int, default=dayNightSelector)
     falls = RadioField('Number of Slips/Falls of Resident',
                        choices=[(0, '0'), (1, '1'), (2, '2'), (3, '3')], coerce=int)
     near_falls = RadioField('Number of Near Falls',
@@ -34,8 +42,10 @@ class SampleForm(Form):
     consumption = RadioField('Food consumption',
                              choices=[('insufficient', 'Insufficient'), ('moderate', 'Moderate'),
                                       ('excessive', 'Excessive')])
-    temperature = FloatField('Temperature (°C) taken at 3PM (leave blank if temperature has been taken')
-    bp = FloatField('Weekly Blood Pressure Reading (Update only on every Sunday)')
+    temperature = FloatField('Temperature (°C) ')
+    sbp = FloatField('Systolic blood pressure (SBP) mmHg ')
+    dbp = FloatField('Diastolic blood pressure (DBP) mmHg ')
+    pulse = FloatField('Pulse Rate (b/m)  ')
     submit = SubmitField('Submit')
 
 
@@ -43,30 +53,34 @@ class SampleForm(Form):
 @server.route("/eosforms", methods=['GET', 'POST'])
 @flask_login.login_required
 def showForms():
-    form = SampleForm()
+    form = ShiftLogForm()
     if request.method == 'POST':
         if form.validate_on_submit():
             # handle submitted data here
             # process form here
             submitted_name = form.name.data.id
             submitted_date = form.date.data
+            submitted_time = form.time.data
             submitted_falls = form.falls.data
             submitted_near_falls = form.near_falls.data
             submitted_consumption = form.consumption.data
             default_value = True
             submitted_toilet_visits = request.form.get('toilet_visits', default_value)
             submitted_temperature = form.temperature.data
-            submitted_bp = form.bp.data
+            submitted_sbp = form.sbp.data
+            submitted_dbp = form.dbp.data
+            submitted_pulse = form.pulse.data
 
             shiftLogDAO = shift_log_DAO()
-            shiftLog = Shift_log(submitted_date, submitted_name, submitted_falls, submitted_near_falls,
+            shiftLog = Shift_log(submitted_date, submitted_time, submitted_name, submitted_falls, submitted_near_falls,
                                  submitted_consumption, submitted_toilet_visits, submitted_temperature,
-                                 submitted_bp)
+                                 submitted_sbp, submitted_dbp, submitted_pulse)
             shiftLogDAO.insert_shift_log(shiftLog)
-            return render_template('sample.html', name=submitted_name, date=submitted_date, falls=submitted_falls,
+            return render_template('shiftLogResponse.html', name=submitted_name, date=submitted_date, time=submitted_time,
+                                   falls=submitted_falls,
                                    near_falls=submitted_near_falls, consumption=submitted_consumption,
                                    toilet_visits=submitted_toilet_visits, temperature=submitted_temperature,
-                                   bp=submitted_bp)
+                                   sbp=submitted_sbp, dbp=submitted_dbp, pulse=submitted_pulse)
         else:
             return render_template('eosforms.html', form=form)
     else:

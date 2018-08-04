@@ -58,7 +58,7 @@ class shift_log_DAO(object):
         Keyword arguments:
         shift_log -- Entities.shift_log, class vars used to create a new DB row
         '''
-        query = """INSERT INTO {} VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)""" \
+        query = """INSERT INTO {} VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""" \
                     .format(shift_log_DAO.table_name)
 
         # Get connection, which incidentally closes itself during garbage collection

@@ -6,7 +6,8 @@
     <dl>
         {{ form.csrf_token }}
         {{ render_field(form.name) }}
-        {{ render_field(form.date) }}
+        {{ render_field(form.date)  }}
+        {{ render_field(form.time) }}
         {{ render_field(form.falls) }}
         {{ render_field(form.near_falls) }}
         {{ render_field(form.consumption) }}
@@ -19,7 +20,9 @@
                 </select>
             </dd>
             {{ render_field(form.temperature) }}
-            {{ render_field(form.bp) }}
+            {{ render_field(form.sbp) }}
+            {{ render_field(form.dbp) }}
+            {{ render_field(form.pulse) }}
             {{ render_field(form.submit) }}
         </dl>
     </form>
