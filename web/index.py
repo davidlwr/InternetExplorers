@@ -11,7 +11,7 @@ from dash_flask_login import FlaskLoginAuth
 
 # internal imports
 from app import app, server
-from apps import input_data, dashboard, reports, residents_overview, shift_log_form
+from apps import input_data, dashboard, reports, residents_overview, shift_log_form, risk_assessment_form
 from Entities.user import User
 from DAOs.user_DAO import user_DAO
 

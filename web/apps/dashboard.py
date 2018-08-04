@@ -37,6 +37,11 @@ app.layout = html.Div([
                     ], className='nav-item'),
                     html.Li([
                         html.Div([
+                            html.A('Risk Assessment Forms', href='/raforms')
+                        ], className='nav-link')
+                    ], className='nav-item'),
+                    html.Li([
+                        html.Div([
                             html.A('Logout', href='/logout')
                         ], className='nav-link')
                     ], className='nav-item')
