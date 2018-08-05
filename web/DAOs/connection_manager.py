@@ -1,17 +1,19 @@
 import pymysql
 import os
 import csv
-
+import sys
 
 class connection_manager(object):
     '''
     Class solely deals with handling connections to the database. Think of it like a connection factory
     limits connections based on certain settings as follows bellow in settings section
     '''
-    
+
     def __init__(self, read_timeout=30, write_timeout=30, connect_timeout=30, local_infile=True, cursorclass=pymysql.cursors.DictCursor):
 
         host            = "127.0.0.1"
+        if sys.platform == 'linux':
+            host = "stbern.cdc1tjbn622d.ap-southeast-1.rds.amazonaws.com"
         port            = 3306
         database        = "stbern"
         username        = "internetexplorer"
@@ -37,6 +39,6 @@ class connection_manager(object):
     #     Automatically attempts to close connection when object is garbage collected
     #     '''
 
-    #     # If connection is open, close it 
+    #     # If connection is open, close it
     #     if self.connection.open:
     #         self.connection.close()
