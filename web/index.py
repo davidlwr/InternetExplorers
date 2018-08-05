@@ -8,6 +8,7 @@ from flask import render_template, Flask, request, flash, redirect, url_for, abo
 from flask_sqlalchemy import SQLAlchemy
 from urllib.parse import urlparse, urljoin
 from dash_flask_login import FlaskLoginAuth
+import sys
 
 # internal imports
 from app import app, server
@@ -99,4 +100,7 @@ def logout():
 #         return '404'
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    if sys.platform == 'linux':
+        app.run_server(host='0.0.0.0', port=80, debug=True)
+    else:
+        app.run_server(debug=True)
