@@ -1,0 +1,23 @@
+<!doctype html>
+<title>Submission Response</title>
+{% if name %}
+  <!--<h1>Hello {{ name }}!</h1>-->
+  <!--<h1>Date: {{ date }}!</h1>-->
+  <!--<h1>Shift: {{ time }}!</h1>-->
+  <!--<h1>Falls: {{ falls }}!</h1>-->
+  <!--<h1>Near_falls: {{ near_falls }}!</h1>-->
+  <!--<h1>Consumption: {{ consumption }}!</h1>-->
+  <!--<h1>Toilet Visits: {{ toilet_visits }}!</h1>-->
+  <!--<h1>Temperature: {{ temperature }}!</h1>-->
+  <!--<h1>Systolic blood pressure (SBP) mmHg : {{ sbp }}!</h1>-->
+  <!--<h1>Diastolic blood pressure (SBP) mmHg : {{ dbp }}!</h1>-->
+  <!--<h1>Pulse Rate (b/m)  : {{ pulse }}!</h1>-->
+  <h1>Form for {{ name }} submitted!</h1>
+  <br>
+  <h1>Thank You!</h1>
+  <a href='/'>Go to main graphs</a>
+  <br>
+  <a href='/logout'>Logout</a>
+{% else %}
+  <h1>Submission Failed!</h1>
+{% endif %}

@@ -59,6 +59,7 @@ def showForms():
             # handle submitted data here
             # process form here
             submitted_name = form.name.data.id
+            name_to_show = form.name.data.name
             submitted_date = form.date.data
             submitted_time = form.time.data
             submitted_falls = form.falls.data
@@ -76,11 +77,7 @@ def showForms():
                                  submitted_consumption, submitted_toilet_visits, submitted_temperature,
                                  submitted_sbp, submitted_dbp, submitted_pulse)
             shiftLogDAO.insert_shift_log(shiftLog)
-            return render_template('shiftLogResponse.html', name=submitted_name, date=submitted_date, time=submitted_time,
-                                   falls=submitted_falls,
-                                   near_falls=submitted_near_falls, consumption=submitted_consumption,
-                                   toilet_visits=submitted_toilet_visits, temperature=submitted_temperature,
-                                   sbp=submitted_sbp, dbp=submitted_dbp, pulse=submitted_pulse)
+            return render_template('FormResponse.html', name=name_to_show)
         else:
             return render_template('eosforms.html', form=form)
     else:

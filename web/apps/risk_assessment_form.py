@@ -56,6 +56,7 @@ def showRiskForm():
             # handle submitted data here
             # process form here
             submitted_name = form.name.data.id
+            name_to_show = form.name.data.name
             submitted_date = form.date.data
             submitted_weight = form.weight.data
 
@@ -103,10 +104,7 @@ def showRiskForm():
                                              submitted_mobility, submitted_dependent,
                                              submitted_dependency)
             riskAssessmentDAO.insert_risk_assessment(riskAssessment)
-            return render_template('riskAssessmentResponse.html', name=submitted_name, date=submitted_date,
-                                   time=submitted_weight,
-                                   normal=submitted_normal, confusion=submitted_confusion,
-                                   restlessness=submitted_restlessness)
+            return render_template('FormResponse.html', name=name_to_show)
         else:
             return render_template('raforms.html', form=form)
     else:
