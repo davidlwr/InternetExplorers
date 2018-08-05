@@ -6,7 +6,7 @@ from wtforms.fields.html5 import DateField
 from wtforms_sqlalchemy.fields import QuerySelectField
 from flask_sqlalchemy import SQLAlchemy
 from wtforms.validators import InputRequired
-from apps.shift_log_form import patient_query
+from apps.shift_log_form import resident_query
 import flask_login
 from datetime import datetime
 
@@ -28,7 +28,7 @@ from Entities.risk_assessment import Risk_assessment
 
 
 class RiskAssessmentForm(Form):
-    name = QuerySelectField(query_factory=patient_query, allow_blank=False, get_label='name')
+    name = QuerySelectField(query_factory=resident_query, allow_blank=False, get_label='name')
     date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')])
     weight = FloatField('Monthly weight updates (kg)')
     medication_amount = RadioField('Number of medication',
