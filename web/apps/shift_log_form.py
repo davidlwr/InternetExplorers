@@ -13,20 +13,22 @@ from DAOs.shift_log_DAO import shift_log_DAO
 from Entities.shift_log import Shift_log
 
 
-class Patient(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(45))
+class Resident(db.Model):
+    resident_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    node_id = db.Column(db.String(20))
     age = db.Column(db.Integer)
     fall_risk = db.Column(db.String(45))
     status = db.Column(db.String(45))
+    stay_location = db.Column(db.String(45))
 
 
-def patient_query():
-    return Patient.query
+def resident_query():
+    return Resident.query
 
 
 class ShiftLogForm(Form):
-    name = QuerySelectField(query_factory=patient_query, allow_blank=False, get_label='name')
+    name = QuerySelectField(query_factory=resident_query, allow_blank=False, get_label='name')
     date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')])
     timeNow = datetime.time(datetime.now())
     today7pm = timeNow.replace(hour=19, minute=0, second=0, microsecond=0)
@@ -58,7 +60,7 @@ def showForms():
         if form.validate_on_submit():
             # handle submitted data here
             # process form here
-            submitted_name = form.name.data.id
+            submitted_name = form.name.data.resident_id
             name_to_show = form.name.data.name
             submitted_date = form.date.data
             submitted_time = form.time.data
