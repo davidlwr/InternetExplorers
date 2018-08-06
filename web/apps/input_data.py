@@ -126,7 +126,22 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
         result_data = result_data.iloc[1:]
         result_data.reset_index(drop=True, inplace=True)
 
-    # print(result_data)
+    # add 0 for days with no data
+    result_data.set_index('gw_date_only', inplace=True)
+    if isinstance(start_date, str):
+        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+
+    if isinstance(end_date, str):
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+
+    all_days_range = pd.date_range(start_date.date(), end_date.date(), freq='D')
+    result_data = result_data.loc[all_days_range]
+    result_data.fillna(0, inplace=True)
+
+    # undo set index
+    result_data.reset_index(inplace=True)
+    result_data.rename(columns={'index':'gw_date_only'}, inplace=True)
+    # print("result data from get_num_visits_by_date\n", result_data)
     return result_data
 
 
@@ -443,10 +458,10 @@ def motion_duration_during_sleep(node_id, start_date, end_date, use_door=False):
 
 def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     '''
-    Returns what the colour of the toilet status indicator should be for a particular elderly
+    Returns list of night toilet usage alerts so as to determine what the colour of the toilet status indicator should be for a particular elderly
     To be called by the overview page
     Checks status for the past week
-    0 - Green, 1 - Yellow, 2 - Orange, 3 - Red
+    Possible arbitary assignment of colors: 0 - Green, 1 - Yellow, 2 - Orange, 3 - Red
 
     With changeable parameters for the different checks
     NOTE: function assumes that readings for the elderly is normal at the start, and may alert only upon changes
@@ -466,7 +481,7 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     para_SD_threshold = 0.66 # changeable: if difference in moving averages is higher than this multiplied by the std, alert
     # get standard deviation for the past 3 weeks first
     std_calc_data = get_num_visits_by_date(start_date=three_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
-    print(std_calc_data)
+    # print(std_calc_data)
     three_week_std = std_calc_data['event'].std()
     print("3 week std", three_week_std)
 
@@ -475,7 +490,8 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
             offset=True, grouped=True, days=21)
     one_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
             offset=True, grouped=True, days=7)
-    # print(three_week_MA)
+    # print(len(one_week_MA))
+    # print(len(three_week_MA))
     current_date = current_sys_time.date()
     # print("current_date", current_date)
     # print(three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'])
@@ -497,11 +513,11 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
 
     # get night usage
     past_month_data_night = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
-
+    # print("past_month_data_night", past_month_data_night)
     # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
     past_month_data_both = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, offset=True, grouped=True)
     past_month_data_both['threshold_cmp_value'] = past_month_data_both.apply(lambda row: row['event'] * para_ratio_threshold, axis=1)
-    # print(past_month_data_both)
+    # print("past_month_data_both", past_month_data_both)
     # alert if difference in average over the past week is statistically significant beyond the para_ratio_threshold, 95% confidence interval
 
     _confidence_interval = 0.95
@@ -510,8 +526,8 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     (_t_stat, _p_value) = scipy.stats.ttest_rel(past_month_data_night['event'], past_month_data_both['threshold_cmp_value'])
     if (_t_stat > 0) and (_p_value < (_alpha / 2)):
         alerts_of_interest.append(f"night toilet usage higher than {para_ratio_threshold * 100}% of day usage")
-    print(alerts_of_interest)
-    return len(alerts_of_interest)
+    # print(alerts_of_interest)
+    return alerts_of_interest
 
 # below for testing only
 if __name__ == '__main__':
@@ -535,6 +551,6 @@ if __name__ == '__main__':
     # print("result", result)
 
     # test getting indicators
-    # result = get_nightly_toilet_indicator(2005, input_raw_max_date) # + datetime.timedelta(days=-2))
+    # result = get_nightly_toilet_indicator(2006, input_raw_max_date + datetime.timedelta(days=-10))
     # print ("result", result)
     pass # prevents error when no debug tests are being done

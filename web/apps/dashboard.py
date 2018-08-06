@@ -26,6 +26,11 @@ app.layout = html.Div([
                     ], className='nav-item'),
                     html.Li([
                         html.Div([
+                            html.A('Residents Overview', href='/overview')
+                        ], className='nav-link')
+                    ], className='nav-item'),
+                    html.Li([
+                        html.Div([
                             html.A('Shift Reports', href='/reports')
                             # {isActive}'.format(isActive = ' active' if current_page == 'reports' else ''), href='/reports')
                         ], className='nav-link')

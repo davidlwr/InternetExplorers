@@ -1,6 +1,9 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% endblock %} - IE</title>
     <link rel="stylesheet" href="https://unpkg.com/react-select@1.0.0-rc.3/dist/react-select.min.css">
     <link rel="stylesheet" href="https://unpkg.com/react-virtualized@9.9.0/styles.css">
@@ -9,39 +12,43 @@
     <link rel="stylesheet" href="https://unpkg.com/dash-core-components@0.23.0/dash_core_components/react-dates@12.3.0.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='extra.css') }}"> <!-- set to reference url_for static css and put into git -->
+    {% block additional_stylesheets %}{% endblock %}
 </head>
 <body> <!-- common sidebar -->
-    <nav class="col-md-2 col-xs-12 sidebar">
-        <div class="sidebar-sticky">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <div class="nav-link">
-                        <a href="/graphs">Graphs</a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <div class="nav-link">
-                        <a href="/reports">Shift Reports</a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <div class="nav-link">
-                        <a href="/eosforms">End of Shift Forms</a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <div class="nav-link">
-                        <a href="/logout">Logout</a>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </nav>
+    <div class="col-md-2 col-xs-12 sidebar-stacked sidebar-sticky">
+        <ul class="nav flex-column sidebar-nav">
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/graphs">Graphs</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/overview">Residents Overview</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/reports">Shift Reports</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/eosforms">End of Shift Forms</a>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/logout">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </div>
     <main class="col-md-10 ml-sm-auto col-lg-10">
         {% block content %}{% endblock %}
-        </main>
-        <div id="footer">
-            {% block footer %} {% endblock %}
-        </div>
-    </body>
-    </html>
+    </main>
+    <div id="footer">
+        {% block footer %} {% endblock %}
+    </div>
+</body>
+</html>

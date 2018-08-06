@@ -9,6 +9,8 @@ import sys
 server = flask.Flask(__name__)
 server.config['SECRET_KEY'] = 'userandomtogeneratesomethinghere'
 server.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://internetexplorer:int3rn3t@127.0.0.1:3306/stbern'
+server.jinja_env.trim_blocks = True # remove whitespaces
+server.jinja_env.lstrip_blocks = True # remove whitespaces
 if sys.platform == 'linux':
     server.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://internetexplorer:int3rn3t@stbern.cdc1tjbn622d.ap-southeast-1.rds.amazonaws.com:3306/stbern'
 # server.config['SERVER_NAME'] = 'IExStBern'
