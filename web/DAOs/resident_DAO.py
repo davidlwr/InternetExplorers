@@ -7,7 +7,20 @@ from Entities.resident import Resident
 
 table_name = 'stbern.RESIDENT'
 
-def get_resident_by_id():
+def get_resident_by_id(node_id):
+    '''
+    Returns a resident (in a dict) based on node_id (in int)
+    '''
+    query = 'SELECT * FROM {} WHERE node_id = %s'.format(table_name)
+    factory = connection_manager()
+    connection = factory.connection
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, (node_id, ))
+        result = cursor.fetchone()
+
+        return result
+
     return None
 
 def get_list_of_residents(filter_active=True, location_filter=None):
@@ -28,13 +41,13 @@ def get_list_of_residents(filter_active=True, location_filter=None):
 
     factory = connection_manager()
     connection = factory.connection
-    print(query)
+    # print(query)
     with connection.cursor() as cursor:
         cursor.execute(query)
         results = cursor.fetchall()
         # have to try printing this
         if results:
-            print(results)
+            # print(results)
             return results
         else:
             return None

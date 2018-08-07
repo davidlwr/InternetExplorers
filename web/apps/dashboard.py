@@ -385,7 +385,7 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
                             'title': 'Start datetime of visit'
                         },
                         'yaxis': {
-                            'title': 'Duration of visit'
+                            'title': 'Duration of visit (seconds)'
                         }
                     }
                 })

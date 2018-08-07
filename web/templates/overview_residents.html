@@ -12,11 +12,17 @@
 {% block title %}Residents Overview{% endblock %}
 {% block additional_stylesheets %}
 <!--
+<script type="text/javascript" src="{{ url_for('static', filename='overview.js') }}"></script>
 -->
 <link rel="stylesheet" href="{{ url_for('static', filename='overview.css') }}">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<script type="text/javascript" src="{{ url_for('static', filename='overview.js') }}"></script>
+<style>
+a.deco-none {
+    color: inherit;
+    text-decoration: inherit;
+}
+</style>
 {% endblock %}
 {% block content %}
 <!--<div class="col-lg-12">
@@ -25,43 +31,53 @@
 <!-- /.col-lg-12 -->
 <div class="row">
     {% for resident in residents %}
-    <div class="col-lg-4 col-md-4 col-sm-4">
-        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['alert_highest']) }}">
-            <div class="panel-heading">
-                <div class="semihuge">{{ resident['name'] }}</div>
-            </div>
-            <div class="panel-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <tbody>
-                            <tr class="success">
-                                <td><i class="material-icons" style="font-size:15px; vertical-align:sup; align-content:center">favorite</i> </td>
-                                <td><b>Vital signs</b></td>
-                                <td>Good</td>
-                                <td></td>
-                            </tr>
-                            <tr class="warning">
-                                <td><i class="material-icons" style="font-size:17px; vertical-align:sup">brightness_4</i></td>
-                                <td><b>Sleep Patterns</b></td>
-                                <td>Moderate</td>
-                                <td></td>
-                            </tr>
-                            <tr class="{{ getSWDFromAlertLength(resident['toilet_alerts']|length) }}">
-                                <td><i class="fa fa-bathtub" style="font-size:15px; vertical-align:sup"></i></td>
-                                <td><b>Night Toilet Usage</b></td>
-                                <td>{{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}</td>
-                                <td><i></i></td>
-                            </tr>
-                        </tbody>
-                    </table>
+    <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+        <a href="./overview/{{ resident['node_id'] }}" class="deco-none">
+            <div class="panel panel-{{ getPanelColorFromAlertLength(resident['alert_highest']) }}">
+                <div class="panel-heading">
+                    <div class="semihuge">{{ resident['name'] }}</div>
                 </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                <tr class="success">
+                                    <td><i class="material-icons" style="font-size:15px; vertical-align:sup; align-content:center">favorite</i> </td>
+                                    <td><b>Vital signs</b></td>
+                                    <td>Good</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="{{ getSWDFromAlertLength(resident['sleep_alerts']|length) }}">
+                                    <td><i class="material-icons" style="font-size:17px; vertical-align:sup">brightness_4</i></td>
+                                    <td><b>Sleep Patterns</b></td>
+                                    <td><div href="#" data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['sleep_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">{{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}</div></td>
+                                    <td></td>
+                                </tr>
+                                <tr class="{{ getSWDFromAlertLength(resident['toilet_alerts']|length) }}">
+                                    <td><i class="fa fa-bathtub" style="font-size:15px; vertical-align:sup"></i></td>
+                                    <td><b>Night Toilet Usage</b></td>
+                                    <td><div href="#" data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['toilet_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
+                                        {{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}</div></td>
+                                    <td><i></i></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
+                </div>
+                <div class="panel-footer">
+                    Status: {{ getFooterFromAlertLength(resident['alert_highest']) }}
+                </div>
             </div>
-            <div class="panel-footer">
-                Status: {{ getFooterFromAlertLength(resident['alert_highest']) }}
-            </div>
-        </div>
+        </a>
     </div>
     {% endfor %}
 </div>
 {% endblock %}
+{% block footer%}
+<script>
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock%}

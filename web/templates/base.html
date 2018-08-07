@@ -5,6 +5,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{% endblock %} - IE</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.0/jquery-ui.js"></script>
+    <script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.13.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/react-select@1.0.0-rc.3/dist/react-select.min.css">
     <link rel="stylesheet" href="https://unpkg.com/react-virtualized@9.9.0/styles.css">
     <link rel="stylesheet" href="https://unpkg.com/react-virtualized-select@3.1.0/styles.css">
@@ -15,7 +19,7 @@
     {% block additional_stylesheets %}{% endblock %}
 </head>
 <body> <!-- common sidebar -->
-    <div class="col-md-2 col-xs-12 sidebar-stacked sidebar-sticky">
+    <div class="col-md-2 col-xs-2 sidebar-stacked sidebar-sticky">
         <ul class="nav flex-column sidebar-nav">
             <li class="nav-item">
                 <div class="nav-link">
