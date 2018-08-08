@@ -57,9 +57,16 @@ def showOverviewResidents():
 @server.route("/overview/<int:node_id>", methods=['GET', 'POST'])
 @flask_login.login_required
 def detailedLayerTwoOverviewResidents(node_id):
+    date_in_use = input_data.input_raw_max_date + datetime.timedelta(days=-32) # TODO: change to current system time once live data is available
     resident = resident_DAO.get_resident_by_id(node_id)
     if resident is None:
         return 'Resident not found<a href="/overview">Go Back</a>'
 
+    resident['sleep_alerts'] = input_data.get_nightly_sleep_indicator(node_id, date_in_use)
+    resident['toilet_alerts'] = input_data.get_nightly_toilet_indicator(node_id, date_in_use)
+    resident['toilet_night_to_both_ratio'], resident['toilet_night_to_both_std'] = input_data.get_percentage_of_night_toilet_usage(node_id, date_in_use)
+
+    # set indicators
+    resident['check_indicator_night_toilet_ratio'] = any('of total daily usage in the past month' in s for s in resident['toilet_alerts'])
     # get required information here and pass to the template
     return render_template('overview_layer_two.html', resident=resident)

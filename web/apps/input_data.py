@@ -566,9 +566,29 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     # use paired t-tests and check for ratio difference of 0.3
     (_t_stat, _p_value) = scipy.stats.ttest_rel(past_month_data_night['event'], past_month_data_both['threshold_cmp_value'])
     if (_t_stat > 0) and (_p_value < (_alpha / 2)):
-        alerts_of_interest.append(f"Night toilet usage higher than {para_ratio_threshold * 100}% of day usage")
+        alerts_of_interest.append(f"Night toilet usage higher than {para_ratio_threshold * 100}% of total daily usage in the past month")
     # print(alerts_of_interest)
     return alerts_of_interest
+
+def get_percentage_of_night_toilet_usage(user_id, current_sys_time=None):
+    '''
+    Returns the percentage of night toilet usage divided by total usage in a day, averaged over a month (as first value in tuple)
+    Also returns standard deviation (as the second value in the tuple)
+    '''
+    if current_sys_time is None: # used in testing - pass in a different time for simulation
+        current_sys_time = datetime.datetime.now()
+    four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
+    # get night usage
+    past_month_data_night = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+    # print("past_month_data_night", past_month_data_night)
+    # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
+    past_month_data_both = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, offset=True, grouped=True)
+
+    # calculate percentage for each night
+    ratio_series = past_month_data_night['event'] / past_month_data_both['event']
+    # print(ratio_series)
+
+    return ratio_series.mean(), ratio_series.std()
 
 # below for testing only
 if __name__ == '__main__':
@@ -594,4 +614,8 @@ if __name__ == '__main__':
     # test getting indicators
     # result = get_nightly_toilet_indicator(2006, input_raw_max_date + datetime.timedelta(days=-10))
     # print ("result", result)
+
+    # test night toilet ratios
+    # get_percentage_of_night_toilet_usage(2005, input_raw_max_date + datetime.timedelta(days=-10))
+    # get_percentage_of_night_toilet_usage(2006, input_raw_max_date + datetime.timedelta(days=-10))
     pass # prevents error when no debug tests are being done

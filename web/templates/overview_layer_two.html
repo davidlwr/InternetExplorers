@@ -4,6 +4,10 @@
 <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
 <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
 <![endif]-->
+{% from "_classconverter.html" import getSWDFromAlertLength %}
+{% from "_classconverter.html" import getPanelColorFromAlertLength %}
+{% from "_classconverter.html" import getGMHFromAlertLength %}
+{% from "_classconverter.html" import getFooterFromAlertLength %}
 {% extends 'base.html' %}
 {% block title %}{{ resident['name'] }} - Detailed Overview{% endblock %}
 {% block additional_stylesheets %}
@@ -21,4 +25,162 @@ a.deco-none {
 </style>
 {% endblock %}
 {% block content %}
-{% endblock %}
+<div class="row">
+    <div class="col-lg-1 col-md-1 col-s-1">
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-s-2">
+        <div class="panel panel-default" align="center">
+            <div class="panel-body" align="center">
+                <img src="https://image.freepik.com/free-photo/senior-woman-with-a-thumbs-up_1187-2563.jpg" alt="user image" style="width:140px;height:140px;" vertical-align: "baseline">
+            </div>
+            <a class="btn btn-primary btn-xs" role="button">Upload Photo</a><br>
+        </div>
+    </div>
+    <div class="col-lg-8 col-md-8">
+        <div class="well">
+            <h1 >Resident: <b>{{ resident['name'] }}</br></h1>
+                <b>Age: </b>{{ resident['age'] }}
+                <br><b>Date of Birth: </b> 1940
+                <br><b>Admission Date: </b> 31 Mar 2018
+                <br><b>Medical Information: </b> Diabetes, Dementia, Prone to falling
+                <br><b>Fall risks: </b>{{ resident['fall_risk'] }}
+                <br>
+            </div>
+        </div>
+    </div>
+    <div class="row"> {# edit here for each category #}
+        <div class="col-lg-12">
+            <div class="panel panel-{{ getPanelColorFromAlertLength(resident['toilet_alerts']|length) }}"> <!--Toilet Panel-->
+                <div class="panel-heading">
+                    Night Toilet Usage Details
+                </div>
+                <div class="panel-body">
+                    <div class="col-lg-3 col-md-6 col-xs-12">
+                        <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'green' }}">
+                            {# TODO: change identifying text in if shorthand above, if input_data function changes #}
+                            <div class="panel-heading">
+                                <div class="row">
+                                    <div class="col-xs-12 text-right">
+                                        Average percentage of night toilet usage in a day
+                                        <div class="huge"><b>{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}</b></div><b>%</b>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="#">
+                                <div class="panel-footer">
+                                    <span class="pull-left">View Details</span>
+                                    <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                    <div class="clearfix"></div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.actual on top, below just keep for now -->
+    <div>
+        <div class="row">
+            <div class="col-lg-3 col-md-3 col-s-3">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-xs-12 text-right">
+                                Total Movement Duration at night
+                                <div class="huge"><b>15</b></div> <b>Minutes</b>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#">
+                        <div class="panel-footer">
+                            <span class="pull-left">View Details</span>
+                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                            <div class="clearfix"></div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-3 col-s-3">
+                <div class="panel panel-green">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-xs-12 text-right">
+                                Longest Consecutive Hours of Sleep at night
+                                <div class="huge"><b>3</b></div> <b>Hours</b>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#">
+                        <div class="panel-footer">
+                            <span class="pull-left">View Details</span>
+                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                            <div class="clearfix"></div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-3 col-s-3">
+                <div class="panel panel-yellow">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-xs-12 text-right">
+                                Average Toilet Visits during the day
+                                <div class="huge"><b>20</b></div>
+                                <b>Visits</b>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#">
+                        <div class="panel-footer">
+                            <span class="pull-left">View Details</span>
+                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                            <div class="clearfix"></div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-3 col-s-3">
+                <div class="panel panel-red">
+                    <div class="panel-heading">
+                        <div class="row">
+                            <div class="col-xs-12 text-right">
+                                Average Toilet Usage during the day
+                                <div class="huge"><b>7</b></div><b>Minutes</b>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#">
+                        <div class="panel-footer">
+                            <span class="pull-left">View Details</span>
+                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                            <div class="clearfix"></div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- /.row -->
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <i class="fa fa-bar-chart-o fa-fw"></i> Shift Log Comments
+                    <div class="pull-right">
+
+                    </div>
+                </div>
+                <!-- /.panel-heading -->
+                <div class="panel-body">
+                    <div class="panel-group" id="accordion">
+                        <div class="well"><b>18 July 2018: </b> Fell down while using the toilet in the middle of the night. No serious injuries.</div>
+                        <div class="well"><b>03 July 2018: </b> Fell down while using the toilet in the middle of the night. No serious injuries.</div>
+                    </div>
+                    <!-- /.panel-body -->
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
