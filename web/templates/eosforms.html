@@ -7,26 +7,24 @@
 {% block content %}
 <div class="row">
     <div class="col-md-12 col-lg-12">
-    <form method="POST" action="/eosforms">
-        <dl>
+    <form method="POST" action="/eosforms" role="form">
             {{ form.csrf_token }}
             {{ render_field(form.name) }}
             {{ render_field(form.date) }}
             {{ render_field(form.falls) }}
             {{ render_field(form.near_falls) }}
             {{ render_field(form.consumption) }}
-            <dt>Number of time of toilet visit for (Urinal/Bowel)
-                <dd>
-                    <select id="toilet_visits", name="toilet_visits">
+                <div class="form-group">
+                    <label>Number of time of toilet visit for (Urinal/Bowel)</label>
+                    <select class="form-control" id="toilet_visits" name="toilet_visits">
                         {% for x in range(0, 20):%}
                         <option value="{{x}}">{{x}}</option>
                         {% endfor %}
                     </select>
-                </dd>
+                </div>
                 {{ render_field(form.temperature) }}
                 {{ render_field(form.bp) }}
                 {{ render_field(form.submit) }}
-            </dl>
         </form>
     </div>
 </div>
