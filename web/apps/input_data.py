@@ -526,11 +526,15 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     three_week_std = std_calc_data['event'].std()
     # print("3 week std", three_week_std)
 
+    # get calculation data
+    calculation_data = get_num_visits_by_date(start_date=max(three_weeks_ago + datetime.timedelta(days=-22),
+            input_raw_min_date), end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+
     # compare difference in MA with 0.66 * SD (for ~75% confidence)
     three_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
-            offset=True, grouped=True, days=21)
+            offset=True, grouped=True, days=21, result_data=calculation_data)
     one_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
-            offset=True, grouped=True, days=7)
+            offset=True, grouped=True, days=7, result_data=calculation_data)
     # print(len(one_week_MA))
     # print(len(three_week_MA))
     current_date = current_sys_time.date()
