@@ -467,6 +467,10 @@ def motion_duration_during_sleep(node_id, start_date, end_date, use_door=False):
     # TODO: can replace this to be as a percentage of sleeping hours
 
 def get_nightly_sleep_indicator(user_id, current_sys_time=None):
+    '''
+    Returns (1) the list of alerts of interest, (2) the past week's average duration of motion during sleep
+            and (3) the difference between motion during sleep in the past week versus the previous 3 weeks
+    '''
     alerts_of_interest = [] # add alerts here, can use in the next layer to priortise things to show also
     if current_sys_time is None: # used in testing - pass in a different time for simulation
         current_sys_time = datetime.datetime.now()
@@ -491,7 +495,7 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
     if difference_longest_sleep < -.75 * old_three_longest_sleep_average: # NOTE: changeable here
         alerts_of_interest.append("Longest interval of uninterrupted sleep decreased significantly")
 
-    return alerts_of_interest
+    return alerts_of_interest, past_week_average, difference
 
 def get_overview_change_values(user_id, current_sys_time=None):
     pass
@@ -499,7 +503,9 @@ def get_overview_change_values(user_id, current_sys_time=None):
 
 def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     '''
-    Returns list of night toilet usage alerts so as to determine what the colour of the toilet status indicator should be for a particular elderly
+    Returns list of night toilet usage alerts so as to determine what the colour
+            of the toilet status indicator should be for a particular elderly
+            Second value returns the past week average number of night toilet usage
     To be called by the overview page
     Checks status for the past week
     Possible arbitary assignment of colors: 0 - Green, 1 - Yellow, 2 - Orange, 3 - Red
@@ -572,7 +578,7 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     if (_t_stat > 0) and (_p_value < (_alpha / 2)):
         alerts_of_interest.append(f"Night toilet usage higher than {para_ratio_threshold * 100}% of total daily usage in the past month")
     # print(alerts_of_interest)
-    return alerts_of_interest
+    return alerts_of_interest, one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
 
 def get_percentage_of_night_toilet_usage(user_id, current_sys_time=None):
     '''

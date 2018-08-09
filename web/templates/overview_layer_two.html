@@ -39,148 +39,123 @@ a.deco-none {
     </div>
     <div class="col-lg-8 col-md-8">
         <div class="well">
-            <h1 >Resident: <b>{{ resident['name'] }}</br></h1>
-                <b>Age: </b>{{ resident['age'] }}
-                <br><b>Date of Birth: </b> 1940
-                <br><b>Admission Date: </b> 31 Mar 2018
-                <br><b>Medical Information: </b> Diabetes, Dementia, Prone to falling
-                <br><b>Fall risks: </b>{{ resident['fall_risk'] }}
-                <br>
-            </div>
+            <h1>Resident: <b>{{ resident['name'] }}</br>
+            </h1>
+            <b>Age: </b>{{ resident['age'] }}
+            <br><b>Date of Birth: </b> 1940
+            <br><b>Admission Date: </b> 31 Mar 2018
+            <br><b>Medical Information: </b> Diabetes, Dementia, Prone to falling
+            <br><b>Fall risks: </b>{{ resident['fall_risk'] }}
+            <br>
         </div>
     </div>
-    <div class="row"> {# edit here for each category #}
-        <div class="col-lg-12">
-            <div class="panel panel-{{ getPanelColorFromAlertLength(resident['toilet_alerts']|length) }}"> <!--Toilet Panel-->
-                <div class="panel-heading">
-                    Night Toilet Usage Details
-                </div>
-                <div class="panel-body">
-                    <div class="col-lg-3 col-md-6 col-xs-12">
-                        <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'green' }}">
-                            {# TODO: change identifying text in if shorthand above, if input_data function changes #}
-                            <div class="panel-heading">
-                                <div class="row">
-                                    <div class="col-xs-12 text-right">
-                                        Average percentage of night toilet usage in a day
-                                        <div class="huge"><b>{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}</b></div><b>%</b>
-                                    </div>
+</div>
+<div class="row"> {# edit here for night toilet usage #}
+    <div class="col-lg-12">
+        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['toilet_alerts']|length) }}"> <!--Toilet Panel-->
+            <div class="panel-heading">
+                Night Toilet Usage Details
+            </div>
+            <div class="panel-body">
+                <div class="col-lg-3 col-md-6 col-xs-12">
+                    <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'default' }}">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    Average percentage of night toilet usage in a day
+                                    <div class="huge"><b>{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}</b></div><b>%</b>
                                 </div>
                             </div>
-                            <a href="#">
-                                <div class="panel-footer">
-                                    <span class="pull-left">View Details</span>
-                                    <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                                    <div class="clearfix"></div>
+                        </div>
+                        <a href="#">
+                            <div class="panel-footer">
+                                <span class="pull-left">View Details</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-xs-12">
+                    <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'default' }}">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    SHOW THE DIAGRAME HERE
                                 </div>
-                            </a>
+                            </div>
                         </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-xs-12">
+                    <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_MA'] else 'default' }}">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    Average number of night toilet usage
+                                    <div class="huge"><b>{{ '%0.2f'|format((resident['number_of_night_toilet_usage_in_past_week'])|float) }}</b></div><b>Times</b>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="#">
+                            <div class="panel-footer">
+                                <span class="pull-left">View Details</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- /.actual on top, below just keep for now -->
-    <div>
-        <div class="row">
-            <div class="col-lg-3 col-md-3 col-s-3">
-                <div class="panel panel-primary">
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-xs-12 text-right">
-                                Total Movement Duration at night
-                                <div class="huge"><b>15</b></div> <b>Minutes</b>
+</div>
+<div class="row"> {# edit here for sleeping patterns #}
+    <div class="col-lg-12">
+        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['sleep_alerts']|length) }}"> <!--Toilet Panel-->
+            <div class="panel-heading">
+                Sleeping Pattern Details
+            </div>
+            <div class="panel-body">
+                <div class="col-lg-3 col-md-6 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    Average movement duration during sleeping hours
+                                    <div class="huge"><b>{{ '%0.2f'|format((resident['average_motion_during_sleep'] / 60)|float) }}</b></div><b>Minutes</b>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <a href="#">
                         <div class="panel-footer">
                             <span class="pull-left">View Details</span>
                             <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
                             <div class="clearfix"></div>
                         </div>
-                    </a>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-3 col-s-3">
-                <div class="panel panel-green">
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-xs-12 text-right">
-                                Longest Consecutive Hours of Sleep at night
-                                <div class="huge"><b>3</b></div> <b>Hours</b>
-                            </div>
-                        </div>
                     </div>
-                    <a href="#">
-                        <div class="panel-footer">
-                            <span class="pull-left">View Details</span>
-                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                            <div class="clearfix"></div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-3 col-s-3">
-                <div class="panel panel-yellow">
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-xs-12 text-right">
-                                Average Toilet Visits during the day
-                                <div class="huge"><b>20</b></div>
-                                <b>Visits</b>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="#">
-                        <div class="panel-footer">
-                            <span class="pull-left">View Details</span>
-                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                            <div class="clearfix"></div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-3 col-s-3">
-                <div class="panel panel-red">
-                    <div class="panel-heading">
-                        <div class="row">
-                            <div class="col-xs-12 text-right">
-                                Average Toilet Usage during the day
-                                <div class="huge"><b>7</b></div><b>Minutes</b>
-                            </div>
-                        </div>
-                    </div>
-                    <a href="#">
-                        <div class="panel-footer">
-                            <span class="pull-left">View Details</span>
-                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                            <div class="clearfix"></div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <!-- /.row -->
-    </div>
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <i class="fa fa-bar-chart-o fa-fw"></i> Shift Log Comments
-                    <div class="pull-right">
 
-                    </div>
                 </div>
-                <!-- /.panel-heading -->
-                <div class="panel-body">
-                    <div class="panel-group" id="accordion">
-                        <div class="well"><b>18 July 2018: </b> Fell down while using the toilet in the middle of the night. No serious injuries.</div>
-                        <div class="well"><b>03 July 2018: </b> Fell down while using the toilet in the middle of the night. No serious injuries.</div>
+                <div class="col-lg-3 col-md-6 col-xs-12">
+                    <div class="panel panel-{{ 'red' if resident['check_indicator_sleep_movements'] else 'default' }}">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    This is a{{ 'n increase' if resident['average_motion_during_sleep_difference'] >= 0 else ' decrease'}} of
+                                    <div class="huge"><b>
+                                        <i class="material-icons" style="vertical-align:sup; align-content:center">
+                                            trending_{{ 'up' if resident['average_motion_during_sleep_difference'] >= 0 else 'down' }}
+                                        </i>{{ '%0.2f'|format((resident['average_motion_during_sleep_difference'] / 60)|float) }}
+                                    </b></div>
+                                    <b>Minutes</b><br/>
+                                    compared to the past 3 weeks
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <!-- /.panel-body -->
                 </div>
             </div>
         </div>
     </div>
-    {% endblock %}
+</div>
+<!-- /.actual on top, below just keep for now -->
+{% endblock %}

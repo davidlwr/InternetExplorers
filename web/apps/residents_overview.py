@@ -33,7 +33,7 @@ def showOverviewResidents():
         r['node_id'] = resident['node_id']
 
         # settle night toilet usage
-        r['toilet_alerts'] = input_data.get_nightly_toilet_indicator(int(resident['node_id']), date_in_use)
+        r['toilet_alerts'], __ = input_data.get_nightly_toilet_indicator(int(resident['node_id']), date_in_use)
         r['toilet_tooltip'] = []
         if len(r['toilet_alerts']) == 0:
             r['toilet_tooltip'].append("Night toilet visit numbers appear normal")
@@ -41,7 +41,7 @@ def showOverviewResidents():
             r['toilet_tooltip'].extend(r['toilet_alerts'])
 
         # settle sleep duration
-        r['sleep_alerts'] = input_data.get_nightly_sleep_indicator(int(resident['node_id']), date_in_use)
+        r['sleep_alerts'], __, __ = input_data.get_nightly_sleep_indicator(int(resident['node_id']), date_in_use)
         r['sleep_tooltip'] = []
         if len(r['sleep_alerts']) == 0:
             r['sleep_tooltip'].append("Normal level of motion during sleep detected")
@@ -62,11 +62,16 @@ def detailedLayerTwoOverviewResidents(node_id):
     if resident is None:
         return 'Resident not found<a href="/overview">Go Back</a>'
 
-    resident['sleep_alerts'] = input_data.get_nightly_sleep_indicator(node_id, date_in_use)
-    resident['toilet_alerts'] = input_data.get_nightly_toilet_indicator(node_id, date_in_use)
+    # sleep alerts
+    resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'] = input_data.get_nightly_sleep_indicator(node_id, date_in_use)
+
+    # toilet alerts
+    resident['toilet_alerts'], resident['number_of_night_toilet_usage_in_past_week'] = input_data.get_nightly_toilet_indicator(node_id, date_in_use)
     resident['toilet_night_to_both_ratio'], resident['toilet_night_to_both_std'] = input_data.get_percentage_of_night_toilet_usage(node_id, date_in_use)
 
-    # set indicators
+    # set indicators  {# NOTE: change identifying text below, if input_data function changes #}
     resident['check_indicator_night_toilet_ratio'] = any('of total daily usage in the past month' in s for s in resident['toilet_alerts'])
+    resident['check_indicator_night_toilet_MA'] = any('number of night toilet usage in the last week' in s for s in resident['toilet_alerts'])
+    resident['check_indicator_sleep_movements'] = any('movements during sleeping hours' in s for s in resident['sleep_alerts'])
     # get required information here and pass to the template
     return render_template('overview_layer_two.html', resident=resident)
