@@ -38,13 +38,13 @@ class ShiftLogForm(Form):
 
     time = RadioField('Shift', choices=[(1, 'Day'), (2, 'Night')], coerce=int, default=dayNightSelector)
     falls = RadioField('Number of Slips/Falls of Resident',
-                       choices=[(0, '0'), (1, '1'), (2, '2'), (3, '3')], coerce=int)
+                       choices=[(0, '0'), (1, '1'), (2, '2'), (3, '3')], coerce=int, default=0)
     near_falls = RadioField('Number of Near Falls',
-                            choices=[(0, '0'), (1, '1'), (2, '2'), (3, '3')], coerce=int)
+                            choices=[(0, '0'), (1, '1'), (2, '2'), (3, '3')], coerce=int, default=0)
     consumption = RadioField('Food consumption',
                              choices=[('insufficient', 'Insufficient'), ('moderate', 'Moderate'),
-                                      ('excessive', 'Excessive')])
-    temperature = FloatField('Temperature (°C) ')
+                                      ('excessive', 'Excessive')], default='moderate')
+    temperature = FloatField('Temperature (°C) ', default=36.9)
     sbp = FloatField('Systolic blood pressure (SBP) mmHg ')
     dbp = FloatField('Diastolic blood pressure (DBP) mmHg ')
     pulse = FloatField('Pulse Rate (b/m)  ')
