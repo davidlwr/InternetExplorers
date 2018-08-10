@@ -11,7 +11,6 @@
 {% extends 'base.html' %}
 {% block title %}{{ resident['name'] }} - Detailed Overview{% endblock %}
 {% block additional_stylesheets %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <!--
 <script type="text/javascript" src="{{ url_for('static', filename='overview.js') }}"></script>
 -->
@@ -77,11 +76,11 @@ a.deco-none {
                                     <div class="panel-body">
                                         <div class="row">
                                             <div class="col-xs-12 text-right">
-                                                
-				
+
+
 					<div id="myDiv" style="width: 300px; height: 250px;"><!-- Plotly chart will be drawn inside this DIV --></div>
 					<script>
-					
+
 					var xValue = [100 - {{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];
 					var xValue2 = [{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];;
 
@@ -99,7 +98,7 @@ a.deco-none {
 						width: 1
 					  },
 					  type: 'bar'
-					  
+
 					};
 
 					var trace2 = {
@@ -108,7 +107,7 @@ a.deco-none {
 					  name: 'Day Usage',
 					  orientation: 'h',
 					  type: 'bar',
-					  
+
 					  marker: {
 						color: 'rgb(150,230,255)',
 						width: 1
@@ -148,7 +147,7 @@ a.deco-none {
 						width: 1
 					}
 					}
-					
+
 					],
 					barmode: 'stack',
 					width:300,
@@ -172,22 +171,22 @@ a.deco-none {
 					};
 
 					Plotly.newPlot('myDiv', data, layout, {displayModeBar: false});
-					
+
 					document.getElementById('myDiv').on('plotly_afterplot', function() {
 					  var yAxisLabels = [].slice.call(document.querySelectorAll('[class^="yaxislayer"] .ytick text, [class*=" yaxislayer"] .ytick text'))
 					  var bar = document.querySelector('.plot .barlayer .bars path')
 					  var barHeight = bar.getBBox().height
 					  var offset = 30
-					  
+
 					  for (var i = 0; i < yAxisLabels.length; i++) {
 						var yAxisLabel = yAxisLabels[i];
 						yAxisLabel.setAttribute('text-anchor', 'start')
 						yAxisLabel.setAttribute('y', yAxisLabel.getAttribute('y') - (barHeight / 2) - offset)
-						
+
 					  }
 					})
 					</script>
-				
+
                                             </div>
                                         </div>
                                     </div>
@@ -208,7 +207,7 @@ a.deco-none {
                         </div>
                         <div class="panel-body">
                             <div class="col-xs-12">
-                                <div id="myDiv" class="graph"></div>
+                                <div id="night_toilet_MA_chart" class="graph"></div>
                                 <script>
                                 trace1 = {
                                     type: 'scatter',
@@ -252,7 +251,7 @@ a.deco-none {
 
                                 var data = [trace1, trace2];
 
-                                Plotly.newPlot('myDiv', data, layout, {displayModeBar: false});
+                                Plotly.newPlot('night_toilet_MA_chart', data, layout, {displayModeBar: false});
                                 </script>
                             </div>
                             <div class="col-xs-12">
