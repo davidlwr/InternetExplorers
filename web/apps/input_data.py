@@ -134,7 +134,7 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
     if isinstance(end_date, str):
         end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
-    all_days_range = pd.date_range(start_date.date(), end_date.date(), freq='D')
+    all_days_range = pd.date_range(start_date.date(), end_date.date() + datetime.timedelta(days=-1), freq='D')
     result_data = result_data.loc[all_days_range]
     result_data.fillna(0, inplace=True)
 
@@ -279,9 +279,12 @@ def get_visit_numbers_moving_average(node_id, input_location='m-02', time_period
                                              offset=offset, ignore_short_durations=ignore_short_durations,
                                              min_duration=min_duration, grouped=grouped)
     # print(result_data)
+
     r = result_data['event'].rolling(window=days, min_periods=0)
-    result_data['moving_average'] = r.mean()
-    return result_data
+    # print(r)
+    output_data = result_data.copy(deep=True)
+    output_data['moving_average'] = r.mean()
+    return output_data
 
 
 def get_door_pivots(node_id, input_location='d-01'):
@@ -507,6 +510,7 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     Returns list of night toilet usage alerts so as to determine what the colour
             of the toilet status indicator should be for a particular elderly
             Second value returns the past week average number of night toilet usage
+            Third value returns the difference
     To be called by the overview page
     Checks status for the past week
     Possible arbitary assignment of colors: 0 - Green, 1 - Yellow, 2 - Orange, 3 - Red
@@ -524,26 +528,27 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
 
     # this part can be a separate method for each check
-
+    calculation_sys_time = current_sys_time + datetime.timedelta(days=1)
     # 1st check
     para_SD_threshold = 0.66 # changeable: if difference in moving averages is higher than this multiplied by the std, alert
     # get standard deviation for the past 3 weeks first
-    std_calc_data = get_num_visits_by_date(start_date=three_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+    std_calc_data = get_num_visits_by_date(start_date=three_weeks_ago, end_date=calculation_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
     # print(std_calc_data)
     three_week_std = std_calc_data['event'].std()
     # print("3 week std", three_week_std)
 
     # get calculation data
     calculation_data = get_num_visits_by_date(start_date=max(three_weeks_ago + datetime.timedelta(days=-22),
-            input_raw_min_date), end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+            input_raw_min_date), end_date=calculation_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
 
+    # print(calculation_data)
     # compare difference in MA with 0.66 * SD (for ~75% confidence)
     three_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
             offset=True, grouped=True, days=21, result_data=calculation_data)
     one_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
             offset=True, grouped=True, days=7, result_data=calculation_data)
-    # print(len(one_week_MA))
-    # print(len(three_week_MA))
+    # print(one_week_MA)
+    # print(three_week_MA)
     current_date = current_sys_time.date()
     # print("current_date", current_date)
     # print(three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'])
@@ -579,7 +584,7 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     if (_t_stat > 0) and (_p_value < (_alpha / 2)):
         alerts_of_interest.append(f"Night toilet usage higher than {para_ratio_threshold * 100}% of total daily usage in the past month")
     # print(alerts_of_interest)
-    return alerts_of_interest, one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
+    return alerts_of_interest, one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0], difference_MA
 
 def get_percentage_of_night_toilet_usage(user_id, current_sys_time=None):
     '''

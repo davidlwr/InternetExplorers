@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='extra.css') }}"> <!-- set to reference url_for static css and put into git -->
     {% block additional_stylesheets %}{% endblock %}
+    {% block scripts %} {% endblock %}
 </head>
 <body> <!-- common sidebar -->
     <div class="col-md-2 col-xs-2 sidebar-stacked sidebar-sticky">
