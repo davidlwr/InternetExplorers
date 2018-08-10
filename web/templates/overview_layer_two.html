@@ -75,129 +75,128 @@ a.deco-none {
                                 <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'default' }}">
                                     <div class="panel-body">
                                         <div class="row">
-                                            <div class="col-xs-12 text-right">
+                                            <div class="col-xs-12">
 
 
-					<div id="myDiv" style="width: 300px; height: 250px;"><!-- Plotly chart will be drawn inside this DIV --></div>
-					<script>
+                                                <div id="night_toilet_ratio_chart" class="graph-bar"><!-- Plotly chart will be drawn inside this DIV --></div>
+                                                <script>
 
-					var xValue = [100 - {{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];
-					var xValue2 = [{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];;
+                                                var xValue = [100 - {{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];
+                                                var xValue2 = [{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];;
 
-					var yValue = ["% of Night Toilet Usage in a Day"]
+                                                var yValue = ["% of Night Toilet Usage in a Day"]
 
-					var trace1 = {
-					  x: xValue2,
-					  y: yValue,
-					  name: 'Night',
-					  orientation: 'h',
-					  marker: {
-						color: 'rgb(100, 250, 96)',
-						width: 1
-					  },
-					  type: 'bar'
+                                                var trace1 = {
+                                                    x: xValue2,
+                                                    y: yValue,
+                                                    name: 'Night',
+                                                    orientation: 'h',
+                                                    marker: {
+                                                        color: 'rgb(100, 250, 96)',
+                                                        width: 1
+                                                    },
+                                                    type: 'bar'
 
-					};
+                                                };
 
-					var trace2 = {
-					  x: xValue,
-					  y: yValue,
-					  name: 'Day',
-					  orientation: 'h',
-					  type: 'bar',
+                                                var trace2 = {
+                                                    x: xValue,
+                                                    y: yValue,
+                                                    name: 'Day',
+                                                    orientation: 'h',
+                                                    type: 'bar',
 
-					  marker: {
-						color: 'rgb(200,230,255)',
-						width: 1
-					  }
-					};
+                                                    marker: {
+                                                        color: 'rgb(200,230,255)',
+                                                        width: 1
+                                                    }
+                                                };
 
-					var data = [trace1, trace2];
+                                                var data = [trace1, trace2];
 
-					var layout = {
-					annotations: [
+                                                var layout = {
+                                                    annotations: [
 
-					{
-					  x: 0.5,
-					  y: -0.3,
-					  xref: 'x',
-					  yref: 'y',
-					  text: xValue2 + '%',
-					  showarrow: true,
-					  arrowhead: 4,
-					  ax: 0,
-					  ay: 30
-					}
-					],
-					shapes: [
-					{
-						type: 'line',
-						xref: 'paper',
-						x0: 0.3,
-						y0: -0.5,
-						x1: 0.3,
-						y1: 0.5,
-						line:{
-							color: 'rgb(255, 0, 0)',
-							width: 4,
-							dash:'dot'
-						}
-					},
-					{
-					type: 'rect',
-					// x-reference is assigned to the x-values
-					xref: 'x',
-					// y-reference is assigned to the plot paper [0,1]
-					yref: 'paper',
-					x0: 30,
-					y0: 0,
-					x1: 100,
-					y1: 1,
-					fillcolor: 'rgb(300,0,0)',
-					opacity: 0.15,
-					line: {
-						width: 1
-					}
-					}
+                                                        {
+                                                            x: 0.5,
+                                                            y: -0.3,
+                                                            xref: 'x',
+                                                            yref: 'y',
+                                                            text: xValue2 + '%',
+                                                            showarrow: true,
+                                                            arrowhead: 4,
+                                                            ax: 0,
+                                                            ay: 30
+                                                        }
+                                                    ],
+                                                    shapes: [
+                                                        {
+                                                            type: 'line',
+                                                            xref: 'paper',
+                                                            x0: 0.3,
+                                                            y0: -0.5,
+                                                            x1: 0.3,
+                                                            y1: 0.5,
+                                                            line:{
+                                                                color: 'rgb(255, 0, 0)',
+                                                                width: 4,
+                                                                dash:'dot'
+                                                            }
+                                                        },
+                                                        {
+                                                            type: 'rect',
+                                                            // x-reference is assigned to the x-values
+                                                            xref: 'x',
+                                                            // y-reference is assigned to the plot paper [0,1]
+                                                            yref: 'paper',
+                                                            x0: 30,
+                                                            y0: 0,
+                                                            x1: 100,
+                                                            y1: 1,
+                                                            fillcolor: 'rgb(300,0,0)',
+                                                            opacity: 0.15,
+                                                            line: {
+                                                                width: 1
+                                                            }
+                                                        }
 
-					],
-					barmode: 'stack',
-					width:350,
-					height:270,
-					xaxis: {
-					autorange: true,
-					showgrid: true,
-					zeroline: false,
-					showline: true,
-					autotick: true,
-					ticks: '',
-					showticklabels: true
-					},
-					margin: {
-						t: 40, //top margin
-						l: 10, //left margin
-						r: 50
-						},
-					showlegend: true,
-					legend: {"orientation": "h",y:-0.2}
-					};
+                                                    ],
+                                                    barmode: 'stack',
+                                                    autosize: true,
+                                                    xaxis: {
+                                                        autorange: true,
+                                                        showgrid: true,
+                                                        zeroline: false,
+                                                        showline: true,
+                                                        autotick: true,
+                                                        ticks: '',
+                                                        showticklabels: true
+                                                    },
+                                                    margin: {
+                                                        t: 40, //top margin
+                                                        l: 10, //left margin
+                                                        r: 50
+                                                    },
+                                                    showlegend: true,
+                                                    legend: {"orientation": "h",y:-0.2}
+                                                };
 
-					Plotly.newPlot('myDiv', data, layout, {displayModeBar: false});
+                                                Plotly.newPlot('night_toilet_ratio_chart', data, layout, {displayModeBar: false});
 
-					document.getElementById('myDiv').on('plotly_afterplot', function() {
-					  var yAxisLabels = [].slice.call(document.querySelectorAll('[class^="yaxislayer"] .ytick text, [class*=" yaxislayer"] .ytick text'))
-					  var bar = document.querySelector('.plot .barlayer .bars path')
-					  var barHeight = bar.getBBox().height
-					  var offset = 35
+                                                document.getElementById('myDiv').on('plotly_afterplot', function() {
+                                                    var yAxisLabels = [].slice.call(document.querySelectorAll('[class^="yaxislayer"] .ytick text, [class*=" yaxislayer"] .ytick text'))
+                                                    var bar = document.querySelector('.plot .barlayer .bars path')
+                                                    var barHeight = bar.getBBox().height
+                                                    var offset = 35
 
-					  for (var i = 0; i < yAxisLabels.length; i++) {
-						var yAxisLabel = yAxisLabels[i];
-						yAxisLabel.setAttribute('text-anchor', 'start')
-						yAxisLabel.setAttribute('y', yAxisLabel.getAttribute('y') - (barHeight / 2) - offset)
+                                                    for (var i = 0; i < yAxisLabels.length; i++) {
+                                                        var yAxisLabel = yAxisLabels[i];
+                                                        yAxisLabel.setAttribute('text-anchor', 'start')
+                                                        yAxisLabel.setAttribute('y', yAxisLabel.getAttribute('y') - (barHeight / 2) - offset)
 
-					  }
-					})
-					</script>
+                                                    }
+                                                })
+                                                </script>
 
                                             </div>
                                         </div>
