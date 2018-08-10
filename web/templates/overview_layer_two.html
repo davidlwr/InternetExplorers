@@ -14,6 +14,7 @@
 <!--
 <script type="text/javascript" src="{{ url_for('static', filename='overview.js') }}"></script>
 -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='overview.css') }}">
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -23,6 +24,8 @@ a.deco-none {
     text-decoration: inherit;
 }
 </style>
+{% endblock %}
+{% block scripts %}
 {% endblock %}
 {% block content %}
 <div class="row">
@@ -92,6 +95,74 @@ a.deco-none {
                                 </div>
                             </div>
                         </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="myDiv" class="graph"></div>
+                                <script>
+                                trace1 = {
+                                    type: 'scatter',
+                                    x: [1, 2, 3, 4],
+                                    y: [10, 15, 13, 17],
+                                    mode: 'lines',
+                                    name: 'Red',
+                                    line: {
+                                        color: 'rgb(219, 64, 82)',
+                                        width: 3
+                                    }
+                                };
+
+                                trace2 = {
+                                    type: 'scatter',
+                                    x: [1, 2, 3, 4],
+                                    y: [12, 9, 15, 12],
+                                    mode: 'lines',
+                                    name: 'Blue',
+                                    line: {
+                                        color: 'rgb(55, 128, 191)',
+                                        width: 1
+                                    }
+                                };
+
+                                var layout = {
+                                    autosize: true,
+                                    showlegend: false,
+                                    margin: {
+                                        l: 0,
+                                        r: 0,
+                                        b: 0,
+                                        t: 0,
+                                        pad: 4
+                                    },
+                                    yaxis: {
+                                        scaleanchor: '0.1x'
+                                    },
+                                    displayModeBar: false
+                                };
+
+                                var data = [trace1, trace2];
+
+                                Plotly.newPlot('myDiv', data, layout, {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_MA'] else 'default' }}">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                This is a{{ 'n increase' if resident['number_of_night_toilet_usage_in_past_week_diff'] >= 0 else ' decrease'}} of
+                                                <div class="huge"><b>
+                                                    <i class="material-icons" style="vertical-align:sup; align-content:center">
+                                                        trending_{{ 'up' if resident['number_of_night_toilet_usage_in_past_week_diff'] >= 0 else 'down' }}
+                                                    </i>{{ '%0.2f'|format((resident['number_of_night_toilet_usage_in_past_week_diff'])|float|abs) }}
+                                                </b></div>
+                                                <b>Times</b><br/>
+                                                compared to the past 3 weeks
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -125,7 +196,7 @@ a.deco-none {
                                                 <div class="huge"><b>
                                                     <i class="material-icons" style="vertical-align:sup; align-content:center">
                                                         trending_{{ 'up' if resident['average_motion_during_sleep_difference'] >= 0 else 'down' }}
-                                                    </i>{{ '%0.2f'|format((resident['average_motion_during_sleep_difference'] / 60)|float) }}
+                                                    </i>{{ '%0.2f'|format((resident['average_motion_during_sleep_difference'] / 60)|float|abs) }}
                                                 </b></div>
                                                 <b>Minutes</b><br/>
                                                 compared to the past 3 weeks

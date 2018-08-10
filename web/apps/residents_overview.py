@@ -33,7 +33,7 @@ def showOverviewResidents():
         r['node_id'] = resident['node_id']
 
         # settle night toilet usage
-        r['toilet_alerts'], __ = input_data.get_nightly_toilet_indicator(int(resident['node_id']), date_in_use)
+        r['toilet_alerts'], __, __ = input_data.get_nightly_toilet_indicator(int(resident['node_id']), date_in_use)
         r['toilet_tooltip'] = []
         if len(r['toilet_alerts']) == 0:
             r['toilet_tooltip'].append("Night toilet visit numbers appear normal")
@@ -66,7 +66,7 @@ def detailedLayerTwoOverviewResidents(node_id):
     resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'] = input_data.get_nightly_sleep_indicator(node_id, date_in_use)
 
     # toilet alerts
-    resident['toilet_alerts'], resident['number_of_night_toilet_usage_in_past_week'] = input_data.get_nightly_toilet_indicator(node_id, date_in_use)
+    resident['toilet_alerts'], resident['number_of_night_toilet_usage_in_past_week'], resident['number_of_night_toilet_usage_in_past_week_diff'] = input_data.get_nightly_toilet_indicator(node_id, date_in_use)
     resident['toilet_night_to_both_ratio'], resident['toilet_night_to_both_std'] = input_data.get_percentage_of_night_toilet_usage(node_id, date_in_use)
 
     # set indicators  {# NOTE: change identifying text below, if input_data function changes #}
