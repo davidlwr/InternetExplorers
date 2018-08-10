@@ -26,9 +26,9 @@ def showOverviewResidents():
     '''
     residents_raw = resident_DAO.get_list_of_residents()
     residents = []
+    date_in_use = datetime.datetime(2018, 4, 21, 23, 34, 12) # TODO: change to current system time once live data is available
     for resident in residents_raw:
         r = {}
-        date_in_use = input_data.input_raw_max_date + datetime.timedelta(days=-32) # TODO: change to current system time once live data is available
         r['name'] = resident['name']
         r['node_id'] = resident['node_id']
 
@@ -57,7 +57,7 @@ def showOverviewResidents():
 @server.route("/overview/<int:node_id>", methods=['GET', 'POST'])
 @flask_login.login_required
 def detailedLayerTwoOverviewResidents(node_id):
-    date_in_use = input_data.input_raw_max_date + datetime.timedelta(days=-32) # TODO: change to current system time once live data is available
+    date_in_use = datetime.datetime(2018, 4, 21, 23, 34, 12) # TODO: change to current system time once live data is available
     resident = resident_DAO.get_resident_by_id(node_id)
     if resident is None:
         return 'Resident not found<a href="/overview">Go Back</a>'
@@ -73,5 +73,6 @@ def detailedLayerTwoOverviewResidents(node_id):
     resident['check_indicator_night_toilet_ratio'] = any('of total daily usage in the past month' in s for s in resident['toilet_alerts'])
     resident['check_indicator_night_toilet_MA'] = any('number of night toilet usage in the last week' in s for s in resident['toilet_alerts'])
     resident['check_indicator_sleep_movements'] = any('movements during sleeping hours' in s for s in resident['sleep_alerts'])
+    resident['check_indicator_uninterrupted_sleep'] = any('interval of uninterrupted sleep decreased' in s for s in resident['sleep_alerts'])
     # get required information here and pass to the template
     return render_template('overview_layer_two.html', resident=resident)
