@@ -470,6 +470,7 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
     '''
     Returns (1) the list of alerts of interest, (2) the past week's average duration of motion during sleep
             and (3) the difference between motion during sleep in the past week versus the previous 3 weeks
+            and (4) the average longest uninterrupted sleep for the past week (in seconds)
     '''
     alerts_of_interest = [] # add alerts here, can use in the next layer to priortise things to show also
     if current_sys_time is None: # used in testing - pass in a different time for simulation
@@ -495,7 +496,7 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
     if difference_longest_sleep < -.75 * old_three_longest_sleep_average: # NOTE: changeable here
         alerts_of_interest.append("Longest interval of uninterrupted sleep decreased significantly")
 
-    return alerts_of_interest, past_week_average, difference
+    return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average
 
 def get_overview_change_values(user_id, current_sys_time=None):
     pass

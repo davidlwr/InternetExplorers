@@ -57,7 +57,7 @@ a.deco-none {
                 Night Toilet Usage Details
             </div>
             <div class="panel-body">
-                <div class="col-lg-3 col-md-6 col-xs-12">
+                <div class="col-lg-4 col-md-6 col-xs-12">
                     <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'default' }}">
                         <div class="panel-heading">
                             <div class="row">
@@ -67,27 +67,22 @@ a.deco-none {
                                 </div>
                             </div>
                         </div>
-                        <a href="#">
-                            <div class="panel-footer">
-                                <span class="pull-left">View Details</span>
-                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                                <div class="clearfix"></div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 col-xs-12">
-                    <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'default' }}">
                         <div class="panel-body">
-                            <div class="row">
-                                <div class="col-xs-12 text-right">
-                                    SHOW THE DIAGRAME HERE
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'default' }}">
+                                    <div class="panel-body">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                SHOW THE DIAGRAME HERE
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 col-xs-12">
+                <div class="col-lg-4 col-md-6 col-xs-12">
                     <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_MA'] else 'default' }}">
                         <div class="panel-heading">
                             <div class="row">
@@ -97,13 +92,6 @@ a.deco-none {
                                 </div>
                             </div>
                         </div>
-                        <a href="#">
-                            <div class="panel-footer">
-                                <span class="pull-left">View Details</span>
-                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                                <div class="clearfix"></div>
-                            </div>
-                        </a>
                     </div>
                 </div>
             </div>
@@ -117,7 +105,7 @@ a.deco-none {
                 Sleeping Pattern Details
             </div>
             <div class="panel-body">
-                <div class="col-lg-3 col-md-6 col-xs-12">
+                <div class="col-lg-4 col-md-6 col-xs-12">
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             <div class="row">
@@ -127,27 +115,36 @@ a.deco-none {
                                 </div>
                             </div>
                         </div>
-                        <div class="panel-footer">
-                            <span class="pull-left">View Details</span>
-                            <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                            <div class="clearfix"></div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_indicator_sleep_movements'] else 'default' }}">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                This is a{{ 'n increase' if resident['average_motion_during_sleep_difference'] >= 0 else ' decrease'}} of
+                                                <div class="huge"><b>
+                                                    <i class="material-icons" style="vertical-align:sup; align-content:center">
+                                                        trending_{{ 'up' if resident['average_motion_during_sleep_difference'] >= 0 else 'down' }}
+                                                    </i>{{ '%0.2f'|format((resident['average_motion_during_sleep_difference'] / 60)|float) }}
+                                                </b></div>
+                                                <b>Minutes</b><br/>
+                                                compared to the past 3 weeks
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
                 </div>
-                <div class="col-lg-3 col-md-6 col-xs-12">
-                    <div class="panel panel-{{ 'red' if resident['check_indicator_sleep_movements'] else 'default' }}">
+                <div class="col-lg-4 col-md-6 col-xs-12">
+                    <div class="panel panel-default">
                         <div class="panel-heading">
                             <div class="row">
                                 <div class="col-xs-12 text-right">
-                                    This is a{{ 'n increase' if resident['average_motion_during_sleep_difference'] >= 0 else ' decrease'}} of
-                                    <div class="huge"><b>
-                                        <i class="material-icons" style="vertical-align:sup; align-content:center">
-                                            trending_{{ 'up' if resident['average_motion_during_sleep_difference'] >= 0 else 'down' }}
-                                        </i>{{ '%0.2f'|format((resident['average_motion_during_sleep_difference'] / 60)|float) }}
-                                    </b></div>
-                                    <b>Minutes</b><br/>
-                                    compared to the past 3 weeks
+                                    Longest uninterrupted sleep duration
+                                    <div class="huge"><b>{{ '%0.2f'|format((resident['average_longest_uninterrupted_sleep'] / 3600)|float) }}</b>
+                                    </div><b>Hours</b>
                                 </div>
                             </div>
                         </div>
