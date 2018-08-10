@@ -89,12 +89,10 @@ a.deco-none {
 					var trace1 = {
 					  x: xValue2,
 					  y: yValue,
-					  name: 'Night Usage',
+					  name: 'Night',
 					  orientation: 'h',
-					  text: xValue2 + "%",
-					  textposition: 'bottom',
 					  marker: {
-						color: 'rgb(100, 200, 96)',
+						color: 'rgb(100, 250, 96)',
 						width: 1
 					  },
 					  type: 'bar'
@@ -104,12 +102,12 @@ a.deco-none {
 					var trace2 = {
 					  x: xValue,
 					  y: yValue,
-					  name: 'Day Usage',
+					  name: 'Day',
 					  orientation: 'h',
 					  type: 'bar',
 
 					  marker: {
-						color: 'rgb(150,230,255)',
+						color: 'rgb(200,230,255)',
 						width: 1
 					  }
 					};
@@ -117,6 +115,20 @@ a.deco-none {
 					var data = [trace1, trace2];
 
 					var layout = {
+					annotations: [
+
+					{
+					  x: 0.5,
+					  y: -0.3,
+					  xref: 'x',
+					  yref: 'y',
+					  text: xValue2 + '%',
+					  showarrow: true,
+					  arrowhead: 4,
+					  ax: 0,
+					  ay: 30
+					}
+					],
 					shapes: [
 					{
 						type: 'line',
@@ -150,8 +162,8 @@ a.deco-none {
 
 					],
 					barmode: 'stack',
-					width:300,
-					height:170,
+					width:350,
+					height:270,
 					xaxis: {
 					autorange: true,
 					showgrid: true,
@@ -162,12 +174,12 @@ a.deco-none {
 					showticklabels: true
 					},
 					margin: {
-						t: 30, //top margin
-						l: 20, //left margin
-						b: 40
+						t: 40, //top margin
+						l: 10, //left margin
+						r: 50
 						},
-					showlegend: false,
-					legend: {"orientation": "h",}
+					showlegend: true,
+					legend: {"orientation": "h",y:-0.2}
 					};
 
 					Plotly.newPlot('myDiv', data, layout, {displayModeBar: false});
@@ -176,7 +188,7 @@ a.deco-none {
 					  var yAxisLabels = [].slice.call(document.querySelectorAll('[class^="yaxislayer"] .ytick text, [class*=" yaxislayer"] .ytick text'))
 					  var bar = document.querySelector('.plot .barlayer .bars path')
 					  var barHeight = bar.getBBox().height
-					  var offset = 30
+					  var offset = 35
 
 					  for (var i = 0; i < yAxisLabels.length; i++) {
 						var yAxisLabel = yAxisLabels[i];
