@@ -218,11 +218,22 @@ a.deco-none {
                         </div>
                         <div class="panel-body">
                             <div class="col-xs-12">
-                                <div id="night_toilet_MA_chart" class="svg-container container-fluid"></div>
+                                <div id="night_toilet_MA_chart" class="night_toilet_MA_chart_class svg-container container-fluid"></div>
                                 <script>
                                 var graphs = {{ night_toilet_MA_graph_json | safe }}
 
                                 Plotly.newPlot('night_toilet_MA_chart', graphs.data, graphs.layout || {} , {displayModeBar: false});
+                                window.onresize = function() {
+                                    Plotly.Plots.resize('night_toilet_MA_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('night_toilet_MA_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('night_toilet_MA_chart').getElementsByClassName('plot-night_toilet_MA_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('night_toilet_MA_chart');
+                                    }
+                                };
                                 </script>
                             </div>
                             <div class="col-xs-12">
