@@ -7,6 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from wtforms.validators import InputRequired
 import flask_login
 import datetime
+import plotly
+import json
 # internal imports
 from apps import input_data
 from app import app, server
@@ -75,4 +77,48 @@ def detailedLayerTwoOverviewResidents(node_id):
     resident['check_indicator_sleep_movements'] = any('movements during sleeping hours' in s for s in resident['sleep_alerts'])
     resident['check_indicator_uninterrupted_sleep'] = any('interval of uninterrupted sleep decreased' in s for s in resident['sleep_alerts'])
     # get required information here and pass to the template
-    return render_template('overview_layer_two.html', resident=resident)
+    night_toilet_MA_graph_df = input_data.get_num_visits_by_date(date_in_use + datetime.timedelta(days=-28), date_in_use + datetime.timedelta(days=1), 'm-02', node_id, time_period='Night', offset=True, grouped=True)
+
+    # get 3 weeks stacked average series in a day
+
+    # get past week's average
+    night_toilet_MA_graph_df_last_week = night_toilet_MA_graph_df.tail(7)
+    night_toilet_MA_graph_df_last_week_average = night_toilet_MA_graph_df_last_week['event'].mean()
+    # print(night_toilet_MA_graph_df_last_week)
+    # print(night_toilet_MA_graph_df_last_week_average)
+
+    night_toilet_MA_graph = dict(
+            data=[
+                dict(
+                    x = night_toilet_MA_graph_df['gw_date_only'],
+                    y = night_toilet_MA_graph_df['event'],
+                    type = 'scatter',
+                    mode = 'lines',
+                    line = dict(
+                        width = 2,
+                        color = 'rgb(55, 128, 191)'
+                    )
+                )
+            ],
+            layout = dict(
+                autosize = True,
+                height = 180,
+                showlegend = False,
+                margin = dict(
+                    l = 0,
+                    r = 0,
+                    b = 0,
+                    t = 0,
+                    pad = 0
+                ),
+                yaxis = dict(
+                    scaleanchor = 'x',
+                    scaleratio = 0.5
+                ),
+                displayModeBar = False
+            )
+        )
+    night_toilet_MA_graph_json = json.dumps(night_toilet_MA_graph,
+            cls=plotly.utils.PlotlyJSONEncoder)
+
+    return render_template('overview_layer_two.html', resident=resident, night_toilet_MA_graph_json=night_toilet_MA_graph_json)

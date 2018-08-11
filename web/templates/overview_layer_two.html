@@ -218,51 +218,11 @@ a.deco-none {
                         </div>
                         <div class="panel-body">
                             <div class="col-xs-12">
-                                <div id="night_toilet_MA_chart" class="graph"></div>
+                                <div id="night_toilet_MA_chart" class="svg-container container-fluid"></div>
                                 <script>
-                                trace1 = {
-                                    type: 'scatter',
-                                    x: [1, 2, 3, 4],
-                                    y: [10, 15, 13, 17],
-                                    mode: 'lines',
-                                    name: 'Red',
-                                    line: {
-                                        color: 'rgb(219, 64, 82)',
-                                        width: 3
-                                    }
-                                };
+                                var graphs = {{ night_toilet_MA_graph_json | safe }}
 
-                                trace2 = {
-                                    type: 'scatter',
-                                    x: [1, 2, 3, 4],
-                                    y: [12, 9, 15, 12],
-                                    mode: 'lines',
-                                    name: 'Blue',
-                                    line: {
-                                        color: 'rgb(55, 128, 191)',
-                                        width: 1
-                                    }
-                                };
-
-                                var layout = {
-                                    autosize: true,
-                                    showlegend: false,
-                                    margin: {
-                                        l: 0,
-                                        r: 0,
-                                        b: 0,
-                                        t: 0,
-                                        pad: 4
-                                    },
-                                    yaxis: {
-                                        scaleanchor: '0.1x'
-                                    },
-                                    displayModeBar: false
-                                };
-
-                                var data = [trace1, trace2];
-
-                                Plotly.newPlot('night_toilet_MA_chart', data, layout, {displayModeBar: false});
+                                Plotly.newPlot('night_toilet_MA_chart', graphs.data, graphs.layout || {} , {displayModeBar: false});
                                 </script>
                             </div>
                             <div class="col-xs-12">
