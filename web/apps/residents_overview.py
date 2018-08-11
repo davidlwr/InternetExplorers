@@ -17,6 +17,7 @@ from Entities import resident
 
 # settle routing
 @server.route("/overview", methods=['GET', 'POST'])
+@server.route("/", methods=['GET', 'POST'])
 @flask_login.login_required
 def showOverviewResidents():
     '''
