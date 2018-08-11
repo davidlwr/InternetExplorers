@@ -81,23 +81,50 @@ def detailedLayerTwoOverviewResidents(node_id):
     night_toilet_MA_graph_df = input_data.get_num_visits_by_date(date_in_use + datetime.timedelta(days=-28), date_in_use + datetime.timedelta(days=1), 'm-02', node_id, time_period='Night', offset=True, grouped=True)
 
     # get 3 weeks stacked average series in a day
+    night_toilet_MA_graph_df_past_three = night_toilet_MA_graph_df.head(21)
+    night_toilet_MA_graph_df_past_three_average = night_toilet_MA_graph_df_past_three['event'].mean()
 
     # get past week's average
     night_toilet_MA_graph_df_last_week = night_toilet_MA_graph_df.tail(7)
     night_toilet_MA_graph_df_last_week_average = night_toilet_MA_graph_df_last_week['event'].mean()
+    night_toilet_MA_graph_df_last_week['latest_mean'] = night_toilet_MA_graph_df_last_week_average
+    night_toilet_MA_graph_df_last_week['past_mean'] = night_toilet_MA_graph_df_past_three_average
     # print(night_toilet_MA_graph_df_last_week)
     # print(night_toilet_MA_graph_df_last_week_average)
 
     night_toilet_MA_graph = dict(
             data=[
                 dict(
-                    x = night_toilet_MA_graph_df['gw_date_only'],
-                    y = night_toilet_MA_graph_df['event'],
+                    x = night_toilet_MA_graph_df_last_week['gw_date_only'],
+                    y = night_toilet_MA_graph_df_last_week['event'],
                     type = 'scatter',
                     mode = 'lines',
+                    name = 'last wk no.',
                     line = dict(
                         width = 2,
                         color = 'rgb(55, 128, 191)'
+                    )
+                ),
+                dict(
+                    x = night_toilet_MA_graph_df_last_week['gw_date_only'],
+                    y = night_toilet_MA_graph_df_last_week['latest_mean'],
+                    type = 'scatter',
+                    mode = 'lines',
+                    name = 'last wk avg',
+                    line = dict(
+                        width = 2,
+                        color = 'rgba(55, 128, 191, .5)'
+                    )
+                ),
+                dict(
+                    x = night_toilet_MA_graph_df_last_week['gw_date_only'],
+                    y = night_toilet_MA_graph_df_last_week['past_mean'],
+                    type = 'scatter',
+                    mode = 'lines',
+                    name = 'prev 3 wk avg',
+                    line = dict(
+                        width = 2,
+                        color = 'rgb(0, 128, 0)'
                     )
                 )
             ],
@@ -114,7 +141,8 @@ def detailedLayerTwoOverviewResidents(node_id):
                 ),
                 yaxis = dict(
                     scaleanchor = 'x',
-                    scaleratio = 0.5
+                    scaleratio = 0.5,
+                    hoverformat = '.2f'
                 ),
                 displayModeBar = False
             )
