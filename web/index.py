@@ -241,8 +241,8 @@ def is_safe_url(target):
 
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[InputRequired(), Length(min=4, max=25)])
-    password = PasswordField('Password', validators=[InputRequired(), Length(min=8)])
+    username = StringField('Username', validators=[InputRequired()])
+    password = PasswordField('Password', validators=[InputRequired()])
     remember = BooleanField('Remember me?')
 
     def get_user(self):
