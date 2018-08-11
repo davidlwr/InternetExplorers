@@ -37,7 +37,7 @@ auth = FlaskLoginAuth(app)
 
 class Anonymous(AnonymousUserMixin):
     def __init__(self):
-        self.username = 'Guest'
+        self.staff_type = 'Guest'
 
 
 login_manager.anonymous_user = Anonymous
