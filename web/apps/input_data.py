@@ -538,13 +538,13 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     # print("3 week std", three_week_std)
 
     # get calculation data
-    calculation_data = get_num_visits_by_date(start_date=max(three_weeks_ago + datetime.timedelta(days=-22),
+    calculation_data = get_num_visits_by_date(start_date=max(three_weeks_ago + datetime.timedelta(days=-29),
             input_raw_min_date), end_date=calculation_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
 
     # print(calculation_data)
     # compare difference in MA with 0.66 * SD (for ~75% confidence)
     three_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
-            offset=True, grouped=True, days=21, result_data=calculation_data)
+            offset=True, grouped=True, days=28, result_data=calculation_data)
     one_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
             offset=True, grouped=True, days=7, result_data=calculation_data)
     # print(one_week_MA)
@@ -584,7 +584,7 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     if (_t_stat > 0) and (_p_value < (_alpha / 2)):
         alerts_of_interest.append(f"Night toilet usage higher than {para_ratio_threshold * 100}% of total daily usage in the past month")
     # print(alerts_of_interest)
-    return alerts_of_interest, one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0], difference_MA
+    return alerts_of_interest, one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
 
 def get_percentage_of_night_toilet_usage(user_id, current_sys_time=None):
     '''
