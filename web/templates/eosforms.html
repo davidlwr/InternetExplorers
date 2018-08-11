@@ -22,10 +22,12 @@
                         {% endfor %}
                     </select>
                 </div>
-                {{ render_field(form.temperature) }}
-                {{ render_field(form.bp) }}
-                {{ render_field(form.submit) }}
-        </form>
-    </div>
+        {{ render_field(form.temperature) }}
+        {{ render_field(form.sbp) }}
+        {{ render_field(form.dbp) }}
+        {{ render_field(form.pulse) }}
+        {{ render_field(form.submit) }}
 </div>
-{% endblock %}
+</div>
+    </form>
+    {% endblock %}
