@@ -115,6 +115,11 @@ a.deco-none {
                                                 var data = [trace1, trace2];
 
                                                 var layout = {
+													title: '% of Night Toilet Usage in a Day',
+													titlefont: {
+														size: 14,
+														
+													},
                                                     annotations: [
 
                                                         {
@@ -143,26 +148,13 @@ a.deco-none {
                                                                 dash:'dot'
                                                             }
                                                         },
-                                                        {
-                                                            type: 'rect',
-                                                            // x-reference is assigned to the x-values
-                                                            xref: 'x',
-                                                            // y-reference is assigned to the plot paper [0,1]
-                                                            yref: 'paper',
-                                                            x0: 30,
-                                                            y0: 0,
-                                                            x1: 100,
-                                                            y1: 1,
-                                                            fillcolor: 'rgb(300,0,0)',
-                                                            opacity: 0.15,
-                                                            line: {
-                                                                width: 1
-                                                            }
-                                                        }
+                                                        
 
                                                     ],
                                                     barmode: 'stack',
                                                     autosize: true,
+													width:300,
+													height:250,
                                                     xaxis: {
                                                         autorange: true,
                                                         showgrid: true,
@@ -172,6 +164,9 @@ a.deco-none {
                                                         ticks: '',
                                                         showticklabels: true
                                                     },
+													yaxis: {
+														showticklabels: false
+													},
                                                     margin: {
                                                         t: 40, //top margin
                                                         l: 10, //left margin
