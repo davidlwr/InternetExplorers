@@ -14,7 +14,7 @@ locationMap = input_data.get_location_options()
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     html.Div([
-        html.Nav([
+        html.Div([
             html.Div([
                 html.Ul([
                     html.Li([
@@ -53,9 +53,9 @@ app.layout = html.Div([
                             html.A('Logout', href='/logout')
                         ], className='nav-link')
                     ], className='nav-item')
-                ], className='nav flex-column')
-            ], className='sidebar-sticky')
-        ], className='col-md-2 sidebar col-xs-12'),
+                ], className='nav')
+            ], className='sidebar-nav navbar-collapse')
+        ], className='navbar-default sidebar col-md-2 col-xs-12'),
         html.Main([
             html.Div([
                 html.Div([

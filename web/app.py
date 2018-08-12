@@ -25,9 +25,10 @@ csspath2 = ''
 
 with server.test_request_context():
     csspath = url_for('static', filename='overview.css')
-    csspath2 = url_for('static', filename='extra.css')
+    csspath2 = url_for('static', filename='sb-admin-2.css')
+    csspath3 = url_for('static', filename='metis-menu.min.css')
 # Bootstrap sample template for css
 css_source = ['https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css',
-              csspath]
+              csspath, csspath2, csspath3]
 for css in css_source:
     app.css.append_css({'external_url': css})
