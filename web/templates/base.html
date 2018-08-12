@@ -15,13 +15,16 @@
     <link rel="stylesheet" href="https://unpkg.com/rc-slider@6.1.2/assets/index.css">
     <link rel="stylesheet" href="https://unpkg.com/dash-core-components@0.23.0/dash_core_components/react-dates@12.3.0.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='extra.css') }}"> <!-- set to reference url_for static css and put into git -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='metis-menu.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='sb-admin-2.css') }}">
+    <!--<link rel="stylesheet" href="{{ url_for('static', filename='extra.css') }}"> set to reference url_for static css and put into git -->
     {% block additional_stylesheets %}{% endblock %}
     {% block scripts %} {% endblock %}
 </head>
 <body> <!-- common sidebar -->
+    <div id="wrapper">
     <div class="col-md-2 col-xs-2 sidebar-stacked sidebar-sticky">
-        <ul class="nav flex-column sidebar-nav">
+        <ul class="nav">
             <li class="nav-item">
                 <div class="nav-link">
                     <a href="/graphs">Graphs</a>
@@ -59,11 +62,14 @@
             </li>
         </ul>
     </div>
-    <main class="col-md-10 ml-sm-auto col-lg-10">
-        {% block content %}{% endblock %}
-    </main>
+    <div id="page-wrapper">
+        <main class="col-md-10 ml-sm-auto col-lg-10">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
     <div id="footer">
         {% block footer %} {% endblock %}
+    </div>
     </div>
 </body>
 </html>

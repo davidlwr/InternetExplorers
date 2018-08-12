@@ -78,7 +78,7 @@ a.deco-none {
                                             <div class="col-xs-12">
 
 
-                                                <div id="night_toilet_ratio_chart" class="graph-bar"><!-- Plotly chart will be drawn inside this DIV --></div>
+                                                <div id="night_toilet_ratio_chart" class="night_toilet_ratio_chart_class svg_container container-fluid"><!-- Plotly chart will be drawn inside this DIV --></div>
                                                 <script>
 
                                                 var xValue = [100 - {{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];
@@ -118,22 +118,9 @@ a.deco-none {
 													title: '% of Night Toilet Usage in a Day',
 													titlefont: {
 														size: 14,
-														
-													},
-                                                    annotations: [
 
-                                                        {
-                                                            x: 0.5,
-                                                            y: -0.3,
-                                                            xref: 'x',
-                                                            yref: 'y',
-                                                            text: xValue2 + '%',
-                                                            showarrow: true,
-                                                            arrowhead: 4,
-                                                            ax: 0,
-                                                            ay: 30
-                                                        }
-                                                    ],
+													},
+
                                                     shapes: [
                                                         {
                                                             type: 'line',
@@ -148,12 +135,11 @@ a.deco-none {
                                                                 dash:'dot'
                                                             }
                                                         },
-                                                        
+
 
                                                     ],
                                                     barmode: 'stack',
                                                     autosize: true,
-													width:300,
 													height:250,
                                                     xaxis: {
                                                         autorange: true,
@@ -177,20 +163,6 @@ a.deco-none {
                                                 };
 
                                                 Plotly.newPlot('night_toilet_ratio_chart', data, layout, {displayModeBar: false});
-
-                                                document.getElementById('myDiv').on('plotly_afterplot', function() {
-                                                    var yAxisLabels = [].slice.call(document.querySelectorAll('[class^="yaxislayer"] .ytick text, [class*=" yaxislayer"] .ytick text'))
-                                                    var bar = document.querySelector('.plot .barlayer .bars path')
-                                                    var barHeight = bar.getBBox().height
-                                                    var offset = 35
-
-                                                    for (var i = 0; i < yAxisLabels.length; i++) {
-                                                        var yAxisLabel = yAxisLabels[i];
-                                                        yAxisLabel.setAttribute('text-anchor', 'start')
-                                                        yAxisLabel.setAttribute('y', yAxisLabel.getAttribute('y') - (barHeight / 2) - offset)
-
-                                                    }
-                                                })
                                                 </script>
 
                                             </div>
@@ -202,7 +174,7 @@ a.deco-none {
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-xs-12">
-                    <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_MA'] else 'default' }}">
+                    <div class="panel panel-default">
                         <div class="panel-heading">
                             <div class="row">
                                 <div class="col-xs-12 text-right">
@@ -224,25 +196,34 @@ a.deco-none {
                                     var content_div_height = document.getElementById('night_toilet_MA_chart').offsetHeight;
                                     // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
                                     if (content_div_height > (window_height - 40)) {
-                                        var svg_container = document.getElementById('night_toilet_MA_chart').getElementsByClassName('plot-night_toilet_MA_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        var svg_container = document.getElementById('night_toilet_MA_chart').getElementsByClassName('night_toilet_MA_chart_class')[0].getElementsByClassName('svg-container')[0];
                                         svg_container.style.height = (window_height - 40) + 'px';
                                         Plotly.Plots.resize('night_toilet_MA_chart');
+                                    }
+
+                                    Plotly.Plots.resize('night_toilet_ratio_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('night_toilet_ratio_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('night_toilet_ratio_chart').getElementsByClassName('night_toilet_ratio_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('night_toilet_ratio_chart');
                                     }
                                 };
                                 </script>
                             </div>
                             <div class="col-xs-12">
-                                <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_MA'] else 'default' }}">
+                                <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_MA'] else 'info' }}">
                                     <div class="panel-heading">
                                         <div class="row">
                                             <div class="col-xs-12 text-right">
-                                                This is a{{ 'n increase' if resident['number_of_night_toilet_usage_in_past_week_diff'] >= 0 else ' decrease'}} of
-                                                <div class="huge"><b>
+                                                {{ 'Increase' if resident['number_of_night_toilet_usage_in_past_week_diff'] >= 0 else 'Decrease'}} of
+                                                <span class="semihuge">
                                                     <i class="material-icons" style="vertical-align:sup; align-content:center">
                                                         trending_{{ 'up' if resident['number_of_night_toilet_usage_in_past_week_diff'] >= 0 else 'down' }}
                                                     </i>{{ '%0.2f'|format((resident['number_of_night_toilet_usage_in_past_week_diff'])|float|abs) }}
-                                                </b></div>
-                                                <b>Times</b><br/>
+                                                </span><b>Times</b>
                                                 compared to the past 3 weeks
                                             </div>
                                         </div>
@@ -275,16 +256,16 @@ a.deco-none {
                         </div>
                         <div class="panel-body">
                             <div class="col-xs-12">
-                                <div class="panel panel-{{ 'red' if resident['check_indicator_sleep_movements'] else 'default' }}">
+                                <div class="panel panel-{{ 'red' if resident['check_indicator_sleep_movements'] else 'info' }}">
                                     <div class="panel-heading">
                                         <div class="row">
                                             <div class="col-xs-12 text-right">
-                                                This is a{{ 'n increase' if resident['average_motion_during_sleep_difference'] >= 0 else ' decrease'}} of
-                                                <div class="huge"><b>
+                                                {{ 'Increase' if resident['average_motion_during_sleep_difference'] >= 0 else 'Decrease'}} of
+                                                <span class="semihuge"><b>
                                                     <i class="material-icons" style="vertical-align:sup; align-content:center">
                                                         trending_{{ 'up' if resident['average_motion_during_sleep_difference'] >= 0 else 'down' }}
                                                     </i>{{ '%0.2f'|format((resident['average_motion_during_sleep_difference'] / 60)|float|abs) }}
-                                                </b></div>
+                                                </b></span>
                                                 <b>Minutes</b><br/>
                                                 compared to the past 3 weeks
                                             </div>
