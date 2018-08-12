@@ -50,15 +50,20 @@ a.deco-none {
                                 <tr class="{{ getSWDFromAlertLength(resident['sleep_alerts']|length) }}">
                                     <td><i class="material-icons" style="font-size:17px; vertical-align:sup">brightness_4</i></td>
                                     <td><b>Sleep Patterns</b></td>
-                                    <td><div href="#" data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['sleep_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">{{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}</div></td>
-                                    <td></td>
+                                    <td><div>
+                                        {{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}</div></td>
+                                    <td class="text-center"><div data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['sleep_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
+                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
+                                    </div></td>
                                 </tr>
                                 <tr class="{{ getSWDFromAlertLength(resident['toilet_alerts']|length) }}">
                                     <td><i class="fa fa-bathtub" style="font-size:15px; vertical-align:sup"></i></td>
                                     <td><b>Night Toilet Usage</b></td>
-                                    <td><div href="#" data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['toilet_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
+                                    <td><div>
                                         {{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}</div></td>
-                                    <td><i></i></td>
+                                    <td class="text-center"><div data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['toilet_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
+                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
+                                    </div></td>
                                 </tr>
                             </tbody>
                         </table>

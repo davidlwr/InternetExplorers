@@ -131,12 +131,12 @@ def detailedLayerTwoOverviewResidents(node_id):
             ],
             layout = dict(
                 autosize = True,
-                height = 180,
+                height = 200,
                 showlegend = False,
                 margin = dict(
-                    l = 0,
-                    r = 0,
-                    b = 0,
+                    l = 20,
+                    r = 20,
+                    b = 25,
                     t = 0,
                     pad = 0
                 ),
@@ -144,6 +144,11 @@ def detailedLayerTwoOverviewResidents(node_id):
                     scaleanchor = 'x',
                     scaleratio = 0.5,
                     hoverformat = '.2f'
+                ),
+                xaxis = dict(
+                    title = "Day",
+                    tickformat = "%a",
+                    showticklabels = True
                 ),
                 displayModeBar = False
             )
