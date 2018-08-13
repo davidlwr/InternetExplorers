@@ -561,7 +561,7 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
 
     # now check for ratio of night to day toilet usage | can be split to new method
     # NOTE: we use 4 weeks approx. equal to a month and ~30 (28) for good sample size
-    para_ratio_threshold = 0.3 # changeable: if night usage is higher than this ratio of total usage, alert
+    para_ratio_threshold = 0.1 # changeable: if night usage is higher than this ratio of total usage, alert
                                # here we use number of toilet visits as a proxy for urinal volume
                                # nocturnal bladder capacity is usually higher than in the day, so if the amount
                                #+is really that high, nocturia index is much likely to be that high

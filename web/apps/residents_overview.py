@@ -156,4 +156,13 @@ def detailedLayerTwoOverviewResidents(node_id):
     night_toilet_MA_graph_json = json.dumps(night_toilet_MA_graph,
             cls=plotly.utils.PlotlyJSONEncoder)
 
+    # get the 7 days
+
+    sleeping_motion_graph = dict(
+            data=[
+                dict(
+
+                )
+            ]
+    )
     return render_template('overview_layer_two.html', resident=resident, night_toilet_MA_graph_json=night_toilet_MA_graph_json)

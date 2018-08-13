@@ -211,6 +211,28 @@ a.deco-none {
                                         Plotly.Plots.resize('night_toilet_ratio_chart');
                                     }
                                 };
+
+                                $(document).ready(function () {
+                                    Plotly.Plots.resize('night_toilet_MA_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('night_toilet_MA_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('night_toilet_MA_chart').getElementsByClassName('night_toilet_MA_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('night_toilet_MA_chart');
+                                    }
+
+                                    Plotly.Plots.resize('night_toilet_ratio_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('night_toilet_ratio_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('night_toilet_ratio_chart').getElementsByClassName('night_toilet_ratio_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('night_toilet_ratio_chart');
+                                    }
+                                });
                                 </script>
                             </div>
                             <div class="col-xs-12">
