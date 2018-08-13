@@ -8,7 +8,7 @@
 {% from "_classconverter.html" import getPanelColorFromAlertLength %}
 {% from "_classconverter.html" import getGMHFromAlertLength %}
 {% from "_classconverter.html" import getFooterFromAlertLength %}
-{% extends 'base.html' %}
+{% extends 'new_base.html' %}
 {% block title %}{{ resident['name'] }} - Detailed Overview{% endblock %}
 {% block additional_stylesheets %}
 <!--
@@ -65,8 +65,8 @@ a.deco-none {
                         <div class="panel-heading">
                             <div class="row">
                                 <div class="col-xs-12 text-right">
-                                    Average percentage of night toilet usage in a day
-                                    <div class="huge"><b>{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}</b></div><b>%</b>
+                                    Average percentage of night toilet usage in a day<br/>
+                                    <span class="huge"><b>{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}</b></span><b> %</b>
                                 </div>
                             </div>
                         </div>
@@ -89,6 +89,7 @@ a.deco-none {
                                                 var trace1 = {
                                                     x: xValue2,
                                                     y: yValue,
+                                                    width: 0.5,
                                                     name: 'Night',
                                                     orientation: 'h',
                                                     marker: {
@@ -102,6 +103,7 @@ a.deco-none {
                                                 var trace2 = {
                                                     x: xValue,
                                                     y: yValue,
+                                                    width: 0.5,
                                                     name: 'Day',
                                                     orientation: 'h',
                                                     type: 'bar',
@@ -126,12 +128,12 @@ a.deco-none {
                                                             type: 'line',
                                                             xref: 'paper',
                                                             x0: 0.3,
-                                                            y0: -0.5,
+                                                            y0: -0.3,
                                                             x1: 0.3,
-                                                            y1: 0.5,
+                                                            y1: 0.3,
                                                             line:{
                                                                 color: 'rgb(255, 0, 0)',
-                                                                width: 4,
+                                                                width: 3,
                                                                 dash:'dot'
                                                             }
                                                         },
