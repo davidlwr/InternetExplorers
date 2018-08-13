@@ -1,7 +1,8 @@
 import datetime, os, sys
 import pandas as pd
-from DAOs.connection_manager import connection_manager
 
+if __name__ == '__main__':  sys.path.append("..")
+from DAOs.connection_manager import connection_manager
 from Entities.sensor_log import Sensor_Log
 from Entities.activity import Activity
 
@@ -28,13 +29,9 @@ class sensor_log_DAO(object):
         """
         Sets obj vars and returns max_datetime and min_datetime found in the database
 
-        Return:
-        (max (datetime), min (datetime)) or (None, None) if None found
+        Returns:
+        (max_datetime, min_datetime) or (None, None) if nothing found
         """
-
-        # Get connection, which incidentally closes itself during garbage collection
-        factory = connection_manager()
-        connection = factory.connection
 
         query = """SELECT MAX({}) as 'max' , 
                           MIN({}) as 'min' 
@@ -43,8 +40,12 @@ class sensor_log_DAO(object):
                     Sensor_Log.recieved_timestamp_tname, \
                     sensor_log_DAO.table_name)
 
-        # Get cursor
-        with connection.cursor() as cursor:
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
             cursor.execute(query)
             result = cursor.fetchone()
 
@@ -53,8 +54,11 @@ class sensor_log_DAO(object):
                 self.max_datetime = result['max']
                 self.min_datetime = result['min']
                 return result['max'], result['min']
-            else:
-                return None, None
+            else: return None, None
+
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
 
     @staticmethod
     def insert_sensor_log(sensor_log):
@@ -68,16 +72,16 @@ class sensor_log_DAO(object):
         query = "INSERT INTO {} VALUES(%s, %s, %s, %s)" \
             .format(sensor_log_DAO.table_name)
 
-        # Get connection, which incidentally closes itself during garbage collection
+        # Get connection
         factory = connection_manager()
         connection = factory.connection
+        cursor = connection.cursor()
 
-        with connection.cursor() as cursor:
-            try:
-                cursor.execute(query, sensor_log.var_list)
-            except Exception as error:
-                print(error)
-                # raise
+        try:
+            cursor.execute(query, sensor_log.var_list)
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
 
     def get_logs(self, uuid, start_datetime, end_datetime):
         """
@@ -97,12 +101,12 @@ class sensor_log_DAO(object):
                 """.format(sensor_log_DAO.table_name, Sensor_Log.uuid_tname, Sensor_Log.recieved_timestamp_tname,
                            Sensor_Log.recieved_timestamp_tname)
 
-        # Get connection, which incidentally closes itself during garbage collection
+        # Get connection
         factory = connection_manager()
         connection = factory.connection
+        cursor = connection.cursor()
 
-        # Get cursor
-        with connection.cursor() as cursor:
+        try:
             cursor.execute(query, [uuid, start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
                                    end_datetime.strftime('%Y-%m-%d %H:%M:%S')])
             result = cursor.fetchall()
@@ -119,6 +123,10 @@ class sensor_log_DAO(object):
                                              recieved_timestamp=recieved_timestamp)
                     logs.append(row_log_obj)
             return logs
+
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
 
     def get_activities_per_period(self, uuid, start_datetime, end_datetime, time_period=None, min_secs=3):
         """
@@ -157,6 +165,7 @@ class sensor_log_DAO(object):
 
         return activities
 
+
     @staticmethod
     def get_all_logs():
         """
@@ -165,7 +174,7 @@ class sensor_log_DAO(object):
 
         query = "SELECT * FROM {}".format(sensor_log_DAO.table_name)
 
-        # Get connection, which incidentally closes itself during garbage collection
+        # Get connection
         factory = connection_manager()
         connection = factory.connection
 

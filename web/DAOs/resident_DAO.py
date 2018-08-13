@@ -12,16 +12,19 @@ def get_resident_by_id(node_id):
     Returns a resident (in a dict) based on node_id (in int)
     '''
     query = 'SELECT * FROM {} WHERE node_id = %s'.format(table_name)
+
+    # Get connection
     factory = connection_manager()
     connection = factory.connection
+    cursor = connection.cursor()
 
-    with connection.cursor() as cursor:
+    try:
         cursor.execute(query, (node_id, ))
         result = cursor.fetchone()
-
         return result
+    except: raise
+    finally: factory.close_all(cursor=cursor, connection=connection)
 
-    return None
 
 def get_list_of_residents(filter_active=True, location_filter=None):
     '''
@@ -39,19 +42,20 @@ def get_list_of_residents(filter_active=True, location_filter=None):
         # pass
         # query +=
 
+    # Get connection
     factory = connection_manager()
     connection = factory.connection
-    # print(query)
-    with connection.cursor() as cursor:
+    cursor = connection.cursor()
+
+    try:
         cursor.execute(query)
         results = cursor.fetchall()
         # have to try printing this
-        if results:
-            # print(results)
-            return results
-        else:
-            return None
-    return None
+        if results: return results
+        else: return None
+    except: raise
+    finally: factory.close_all(cursor=cursor, connection=connection)
+
 
 def insert_resident(name, node_id, age, fall_risk=None, status="Active", stay_location="STB"):
     '''
@@ -59,13 +63,14 @@ def insert_resident(name, node_id, age, fall_risk=None, status="Active", stay_lo
     '''
     query = 'INSERT INTO {} (name, node_id, age, fall_risk, status, stay_location) VALUES (%s, %s, %s, %s, %s, %s)'.format(table_name)
     values = (name, node_id, age, fall_risk, status, stay_location)
-    factory    = connection_manager()
-    connection = factory.connection
 
-    with connection.cursor() as cursor:
-        try:
-            cursor.execute(query, values)
-            return cursor.lastrowid
-        except Exception as error:
-            print(error)
-            raise
+    # Get connection
+    factory = connection_manager()
+    connection = factory.connection
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(query, values)
+        return cursor.lastrowid
+    except: raise
+    finally: factory.close_all(cursor=cursor, connection=connection)

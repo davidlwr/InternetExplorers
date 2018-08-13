@@ -1,8 +1,11 @@
-from DAOs.connection_manager import connection_manager
 import secrets
 import string
 import hashlib
+import sys
+
+if __name__ == '__main__':  sys.path.append("..")
 from Entities.user import User
+from DAOs.connection_manager import connection_manager
 
 
 class user_DAO(object):
@@ -24,35 +27,30 @@ class user_DAO(object):
         password -- str
         '''
 
-        # Get connection, which incidentally closes itself during garbage collection
+        # Get connection
         factory = connection_manager()
         connection = factory.connection
+        cursor =  connection.cursor()
 
-        with connection.cursor() as cursor:
-
-            # Get salt
+        try:
+            # Check if username exists
             query = "SELECT {} FROM {} WHERE {} = '{}'" \
                 .format(User.encrypted_password_token_tname, user_DAO.table_name, User.username_tname, username)
-            # print(query)
             cursor.execute(query)
             result = cursor.fetchone()
+            if result is None: return None   # No username found
 
-            if result is None:  # No username found
-                return None
-
+            # Get salt, Encrypt given password and authenticate
             salt = result[User.encrypted_password_token_tname]
             encrypted_password = (salt + password).encode('utf-8')
             encrypted_password = hashlib.sha512(encrypted_password).hexdigest()
-            # Encrypt given password and authenticate
             query = "SELECT * FROM {} WHERE {} = '{}' AND {} = '{}'" \
-                .format(user_DAO.table_name, User.username_tname, username, User.encrypted_password_tname,
-                        encrypted_password)
+                .format(user_DAO.table_name, User.username_tname, username, User.encrypted_password_tname, encrypted_password)
 
             cursor.execute(query)
             result = cursor.fetchone()
 
-            if result is None:
-                return None
+            if result is None: return None  # Auth failed
             else:
                 username = result[User.username_tname]
                 name = result[User.name_tname]
@@ -61,6 +59,9 @@ class user_DAO(object):
                 staff_type = result[User.staff_type_tname]
 
                 return User(username=username, name=name, email=email, last_sign_in=last_sign_in, staff_type=staff_type)
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
 
     # NOTE: On salting and hashing: https://stackoverflow.com/questions/685855/how-do-i-authenticate-a-user-in-php-mysql
     @staticmethod
@@ -72,7 +73,6 @@ class user_DAO(object):
         user (Entities.User)
         password (str)
         '''
-
         # Generate Hash
         alphabet = string.ascii_letters + string.digits
         salt = ''.join(secrets.choice(alphabet) for i in range(20))
@@ -83,16 +83,16 @@ class user_DAO(object):
             .format(user_DAO.table_name, user.username, user.name, user.email, encrypted_password, salt,
                     user.last_sign_in, user.staff_type)
 
-        # Get connection, which incidentally closes itself during garbage collection
+        # Get connection
         factory = connection_manager()
         connection = factory.connection
+        cursor = connection.cursor()
 
-        with connection.cursor() as cursor:
-            try:
-                cursor.execute(query)
-            except Exception as error:
-                print(error)
-                raise
+        try:
+            cursor.execute(query)
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
 
     # below to comply with flask-login API
     @staticmethod
@@ -101,39 +101,26 @@ class user_DAO(object):
         Returns a User object that corresponds to a row entry in the table, by id
         Returns None if no such id exists
         '''
-        query = "select * from {} where {} = '{}'".format(user_DAO.table_name, User.username_tname, input_username)
-        # print(query)
+        query = "SELECT * FROM {} WHERE {} = '{}'".format(user_DAO.table_name, User.username_tname, input_username)
 
-        # Get connection, which incidentally closes itself during garbage collection
+        # Get connection
         factory = connection_manager()
         connection = factory.connection
+        cursor = connection.cursor()
 
-        with connection.cursor() as cursor:
+        try:
             cursor.execute(query)
             result = cursor.fetchone()
 
-            if result is None:
-                return None
+            if result is None: return None 
             else:
-                username = result[User.username_tname]
-                name = result[User.name_tname]
-                email = result[User.email_tname]
+                username     = result[User.username_tname]
+                name         = result[User.name_tname]
+                email        = result[User.email_tname]
                 last_sign_in = result[User.last_sign_in_tname]
-                staff_type = result[User.staff_type_tname]
-
+                staff_type   = result[User.staff_type_tname]
                 return User(username=username, name=name, email=email, last_sign_in=last_sign_in, staff_type=staff_type)
 
-# # # TESTS
-# dao = user_DAO()
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
 
-# # # Insert
-# user = User("usernayme", "nayme", "emayle", "1", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-# dao.insert_user(user, "password1234")
-# print("insert done...")
-
-# # # Authenticate
-# user = dao.authenticate("usernayme", "password1234")
-# print(user)
-# print("auth done...")
-
-# r = dao.authenticate(username="xXxiao_shadow_flamezXx", password='wrong_pass')

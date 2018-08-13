@@ -1,9 +1,9 @@
 import datetime, os, sys
-from DAOs.connection_manager import connection_manager
-import secrets
-import string
 
+if __name__ == '__main__':  sys.path.append("..")
+from DAOs.connection_manager import connection_manager
 from Entities.shift_log import Shift_log
+
 
 class shift_log_DAO(object):
     '''
@@ -24,12 +24,10 @@ class shift_log_DAO(object):
     def set_min_max_datetime(self):
         '''
         Sets obj vars and returns max_datetime and min_datetime found in the database
+
+        Returns:
+        (max_datetime, min_datetime) or (None, None) if nothing found
         '''
-
-         # Get connection, which incidentally closes itself during garbage collection
-        factory = connection_manager()
-        connection = factory.connection
-
         query = """SELECT MAX({}) as 'max' ,
                           MIN({}) as 'min'
                           FROM {};"""                    \
@@ -37,8 +35,12 @@ class shift_log_DAO(object):
                             Shift_log.datetime_tname,    \
                             shift_log_DAO.table_name)
 
-        # Get cursor
-        with connection.cursor() as cursor:
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
             cursor.execute(query)
             result = cursor.fetchone()
 
@@ -47,8 +49,10 @@ class shift_log_DAO(object):
                 self.max_datetime = result['max']
                 self.min_datetime = result['min']
                 return result['max'], result['min']
-            else:
-                return None, None
+            else: return None, None
+                
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
 
 
     def insert_shift_log(self, shift_log):
@@ -61,16 +65,16 @@ class shift_log_DAO(object):
         query = """INSERT INTO {} VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""" \
                     .format(shift_log_DAO.table_name)
 
-        # Get connection, which incidentally closes itself during garbage collection
+         # Get connection
         factory = connection_manager()
         connection = factory.connection
+        cursor = connection.cursor()
 
-        with connection.cursor() as cursor:
-            try:
-                cursor.execute(query, shift_log.var_list)
-            except Exception as error:
-                print(error)
-                raise
+
+        try:
+            cursor.execute(query, shift_log.var_list)
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
 
 
 

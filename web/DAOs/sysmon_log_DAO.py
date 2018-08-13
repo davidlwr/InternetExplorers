@@ -1,9 +1,8 @@
 import datetime, os, sys
-from connection_manager import connection_manager
 
 if __name__ == '__main__':  sys.path.append("..")
 from Entities.sysmon_log import Sysmon_Log
-
+from DAOs.connection_manager import connection_manager
 
 class sysmon_log_DAO(object):
     '''
@@ -19,54 +18,50 @@ class sysmon_log_DAO(object):
 
         Returns success boolean
         '''
-
-        # Get connection, which incidentally closes itself during garbage collection
-        factory = connection_manager()
-        connection = factory.connection
-
         query = "INSERT INTO {} VALUES('{}', '{}', '{}', '{}', '{}')"                        \
                     .format(sysmon_log_DAO.table_name, log.uuid, log.node_id,                \
                             log.event, log.key, log.recieved_timestamp.strftime('%Y-%m-%d %H:%M:%S'))
+        
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
 
-        with connection.cursor() as cursor:
-            try:
-                cursor.execute(query)
-            except Exception as error:
-                print(error)
-                raise
+        try:
+            cursor.execute(query)
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
             
 
     def get_all_logs(self):
         '''
-        Returns sysmon logs for a uuid between and start and end datetime
-
-        Inputs:
-        uuid (str)
+        Returns all sysmon logs in the DB
         '''
 
-        # Get connection, which incidentally closes itself during garbage collection
+        # Get connection
         factory = connection_manager()
         connection = factory.connection
+        cursor = connection.cursor()
 
         query = f"SELECT * FROM {sysmon_log_DAO.table_name}"
 
-        with connection.cursor() as cursor:
-            try:
-                cursor.execute(query)
-                results = cursor.fetchall()
-                logs = []
-                if results != None:
-                    for result in results:
-                        uuid    = result[Sysmon_Log.uuid_tname]
-                        node_id = result[Sysmon_Log.node_id_tname]
-                        event   = result[Sysmon_Log.event_tname]
-                        key     = result[Sysmon_Log.key_tname]
-                        ts      = result[Sysmon_Log.recieved_timestamp_tname]
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            logs = []
+            if results != None:
+                for result in results:
+                    uuid    = result[Sysmon_Log.uuid_tname]
+                    node_id = result[Sysmon_Log.node_id_tname]
+                    event   = result[Sysmon_Log.event_tname]
+                    key     = result[Sysmon_Log.key_tname]
+                    ts      = result[Sysmon_Log.recieved_timestamp_tname]
 
-                        log = Sysmon_Log(uuid, node_id, event, key, ts)
-                        logs.append(log)
-                return logs
+                    log = Sysmon_Log(uuid, node_id, event, key, ts)
+                    logs.append(log)
+            return logs
 
-            except Exception as error:
-                print(error)
-                raise
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
