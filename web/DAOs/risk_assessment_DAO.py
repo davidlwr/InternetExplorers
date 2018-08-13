@@ -1,18 +1,17 @@
 import datetime, os
-from connection_manager import connection_manager
+from DAOs.connection_manager import connection_manager
 import secrets
 import string
 import sys
 
-sys.path.append('../Entities')
-from risk_assesment import Risk_assesment
+from Entities.risk_assessment import Risk_assessment
 
-class risk_assesment_DAO(object):
+class risk_assessment_DAO(object):
     '''
     This class handles connection between app and the database table
     '''
 
-    table_name = "stbern.RISK_ASSESMENT"
+    table_name = "stbern.RISK_ASSESSMENT"
 
     def __init__(self):
         '''
@@ -35,9 +34,9 @@ class risk_assesment_DAO(object):
         query = """SELECT MAX({}) as 'max' , 
                           MIN({}) as 'min' 
                           FROM {};"""                         \
-                    .format(Risk_assesment.datetime_tname,    \
-                            Risk_assesment.datetime_tname,    \
-                            risk_assesment_DAO.table_name)
+                    .format(Risk_assessment.datetime_tname,    \
+                            Risk_assessment.datetime_tname,    \
+                            risk_assessment_DAO.table_name)
 
         # Get cursor
         with connection.cursor() as cursor:
@@ -65,7 +64,7 @@ class risk_assesment_DAO(object):
                        %s, %s, %s, %s, %s, %s,
                        %s, %s, %s, %s, %s, %s,
                        %s, %s, %s, %s, %s, %s,
-                       %s, %s, %s, %s);""".format(risk_assesment_DAO.table_name)
+                       %s, %s, %s, %s, %s);""".format(risk_assessment_DAO.table_name)
 
 
         # Get connection, which incidentally closes itself during garbage collection

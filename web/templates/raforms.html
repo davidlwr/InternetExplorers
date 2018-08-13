@@ -1,0 +1,81 @@
+{% from "_formhelpers.html" import render_field %}
+{% from "_formhelpers.html" import render_radio_fields %}
+{% from "_formhelpers.html" import render_name_field %}
+{% extends 'base.html' %}
+{% block title %}End of Shift Forms{% endblock %}
+{% block additional_stylesheets %}
+<link rel="stylesheet" href="{{ url_for('static', filename='overview.css') }}">
+{% endblock %}
+{% block content %}
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js" type="text/javascript"></script>
+</head>
+
+<div class="container">
+    <div class="col-md-12 col-lg-12">
+        <form class="well form-horizontal" method="POST" action="/eosforms">
+        {{ form.csrf_token }}
+        {{ render_name_field(form.name) }}
+        {{ render_field(form.date)  }}
+        {{ render_field(form.weight)  }}
+            <br>
+            <div class="form-group">
+                <label class="col-md-4 control-label">Mental Behaviour Status</label>
+                <div class="col-md-4 inputGroupContainer">
+                    <div class="input-group">
+                        <input type="checkbox" name="normal" value="normal" checked>Normal<br>
+                        <input type="checkbox" name="confusion" value="confusion" >Confusion<br>
+                        <input type="checkbox" name="restlessness" value="restlessness" >Restlessness<br>
+                        <input type="checkbox" name="agitation" value="agitation" >Agitation<br>
+                        <input type="checkbox" name="uncooperative" value="uncooperative" >Uncooperative<br>
+                        <input type="checkbox" name="hallucination" value="hallucination" >Hallucination<br>
+                        <input type="checkbox" name="drowsy" value="drowsy" >Drowsy<br>
+                        Others <input type="text" name="otherBehaviours" ><br>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="form-group">
+                <label class="col-md-4 control-label">Elderly needs assistance on daily activities (Tick box if yes)</label>
+                <div class="col-md-4 inputGroupContainer">
+                    <div class="input-group">
+                        <input type="checkbox" name="medicine" value="medicine" >Taking medicine (without reminder)<br>
+                        <input type="checkbox" name="clothes" value="clothes" >Changing own clothes<br>
+                        <input type="checkbox" name="eating" value="eating" >Eating<br>
+                        <input type="checkbox" name="bathing" value="bathing" >Bathing<br>
+                        <input type="checkbox" name="walking" value="walking" >Walking<br>
+                        <input type="checkbox" name="toileting" value="toileting" >Toileting<br>
+                        Others <input type="text" name="otherAssistance" ><br>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="form-group">
+                <label class="col-md-4 control-label">Pain affecting level of function</label>
+                <div class="col-md-4 inputGroupContainer">
+                    <div class="input-group">
+                        <input type="checkbox" name="noPain" value="noPain" checked>No pain<br>
+                        <input type="checkbox" name="general" value="general" >Generalised pain (abdominal, headache, etc.)<br>
+                        <input type="checkbox" name="joint" value="joint" >Musculoskeletal/Joint Pain<br>
+                        <input type="checkbox" name="critical" value="critical" >Critical Pain in other parts<br>
+                        Others <input type="text" name="otherPain" ><br>
+                    </div>
+                </div>
+            </div>
+            <br>
+        {{ render_radio_fields(form.medication_amount)  }}
+        {{ render_radio_fields(form.hearing)  }}
+        {{ render_radio_fields(form.vision)  }}
+        {{ render_radio_fields(form.mobility)  }}
+        {{ render_radio_fields(form.dependent)  }}
+        {{ render_field(form.dependency)  }}
+        {{ render_field(form.submit) }}
+
+    </form>
+{% endblock %}

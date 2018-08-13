@@ -126,7 +126,22 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
         result_data = result_data.iloc[1:]
         result_data.reset_index(drop=True, inplace=True)
 
-    # print(result_data)
+    # add 0 for days with no data
+    result_data.set_index('gw_date_only', inplace=True)
+    if isinstance(start_date, str):
+        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+
+    if isinstance(end_date, str):
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+
+    all_days_range = pd.date_range(start_date.date(), end_date.date() + datetime.timedelta(days=-1), freq='D')
+    result_data = result_data.loc[all_days_range]
+    result_data.fillna(0, inplace=True)
+
+    # undo set index
+    result_data.reset_index(inplace=True)
+    result_data.rename(columns={'index':'gw_date_only'}, inplace=True)
+    # print("result data from get_num_visits_by_date\n", result_data)
     return result_data
 
 
@@ -222,8 +237,9 @@ def get_grouped_data(current_data, remove_all=False):
                         to_process = False
                 else:  # error
                     # display error to console
-                    print('check data - missing active (ON) reading:')
-                    print(current_data['recieved_timestamp'].iloc[i])
+                    # print('check data - missing active (ON) reading:')
+                    # print(current_data['recieved_timestamp'].iloc[i])
+                    pass
         else:
             if current_data['event'].iloc[i] == 0:
                 to_process = True
@@ -263,9 +279,12 @@ def get_visit_numbers_moving_average(node_id, input_location='m-02', time_period
                                              offset=offset, ignore_short_durations=ignore_short_durations,
                                              min_duration=min_duration, grouped=grouped)
     # print(result_data)
+
     r = result_data['event'].rolling(window=days, min_periods=0)
-    result_data['moving_average'] = r.mean()
-    return result_data
+    # print(r)
+    output_data = result_data.copy(deep=True)
+    output_data['moving_average'] = r.mean()
+    return output_data
 
 
 def get_door_pivots(node_id, input_location='d-01'):
@@ -287,9 +306,14 @@ def get_average_longest_sleep(node_id, start_date, end_date, use_door=False):
     NOTE: Intended usage is to be called weekly (called for each week, possibly excluding weekend nights) to analyse changes in sleep quality across weeks
     '''
     # TODO: consider dates where no data could be obtained - ignore in average calculations
+    # TODO: consider returning tuple with SD as well
 
     start_time = default_sleep_start
     end_time = default_sleep_end
+
+    # strip time information from input datetime
+    # start_date = start_date.date()
+    # end_date = end_date.date()
 
     date_range = pd.date_range(start_date, end_date - datetime.timedelta(days=1))
     total_days = 0
@@ -311,12 +335,12 @@ def get_average_longest_sleep(node_id, start_date, end_date, use_door=False):
         temp_data = current_data[current_data.recieved_timestamp < datetime.datetime.combine(single_date, start_time)]
         # print(temp_data)
         last_active_value = temp_data.loc[temp_data['recieved_timestamp'].idxmax()].event
-        print("DEBUG: last active value", last_active_value)
+        # print("DEBUG: last active value", last_active_value)
         current_longest = 0
         night_data = current_data[(current_data.recieved_timestamp > datetime.datetime.combine(single_date, start_time))
                                   & (current_data.recieved_timestamp < datetime.datetime.combine(
             single_date + datetime.timedelta(days=1), end_time))]
-        print(night_data)
+        # print(night_data)
         night_data.reset_index(drop=True, inplace=True)
 
         loop_start_index = 0
@@ -332,7 +356,7 @@ def get_average_longest_sleep(node_id, start_date, end_date, use_door=False):
                     loop_start_index = i + 1
                     current_longest = (night_data['recieved_timestamp'].iloc[i] - datetime.datetime.combine(single_date,
                                                                                                             start_time)).total_seconds()
-                    print("see this once per day only")
+                    # print("see this once per day only")
                     break
 
         # else can just start counting from the next occurrence of 0
@@ -349,15 +373,15 @@ def get_average_longest_sleep(node_id, start_date, end_date, use_door=False):
         # +range is exclusive for the 2nd argument
 
         # check end
-        if night_data['event'].iloc[loop_end_index] == 0:
+        if loop_end_index >= 0 and night_data['event'].iloc[loop_end_index] == 0:
             current_duration = (datetime.datetime.combine(single_date + datetime.timedelta(days=1), end_time) -
                                 night_data['recieved_timestamp'].iloc[loop_end_index]).total_seconds()
             if current_duration > current_longest:
                 current_longest = current_duration
-        print("DEBUG: current longest", current_longest)
+        # print("DEBUG: current longest", current_longest)
         total_longest += current_longest
 
-    print("DEBUG: total_days", total_days)
+    # print("DEBUG: total_days", total_days)
     average_longest = total_longest / total_days  # in seconds
     return average_longest
 
@@ -368,7 +392,7 @@ def get_average_longest_sleep(node_id, start_date, end_date, use_door=False):
 
 def motion_duration_during_sleep(node_id, start_date, end_date, use_door=False):
     '''
-    Get the average total motion duration detected during sleep as a measure of sleep quality
+    Get the average total motion duration detected (in seconds) during sleep as a measure of sleep quality
     NOTE: Intended to be used weekly (called for each week, possibly excluding weekend nights) to analyse changes in sleep quality across weeks
     '''
     # NOTE: can easily reprogram to give average sleep non-motion if required
@@ -379,8 +403,11 @@ def motion_duration_during_sleep(node_id, start_date, end_date, use_door=False):
     total_days = 0
     total_motion_aggregated = 0
 
-    current_data = get_relevant_data('m-01', start_date, end_date + datetime.timedelta(days=1), node_id,
-                                     True)
+    # strip time information from input datetime
+    # start_date = start_date.date()
+    # end_date = end_date.date()
+
+    current_data = get_relevant_data('m-01', start_date, end_date + datetime.timedelta(days=1), node_id, True)
     # group true so that motion close together is considered more significant, resulting in lower sleep quality (e.g. tossing in bed)
     # +NOTE: not implemented yet
 
@@ -399,14 +426,14 @@ def motion_duration_during_sleep(node_id, start_date, end_date, use_door=False):
 
         # get latest reading before start
         temp_data = current_data[current_data.recieved_timestamp < datetime.datetime.combine(single_date, start_time)]
-        # print(temp_data)
+        # print(single_date, temp_data)
         last_active_value = temp_data.loc[temp_data['recieved_timestamp'].idxmax()].event
-        print("DEBUG: last active value", last_active_value)
+        # print("DEBUG: last active value", last_active_value)
 
         night_data = current_data[(current_data.recieved_timestamp > datetime.datetime.combine(single_date, start_time))
                                   & (current_data.recieved_timestamp < datetime.datetime.combine(
             single_date + datetime.timedelta(days=1), end_time))]
-        print(night_data)
+        # print(night_data)
         night_data.reset_index(drop=True, inplace=True)
 
         loop_start_index = 0
@@ -420,7 +447,7 @@ def motion_duration_during_sleep(node_id, start_date, end_date, use_door=False):
                     total_motion_daily += (
                             night_data['recieved_timestamp'].iloc[i] - datetime.datetime.combine(single_date,
                                                                                                  start_time)).total_seconds()
-                    print("see this once per day only")
+                    # print("see this once per day only")
                     break
 
         # loop through each period of motion
@@ -431,22 +458,62 @@ def motion_duration_during_sleep(node_id, start_date, end_date, use_door=False):
                     i]).total_seconds()
 
         # check end
-        if night_data['event'].iloc[loop_end_index] == 1:
+        # print("DEBUG", loop_end_index)
+        if loop_end_index >= 0 and night_data['event'].iloc[loop_end_index] == 1:
             total_motion_daily += (datetime.datetime.combine(single_date + datetime.timedelta(days=1), end_time) -
                                    night_data['recieved_timestamp'].iloc[loop_end_index]).total_seconds()
-        print("DEBUG: daily total motion", total_motion_daily)
+        # print("DEBUG: daily total motion", total_motion_daily)
         total_motion_aggregated += total_motion_daily
 
     average_motion = total_motion_aggregated / total_days
     return average_motion
     # TODO: can replace this to be as a percentage of sleeping hours
 
+def get_nightly_sleep_indicator(user_id, current_sys_time=None):
+    '''
+    Returns (1) the list of alerts of interest, (2) the past week's average duration of motion during sleep
+            and (3) the difference between motion during sleep in the past week versus the previous 3 weeks
+            and (4) the average longest uninterrupted sleep for the past week (in seconds)
+    '''
+    alerts_of_interest = [] # add alerts here, can use in the next layer to priortise things to show also
+    if current_sys_time is None: # used in testing - pass in a different time for simulation
+        current_sys_time = datetime.datetime.now()
+
+    current_sys_date = current_sys_time.date()
+    three_weeks_ago = current_sys_date + datetime.timedelta(days=-21)
+    one_week_ago = current_sys_date + datetime.timedelta(days=-7)
+    four_weeks_ago = current_sys_date + datetime.timedelta(days=-28)
+
+    # 1st check
+    # get previous 3 weeks average motion first, then take the past week's
+    old_three_average = motion_duration_during_sleep(user_id, four_weeks_ago, one_week_ago)
+    past_week_average = motion_duration_during_sleep(user_id, one_week_ago, current_sys_time)
+    difference = past_week_average - old_three_average
+    if difference > old_three_average * 0.5: # NOTE: changeable here
+        alerts_of_interest.append("Increased movements during sleeping hours, likely having more segmented sleep")
+
+    # 2nd check
+    old_three_longest_sleep_average = get_average_longest_sleep(user_id, four_weeks_ago, one_week_ago)
+    past_week_longest_sleep_average = get_average_longest_sleep(user_id, one_week_ago, current_sys_time)
+    difference_longest_sleep = past_week_longest_sleep_average - old_three_longest_sleep_average
+    if difference_longest_sleep < -.75 * old_three_longest_sleep_average: # NOTE: changeable here
+        alerts_of_interest.append("Longest interval of uninterrupted sleep decreased significantly")
+
+    return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average
+
+def get_overview_change_values(user_id, current_sys_time=None):
+    pass
+
+
 def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     '''
-    Returns what the colour of the toilet status indicator should be for a particular elderly
+    Returns list of night toilet usage alerts so as to determine what the colour
+            of the toilet status indicator should be for a particular elderly
+            Second value returns the past week average number of night toilet usage
+            Third value returns the difference
     To be called by the overview page
     Checks status for the past week
-    0 - Green, 1 - Yellow, 2 - Orange, 3 - Red
+    Possible arbitary assignment of colors: 0 - Green, 1 - Yellow, 2 - Orange, 3 - Red
 
     With changeable parameters for the different checks
     NOTE: function assumes that readings for the elderly is normal at the start, and may alert only upon changes
@@ -461,20 +528,26 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
 
     # this part can be a separate method for each check
-
+    calculation_sys_time = current_sys_time + datetime.timedelta(days=1)
     # 1st check
     para_SD_threshold = 0.66 # changeable: if difference in moving averages is higher than this multiplied by the std, alert
     # get standard deviation for the past 3 weeks first
-    std_calc_data = get_num_visits_by_date(start_date=three_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
-    print(std_calc_data)
+    std_calc_data = get_num_visits_by_date(start_date=three_weeks_ago, end_date=calculation_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+    # print(std_calc_data)
     three_week_std = std_calc_data['event'].std()
-    print("3 week std", three_week_std)
+    # print("3 week std", three_week_std)
 
+    # get calculation data
+    calculation_data = get_num_visits_by_date(start_date=max(three_weeks_ago + datetime.timedelta(days=-29),
+            input_raw_min_date), end_date=calculation_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+
+    # print(calculation_data)
     # compare difference in MA with 0.66 * SD (for ~75% confidence)
     three_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
-            offset=True, grouped=True, days=21)
+            offset=True, grouped=True, days=28, result_data=calculation_data)
     one_week_MA = get_visit_numbers_moving_average(user_id, time_period='Night',
-            offset=True, grouped=True, days=7)
+            offset=True, grouped=True, days=7, result_data=calculation_data)
+    # print(one_week_MA)
     # print(three_week_MA)
     current_date = current_sys_time.date()
     # print("current_date", current_date)
@@ -484,11 +557,11 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
             - three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'].values[0])
     # print("difference_MA", difference_MA)
     if difference_MA > para_SD_threshold * three_week_std:
-        alerts_of_interest.append("short MA > long MA")
+        alerts_of_interest.append("Increased number of night toilet usage in the last week")
 
     # now check for ratio of night to day toilet usage | can be split to new method
     # NOTE: we use 4 weeks approx. equal to a month and ~30 (28) for good sample size
-    para_ratio_threshold = 0.3 # changeable: if night usage is higher than this ratio of total usage, alert
+    para_ratio_threshold = 0.1 # changeable: if night usage is higher than this ratio of total usage, alert
                                # here we use number of toilet visits as a proxy for urinal volume
                                # nocturnal bladder capacity is usually higher than in the day, so if the amount
                                #+is really that high, nocturia index is much likely to be that high
@@ -497,11 +570,11 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
 
     # get night usage
     past_month_data_night = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
-
+    # print("past_month_data_night", past_month_data_night)
     # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
     past_month_data_both = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, offset=True, grouped=True)
     past_month_data_both['threshold_cmp_value'] = past_month_data_both.apply(lambda row: row['event'] * para_ratio_threshold, axis=1)
-    # print(past_month_data_both)
+    # print("past_month_data_both", past_month_data_both)
     # alert if difference in average over the past week is statistically significant beyond the para_ratio_threshold, 95% confidence interval
 
     _confidence_interval = 0.95
@@ -509,9 +582,29 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     # use paired t-tests and check for ratio difference of 0.3
     (_t_stat, _p_value) = scipy.stats.ttest_rel(past_month_data_night['event'], past_month_data_both['threshold_cmp_value'])
     if (_t_stat > 0) and (_p_value < (_alpha / 2)):
-        alerts_of_interest.append(f"night toilet usage higher than {para_ratio_threshold * 100}% of day usage")
-    print(alerts_of_interest)
-    return len(alerts_of_interest)
+        alerts_of_interest.append(f"Night toilet usage higher than {para_ratio_threshold * 100}% of total daily usage in the past month")
+    # print(alerts_of_interest)
+    return alerts_of_interest, one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
+
+def get_percentage_of_night_toilet_usage(user_id, current_sys_time=None):
+    '''
+    Returns the percentage of night toilet usage divided by total usage in a day, averaged over a month (as first value in tuple)
+    Also returns standard deviation (as the second value in the tuple)
+    '''
+    if current_sys_time is None: # used in testing - pass in a different time for simulation
+        current_sys_time = datetime.datetime.now()
+    four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
+    # get night usage
+    past_month_data_night = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+    # print("past_month_data_night", past_month_data_night)
+    # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
+    past_month_data_both = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, offset=True, grouped=True)
+
+    # calculate percentage for each night
+    ratio_series = past_month_data_night['event'] / past_month_data_both['event']
+    # print(ratio_series)
+
+    return ratio_series.mean(), ratio_series.std()
 
 # below for testing only
 if __name__ == '__main__':
@@ -535,6 +628,10 @@ if __name__ == '__main__':
     # print("result", result)
 
     # test getting indicators
-    # result = get_nightly_toilet_indicator(2005, input_raw_max_date) # + datetime.timedelta(days=-2))
+    # result = get_nightly_toilet_indicator(2006, input_raw_max_date + datetime.timedelta(days=-10))
     # print ("result", result)
+
+    # test night toilet ratios
+    # get_percentage_of_night_toilet_usage(2005, input_raw_max_date + datetime.timedelta(days=-10))
+    # get_percentage_of_night_toilet_usage(2006, input_raw_max_date + datetime.timedelta(days=-10))
     pass # prevents error when no debug tests are being done

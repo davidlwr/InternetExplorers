@@ -1,0 +1,14 @@
+<!doctype html>
+<title>Hello from Flask</title>
+{% if name %}
+  <h1>Hello {{ name }}!</h1>
+  <h1>Date: {{ date }}!</h1>
+  <h1>Weight: {{ weight }}!</h1>
+  <h1>Normal: {{ normal }}!</h1>
+  <h1>Confusion: {{ confusion }}!</h1>
+  <h1>Restlessness: {{ restlessness }}!</h1>
+  <br>
+  <a href='/'>Go to main graphs</a>
+{% else %}
+  <h1>Hello, World!</h1>
+{% endif %}

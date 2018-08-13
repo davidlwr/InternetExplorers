@@ -3,7 +3,7 @@ import sys
 
 sys.path.append('../Entities')
 from activity import Activity
-from risk_assesment import Risk_assesment
+from risk_assessment import Risk_assesment
 from sensor_log import Sensor_Log
 from shift_log import Shift_log
 from sysmon_log import Sysmon_Log

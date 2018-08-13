@@ -1,0 +1,28 @@
+{% macro getPanelColorFromAlertLength(_length) %}
+{# the + and - signs are used to remove whitespaces #}
+{%+ if _length == 0 -%}green{%+ endif -%}
+{%+ if _length == 1 -%}yellow{%+ endif -%}
+{%+ if _length == 2 -%}yellow{%+ endif -%}
+{%+ if _length == 3 -%}red{%+ endif -%}
+{% endmacro %}
+
+{% macro getSWDFromAlertLength(_length) %}
+{%+ if _length == 0 -%}success{%+ endif -%}
+{%+ if _length == 1 -%}warning{%+ endif -%}
+{%+ if _length == 2 -%}warning{%+ endif -%}
+{%+ if _length == 3 -%}danger{%+ endif -%}
+{% endmacro %}
+
+{% macro getGMHFromAlertLength(_length) %}
+{%+ if _length == 0 -%}Good{%+ endif -%}
+{%+ if _length == 1 -%}Moderate{%+ endif -%}
+{%+ if _length == 2 -%}Moderate{%+ endif -%}
+{%+ if _length == 3 -%}High{%+ endif -%}
+{% endmacro %}
+
+{% macro getFooterFromAlertLength(_length) %}
+{%+ if _length == 0 -%}Normal{%+ endif -%}
+{%+ if _length == 1 -%}To Observe{%+ endif -%}
+{%+ if _length == 2 -%}To Observe{%+ endif -%}
+{%+ if _length == 3 -%}High Alert{%+ endif -%}
+{% endmacro %}

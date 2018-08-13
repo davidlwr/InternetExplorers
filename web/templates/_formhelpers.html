@@ -1,6 +1,8 @@
 {% macro render_field(field) %}
-  <dt>{{ field.label }}
-  <dd>{{ field(**kwargs)|safe }}
+<div class="form-group">
+    <label for="{{field.name}}" class="col-md-4 control-label" >{{ field.label.text }}</label>
+  <div class="col-md-4 inputGroupContainer">
+    <div class="input-group">{{ field(class_='form-control',**kwargs)|safe }}
   {% if field.errors %}
     <ul class=errors>
     {% for error in field.errors %}
@@ -8,7 +10,57 @@
     {% endfor %}
     </ul>
   {% endif %}
-  </dd>
+    </div>
+  </div>
+</div>
 {% endmacro %}
 
-<!--From PrettyPrinted github-->
+{% macro render_name_field(field) %}
+<div class="form-group">
+  <label for="{{field.name}}" class="col-md-4 control-label" >{{ field.label.text }}</label>
+  <div class="col-md-4 inputGroupContainer">
+    <div class="input-group">
+      <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+        {{ field(class_='form-control',**kwargs)|safe }}
+            {% if field.errors %}
+              <ul class=errors>
+                {% for error in field.errors %}
+                <li style="color:red;">{{ error }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_radio_fields(field) %}
+<div class="form-group">
+  <label  class="col-md-4 control-label" >{{ field.label.text }}</label>
+  <div class="col-md-4">
+    {% for subfield in field %}
+    <div class="radio">
+      <label>
+        {{ subfield }}
+        {{ subfield.label.text }}
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_login_field(field) %}
+<div class="form-group">
+  <label>{{ field.label }}</label>
+  <dd>{{ field(**kwargs)|safe }}
+    {% if field.errors %}
+    <ul class=errors>
+      {% for error in field.errors %}
+      <li style="color:red;">{{ error }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </dd>
+</div>
+{% endmacro %}
