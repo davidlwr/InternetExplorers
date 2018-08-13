@@ -6,6 +6,7 @@ import datetime
 # internal imports
 from app import app
 from apps import input_data
+from DAOs import resident_DAO
 
 locationMap = input_data.get_location_options()
 
@@ -69,7 +70,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input',
-                                options=[{'label': i, 'value': i} for i in input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
                                 placeholder='Select a resident to view'
                             )
                         ], className='col-md-4'),
@@ -119,7 +120,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input_toilet_numbers',
-                                options=[{'label': i, 'value': i} for i in input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
                                 placeholder='Select resident(s) to view',
                                 value=[],
                                 multi=True
@@ -204,7 +205,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input_visit_duration',
-                                options=[{'label': i, 'value': i} for i in input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
                                 placeholder='Select resident(s) to view',
                                 value=[],
                                 multi=True

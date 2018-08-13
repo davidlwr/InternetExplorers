@@ -69,3 +69,13 @@ def insert_resident(name, node_id, age, fall_risk=None, status="Active", stay_lo
         except Exception as error:
             print(error)
             raise
+
+def get_resident_name_by_node_id(node_id):
+    '''
+    Returns the name of the resident based on current node_id
+    '''
+    resident = get_resident_by_id(node_id)
+    if resident is None:
+        return None
+
+    return resident['name']
