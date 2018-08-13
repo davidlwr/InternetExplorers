@@ -29,7 +29,7 @@ def resident_query():
 
 class ShiftLogForm(Form):
     name = QuerySelectField(query_factory=resident_query, allow_blank=False, get_label='name')
-    date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')])
+    date = DateField('Date', format='%Y-%m-%d', default=datetime.today, validators=[InputRequired('Please enter date!')])
     timeNow = datetime.time(datetime.now())
     today7pm = timeNow.replace(hour=19, minute=0, second=0, microsecond=0)
     dayNightSelector = 1
