@@ -27,10 +27,6 @@ class risk_assessment_DAO(object):
         Sets obj vars and returns max_datetime and min_datetime found in the database
         '''
 
-         # Get connection, which incidentally closes itself during garbage collection
-        factory = connection_manager()
-        connection = factory.connection
-
         query = """SELECT MAX({}) as 'max' , 
                           MIN({}) as 'min' 
                           FROM {};"""                         \
@@ -38,17 +34,24 @@ class risk_assessment_DAO(object):
                             Risk_assessment.datetime_tname,    \
                             risk_assessment_DAO.table_name)
 
-        # Get cursor
-        with connection.cursor() as cursor:
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
             cursor.execute(query)
             result = cursor.fetchone()
 
-            #set class vars
-            self.max_datetime = result['max']
-            self.min_datetime = result['min']
+            # set class vars
+            if result != None:
+                self.max_datetime = result['max']
+                self.min_datetime = result['min']
+                return result['max'], result['min']
+            else: return None, None
 
-            # return
-            return result['max'], result['min']
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
 
     
     def insert_risk_assessment(self, risk_assessment):
@@ -66,17 +69,15 @@ class risk_assessment_DAO(object):
                        %s, %s, %s, %s, %s, %s,
                        %s, %s, %s, %s, %s);""".format(risk_assessment_DAO.table_name)
 
-
-        # Get connection, which incidentally closes itself during garbage collection
+        # Get connection
         factory = connection_manager()
         connection = factory.connection
+        cursor = connection.cursor()
 
-        with connection.cursor() as cursor:
-            try:
-                cursor.execute(query, risk_assessment.tname_list + risk_assessment.var_list)
-            except Exception as error:
-                print(error)
-                raise
+        try:
+            cursor.execute(query, risk_assessment.tname_list + risk_assessment.var_list)
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
 
     
 
