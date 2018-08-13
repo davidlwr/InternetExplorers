@@ -23,7 +23,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # internal imports
 from app import app, server, db
 from apps import input_data, dashboard, reports, residents_overview, shift_log_form, risk_assessment_form
-from apps.shift_log_form import Resident
+from apps.shift_log_form import Resident, ShiftLogForm
 from Entities.user import User
 from DAOs.user_DAO import user_DAO
 
@@ -51,6 +51,18 @@ login_manager.anonymous_user = Anonymous
 #     fall_risk = db.Column(db.String(45))
 #     status = db.Column(db.String(45))
 #     stay_location = db.Column(db.String(45))
+
+class Shift_log(db.Model):
+    datetime = db.Column(db.DateTime, primary_key=True)
+    patient_id = db.Column(db.Integer, primary_key=True)
+    num_falls = db.Column(db.Integer)
+    num_near_falls = db.Column(db.Integer)
+    food_consumption = db.Column(db.String(45))
+    num_toilet_visit = db.Column(db.Integer)
+    temperature = db.Column(db.Float)
+    systolic_bp = db.Column(db.Float)
+    diastolic_bp = db.Column(db.Float)
+    pulse_rate = db.Column(db.Float)
 
 
 class User(db.Model):
@@ -104,6 +116,7 @@ class MyModelView(ModelView):
     column_display_pk = True
     column_default_sort = 'username'
     column_exclude_list = ('encrypted_password', 'encrypted_password_token')
+    form_edit_rules = ('name', 'email', 'staff_type')
 
     # column_editable_list = ( 'name', 'email', 'staff_type')
     # @expose('/register/', methods=('GET', 'POST'))
@@ -122,16 +135,22 @@ class MyModelView(ModelView):
     def get_create_form(self):
         return CreateForm
 
-    def get_edit_form(self):
-        return EditForm
+    # def get_edit_form(self):
+    #     return EditForm
 
     # def get_delete_form(self):
     #     return CreateForm
 
     def validate_form(self, form):
+
         try:
-            if form.validate_on_submit() and form.encrypted_password.data:
-                encrypted_password = form.encrypted_password.data
+            encrypted_password = form.encrypted_password.data
+
+            if user_DAO.get_user_by_id(form.username.data) is not None:
+                flash('The username is already in use')
+                return
+
+            if form.validate_on_submit() and encrypted_passworda:
                 alphabet = string.ascii_letters + string.digits
                 encrypted_password_token = ''.join(secrets.choice(alphabet) for i in range(20))
                 encrypted_password = (encrypted_password_token + encrypted_password).encode('utf-8')
@@ -145,7 +164,6 @@ class MyModelView(ModelView):
 
 
 class ResidentView(ModelView):
-    print("submitted2")
 
     def is_accessible(self):
         if current_user.staff_type == 'Admin' or current_user.staff_type == 'Staff':
@@ -168,6 +186,31 @@ class ResidentView(ModelView):
     #         return super(MyModelView, self).validate_form(form)
     #
     #     return super(MyModelView, self).validate_form(form)
+
+
+class FormView(ModelView):
+    #
+    # def create_form(self):
+    #     ShiftLogForm()
+    # can_create = False
+    column_display_pk = True
+    column_default_sort = ('datetime', True)
+
+    @expose('/new/', methods=('GET', 'POST'))
+    def create_view(self):
+        form = ShiftLogForm()
+        return render_template('eosforms.html', form=form)
+    # def get_create_form(self):
+    #     return ShiftLogForm
+
+    # create_template = 'createLogForm.html'
+
+    def is_accessible(self):
+        if current_user.staff_type == 'Admin' or current_user.staff_type == 'Staff':
+            return True
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('show_graphs'))
 
 
 class MyAdminIndexView(AdminIndexView):
@@ -231,6 +274,7 @@ class MyAdminIndexView(AdminIndexView):
 admin = Admin(server, index_view=MyAdminIndexView(), base_template='my_master.html')
 admin.add_view(MyModelView(User, db.session))
 admin.add_view(ResidentView(Resident, db.session))
+admin.add_view(FormView(Shift_log, db.session))
 
 
 # utlity method for security
