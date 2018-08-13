@@ -3,68 +3,41 @@ import datetime
 class Sysmon_Log(object):
     '''
     This class represents a row entry of the DB table 'SYSMON_LOG'
-
-    Class static variables:
-    sensor_id_tname         = "sensor_id"
-    sensor_location_tname   = "sensor_location"
-    gateway_id_tname        = "gateway_id"
-    gateway_timestamp_tname = "gateway_timestamp"
-    key_tname               = "key"
-    reading_type_tname      = "reading_type"
-    server_timestamp_tname  = "server_timestamp"
-    value_tname             = "value"
     '''
 
     # Table col names
-    sensor_id_tname         = "sensor_id"
-    sensor_location_tname   = "sensor_location"
-    gateway_id_tname        = "gateway_id"
-    gateway_timestamp_tname = "gateway_timestamp"
-    key_tname               = "key"
-    reading_type_tname      = "reading_type"
-    server_timestamp_tname  = "server_timestamp"
-    value_tname             = "value"
+    uuid_tname               = "uuid"
+    node_id_tname            = "node_id"
+    event_tname              = "event"
+    key_tname                = "key"
+    recieved_timestamp_tname = "recieved_timestamp"
 
     # write param defs
-    def __init__(self, sensor_id, gateway_id, reading_type, value, sensor_location=None,   \
-                gateway_timestamp=None, key=None, server_timestamp=None):
+    def __init__(self, uuid, node_id, event, key, recieved_timestamp):
         '''
         Constructor method
 
-        Keyword arguments:
-        sensor_id         -- 
-        gateway_id        -- 
-        reading_type      --
-        value             -- 
-        sensor_location   -- str, location description (default None)
-        gateway_timestamp -- Datetime obj (default None)
-        key               -- (default None)
-        server_timestamp  -- datetime obj (default None)
-        
+        Input:
+        uuid (str)
+        node_id (int)
+        event (float)
+        key (str)
+        recieved_timestamp (datetime)
         '''        
-        self.sensor_id         = sensor_id
-        self.sensor_location   = sensor_location
-        self.gateway_id        = gateway_id
-        self.gateway_timestamp = gateway_timestamp
-        self.key               = key
-        self.reading_type      = reading_type
-        self.server_timestamp  = server_timestamp
-        self.value             = value
+        self.uuid               = uuid
+        self.node_id            = node_id
+        self.event              = event
+        self.key                = key
+        self.recieved_timestamp = recieved_timestamp
 
-
-    def datetime_to_date(self, date_time):
-        '''
-        changes datetime to date only
-        '''
-        return date_time.replace(hour=0, minute=0, second=0, microsecond=0)
+        self.varlist = [self.uuid, self.node_id, self.event, self.key, self.recieved_timestamp]
 
 
     def __str__(self):
         '''
         String representation of object
         '''
-        return f"LOG: sens_id: {self.sensor_id}, sens_loc: {self.sensor_location}, gw_id: {self.gateway_id}, gw_ts: {self.gateway_timestamp.strftime('%Y-%m-%d %H:%M:%S')}, value: {self.value}"
-
+        return f"SYSMONLOG: uuid: {self.uuid}, node_id: {self.node_id}, event: {self.event}, key: {self.key}, timestamp: {self.recieved_timestamp}"
 
     def __repr__(self):
         '''
