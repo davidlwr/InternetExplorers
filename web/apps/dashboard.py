@@ -28,7 +28,7 @@ app.layout = html.Div([
                 html.A([
                     html.I(className='fa fa-envelope fa-fw'),
                     html.I(className='fa fa-caret-down')
-                ], className='dropdown-toggle', href='#'),
+                ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
                 html.Ul([
                     html.Li([
                         html.A([
@@ -47,6 +47,33 @@ app.layout = html.Div([
                         ], className='text-center', href='#')
                     ])
                 ], className='dropdown-menu dropdown-messages')
+            ], className='dropdown'),
+            html.Li([
+                html.A([
+                    html.I(className='fa fa-user fa-fw'),
+                    html.I(className='fa fa-caret-down')
+                ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
+                html.Ul([
+                    html.Li([
+                        html.A([
+                            html.I(className='fa fa-user fa-fw'),
+                            ' User Profile'
+                        ], href='#')
+                    ]),
+                    html.Li([
+                        html.A([
+                            html.I(className='fa fa-gear fa-fw'),
+                            ' Settings'
+                        ], href='#')
+                    ]),
+                    html.Li(className='divider'),
+                    html.Li([
+                        html.A([
+                            html.I(className='fa fa-sign-out fa-fw'),
+                            ' Logout'
+                        ], href='/logout')
+                    ])
+                ], className='dropdown-menu dropdown-user')
             ], className='dropdown')
         ], className='nav navbar-top-links navbar-right'),
         html.Div([
