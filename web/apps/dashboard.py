@@ -13,51 +13,95 @@ locationMap = input_data.get_location_options()
 # define page layout
 
 app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
-    html.Div([
+    html.Nav([
+        html.Div([
+            html.Button([
+                html.Span('Toggle navigation', className='sr-only'),
+                html.Span(className='icon-bar'),
+                html.Span(className='icon-bar'),
+                html.Span(className='icon-bar')
+            ], type='button', className='navbar-toggle'),
+            html.A('IE x ST b <3 IOT', className='navbar-brand', href='/overview')
+        ], className='navbar-header'),
+        html.Ul([
+            html.Li([
+                html.A([
+                    html.I(className='fa fa-envelope fa-fw'),
+                    html.I(className='fa fa-caret-down')
+                ], className='dropdown-toggle', href='#'),
+                html.Ul([
+                    html.Li([
+                        html.A([
+                            html.Div([
+                                html.Strong('John Smith'),
+                                html.Span('Yesterday', className='pull-right text-muted')
+                            ]),
+                            html.Div('Lorem ipsum dolor sit amet')
+                        ], href='#')
+                    ]),
+                    html.Li(className='divider'),
+                    html.Li([
+                        html.A([
+                            html.Strong('Read All Messages'),
+                            html.I(className='fa fa-angle-right')
+                        ], className='text-center', href='#')
+                    ])
+                ], className='dropdown-menu dropdown-messages')
+            ], className='dropdown')
+        ], className='nav navbar-top-links navbar-right'),
         html.Div([
             html.Div([
                 html.Ul([
                     html.Li([
                         html.Div([
-                            html.A('Graphs', href='/graphs')
-                        ], className='nav-link')
-                    ], className='nav-item'),
+                            dcc.Input(placeholder='Search...', type='text', className='form-control'),
+                            html.Span([
+                                html.Button([
+                                    html.I(className='fa fa-search')
+                                ], className='btn btn-default', type='button')
+                            ], className='input-group-btn')
+                        ], className='input-group custom-search-form')
+                    ], className='sidebar-search'),
                     html.Li([
-                        html.Div([
-                            html.A('Residents Overview', href='/overview')
-                        ], className='nav-link')
-                    ], className='nav-item'),
+                        html.A([
+                            html.I(className='fa fa-dashboard fa-fw'),
+                            ' Residents Overview'
+                        ], href='/overview')
+                    ]),
                     html.Li([
-                        html.Div([
-                            html.A('Shift Reports', href='/reports')
-                            # {isActive}'.format(isActive = ' active' if current_page == 'reports' else ''), href='/reports')
-                        ], className='nav-link')
-                    ], className='nav-item'),
+                        html.A([
+                            html.I(className='fa fa-chart-o fa-fw'),
+                            ' Detailed Charts'
+                        ], href='/graphs')
+                    ]),
                     html.Li([
-                        html.Div([
-                            html.A('End of Shift Forms', href='/eosforms')
-                        ], className='nav-link')
-                    ], className='nav-item'),
+                        html.A([
+                            html.I(className='fa fa-edit fa-fw'),
+                            ' Forms',
+                            html.Span(className='fa arrow')
+                        ], href='#'),
+                        html.Ul([
+                            html.Li([
+                                html.A('End of Shift Forms', href='/eosforms')
+                            ]),
+                            html.Li([
+                                html.A('Risk Assessment Forms', href='/raforms')
+                            ])
+                        ], className='nav nav-second-level')
+                    ]),
                     html.Li([
-                        html.Div([
-                            html.A('Risk Assessment Forms', href='/raforms')
-                        ], className='nav-link')
-                    ], className='nav-item'),
-                    html.Li([
-                        html.Div([
-                            html.A('Manage User/Residents', href='/admin/resident')
-                        ], className='nav-link')
-                    ], className='nav-item'),
-                    html.Li([
-                        html.Div([
-                            html.A('Logout', href='/logout')
-                        ], className='nav-link')
-                    ], className='nav-item')
-                ], className='nav')
+                        html.A([
+                            html.I(className='fa fa-wrench fa-fw'),
+                            ' Manage Users/Residents'
+                        ], href='/admin/resident')
+                    ])
+                ], className='nav', id='side-menu')
             ], className='sidebar-nav navbar-collapse')
-        ], className='navbar-default sidebar col-md-2 col-xs-12'),
-        html.Main([
+        ], className='navbar-default sidebar', role='navigation')
+    ], className='navbar navbar-default navbar-static-top', role='navigation', style={'margin-bottom': 0}),
+        # sidebar above
+        # main body below
+    html.Div([
             html.Div([
                 html.Div([
                     html.H1('Home Page')
@@ -111,7 +155,7 @@ app.layout = html.Div([
                     html.Div([
                         html.Div(id='location_output', className='col-md-12')
                     ], className='row')
-                ], id='activity_graph', className='container-fluid'),
+                ], id='activity_graph'),
                 html.Div([
                     html.Div([
                         html.H3('View resident\'s toilet usage numbers')
@@ -196,7 +240,7 @@ app.layout = html.Div([
                     html.Div([
                         html.Div(id='toilet_numbers_output', className='col-md-12')
                     ], className='row')
-                ], id='toilet_numbers_graph', className='container-fluid'),
+                ], id='toilet_numbers_graph'),
                 html.Div([
                     html.Div([
                         html.H3('View resident\'s activity durations')
@@ -238,12 +282,11 @@ app.layout = html.Div([
                     html.Div([
                         html.Div(id='visit_duration_output', className='col-md-12')
                     ], className='row')
-                ], id='visit_duration_graph', className='container-fluid')
-            ], className='col-md-12')
-        ], role='main', id='page-content', className='col-md-10 ml-sm-auto col-lg-10')
+                ], id='visit_duration_graph')
+            ], className='row-fluid')
+        ], id='page-wrapper')
         # this is where the page content goes
-    ], className='row')
-], className='container-fluid')
+])
 
 
 @app.callback(
