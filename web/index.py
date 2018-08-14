@@ -6,17 +6,19 @@ import secrets
 import string
 from flask.json import dump
 from flask_wtf import Form
-from wtforms import StringField, PasswordField, SubmitField, RadioField, FloatField, SelectField, HiddenField
+from wtforms import StringField, PasswordField, SubmitField, RadioField, FloatField, SelectField, HiddenField, \
+    IntegerField
 from flask_login import UserMixin, current_user, LoginManager, AnonymousUserMixin
 from flask_admin import Admin, AdminIndexView, helpers, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, TextField
 from wtforms.validators import InputRequired, Email, Length, ValidationError
-from flask import render_template, Flask, request, flash, redirect, url_for, abort, session
+from flask import render_template, Flask, request, flash, redirect, url_for, abort, session, Markup
 from flask_sqlalchemy import SQLAlchemy
 from urllib.parse import urlparse, urljoin
 from dash_flask_login import FlaskLoginAuth
+from datetime import datetime
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -24,8 +26,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, server, db
 from apps import input_data, dashboard, reports, residents_overview, shift_log_form, risk_assessment_form
 from apps.shift_log_form import Resident, ShiftLogForm
+from apps.risk_assessment_form import RiskAssessmentForm
 from Entities.user import User
 from DAOs.user_DAO import user_DAO
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import select, func, case
 
 login_manager = flask_login.LoginManager()
 login_manager.init_app(server)
@@ -43,18 +48,10 @@ class Anonymous(AnonymousUserMixin):
 login_manager.anonymous_user = Anonymous
 
 
-# class Resident(db.Model):
-#     resident_id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(100))
-#     node_ide = db.Column(db.String(20))
-#     age = db.Column(db.Integer)
-#     fall_risk = db.Column(db.String(45))
-#     status = db.Column(db.String(45))
-#     stay_location = db.Column(db.String(45))
-
 class Shift_log(db.Model):
     datetime = db.Column(db.DateTime, primary_key=True)
     patient_id = db.Column(db.Integer, primary_key=True)
+    # resident_object = db.relationship('Resident', backref='Shift_log', lazy=True, uselist=False)
     num_falls = db.Column(db.Integer)
     num_near_falls = db.Column(db.Integer)
     food_consumption = db.Column(db.String(45))
@@ -63,6 +60,52 @@ class Shift_log(db.Model):
     systolic_bp = db.Column(db.Float)
     diastolic_bp = db.Column(db.Float)
     pulse_rate = db.Column(db.Float)
+
+    @hybrid_property
+    def resident_name(self):
+        resident_object = db.session.query(Resident).filter_by(resident_id=self.patient_id).first()
+        return resident_object.name
+
+    @resident_name.expression
+    def resident_name(cls):
+        return select([Resident.name]).where(Resident.resident_id == cls.patient_id)
+
+
+class Risk_assessment(db.Model):
+    datetime = db.Column(db.DateTime, primary_key=True)
+    patient_id = db.Column(db.Integer, primary_key=True)
+    # resident_object = db.relationship('Resident', backref='risk_assessment', lazy=True, uselist=False, cascade="save-update, delete-orphan")
+    weight = db.Column(db.Float)
+    mbs_normal = db.Column(db.Integer)
+    mbs_confusion = db.Column(db.Integer)
+    mbs_restlessness = db.Column(db.Integer)
+    mbs_agitation = db.Column(db.Integer)
+    mbs_uncooperative = db.Column(db.Integer)
+    mbs_hallucination = db.Column(db.Integer)
+    mbs_drowsy = db.Column(db.Integer)
+    mbs_others = db.Column(db.String(100))
+    ast_medication = db.Column(db.Integer)
+    ast_clothes = db.Column(db.Integer)
+    ast_eating = db.Column(db.Integer)
+    ast_bathing = db.Column(db.Integer)
+    ast_walking = db.Column(db.Integer)
+    ast_toileting = db.Column(db.Integer)
+    ast_others = db.Column(db.String(100))
+    num_medication = db.Column(db.Integer)
+    hearing_ability = db.Column(db.Integer)
+    vision_ability = db.Column(db.Integer)
+    mobility = db.Column(db.Integer)
+    dependency = db.Column(db.Integer)
+    dependency_comments = db.Column(db.String(100))
+
+    @hybrid_property
+    def resident_name(self):
+        resident_object = db.session.query(Resident).filter_by(resident_id=self.patient_id).first()
+        return resident_object.name
+
+    @resident_name.expression
+    def resident_name(cls):
+        return select([Resident.name]).where(Resident.resident_id == cls.patient_id)
 
 
 class User(db.Model):
@@ -163,7 +206,17 @@ class MyModelView(ModelView):
         return super(MyModelView, self).validate_form(form)
 
 
+class ResidentCreateForm(Form):
+    name = StringField('Name')
+    node_id = StringField('Node')
+    age = IntegerField('Age')
+    fall_risk = StringField('Fall Risk')
+    status = StringField('Status')
+    stay_location = StringField('Stay Location')
+
+
 class ResidentView(ModelView):
+    # column_list = ('name', 'node_id', 'age', 'fall_risk', 'status', 'stay_location')
 
     def is_accessible(self):
         if current_user.staff_type == 'Admin' or current_user.staff_type == 'Staff':
@@ -171,6 +224,9 @@ class ResidentView(ModelView):
 
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for('show_graphs'))
+
+    # def get_create_form(self):
+    #     return ResidentCreateForm
 
     # def validate_form(self, form):
     #     try:
@@ -188,18 +244,32 @@ class ResidentView(ModelView):
     #     return super(MyModelView, self).validate_form(form)
 
 
+# def user_link_formatter(view, context, model, name):
+#     field = getattr(model, name)
+#     url = url_for('user.details_view', id=field.id)
+#     return Markup('<a href="{}">{}</a>'.format(url, field))
+
+
 class FormView(ModelView):
     #
     # def create_form(self):
     #     ShiftLogForm()
     # can_create = False
+    form_excluded_columns = 'resident_object'
     column_display_pk = True
     column_default_sort = ('datetime', True)
+    column_list = (
+        'datetime', 'patient_id', 'resident_name', 'num_falls', 'num_near_falls', 'food_consumption',
+        'num_toilet_visit', 'temperature', 'systolic_bp', 'diastolic_bp', 'pulse_rate')
+    column_sortable_list = (
+        'datetime', 'patient_id', 'resident_name', 'num_falls', 'num_near_falls', 'food_consumption',
+        'num_toilet_visit', 'temperature', 'systolic_bp', 'diastolic_bp', 'pulse_rate')
 
     @expose('/new/', methods=('GET', 'POST'))
     def create_view(self):
         form = ShiftLogForm()
         return render_template('eosforms.html', form=form)
+
     # def get_create_form(self):
     #     return ShiftLogForm
 
@@ -213,68 +283,45 @@ class FormView(ModelView):
         return redirect(url_for('show_graphs'))
 
 
+class RiskAssessmentView(ModelView):
+    form_excluded_columns = 'resident_object'
+    column_display_pk = True
+    column_default_sort = ('datetime', True)
+    column_list = (
+        'datetime', 'patient_id', 'resident_name', 'weight', 'mbs_normal', 'mbs_confusion', 'mbs_restlessness',
+        'mbs_agitation', 'mbs_uncooperative', 'mbs_hallucination', 'mbs_drowsy', 'mbs_others', 'ast_medication',
+        'ast_clothes', 'ast_eating', 'ast_bathing', 'ast_walking', 'ast_toileting', 'ast_others', 'num_medication',
+        'hearing_ability', 'vision_ability', 'mobility', 'dependency', 'dependency_comments')
+    column_sortable_list = (
+        'datetime', 'patient_id', 'resident_name', 'weight', 'mbs_normal', 'mbs_confusion', 'mbs_restlessness',
+        'mbs_agitation', 'mbs_uncooperative', 'mbs_hallucination', 'mbs_drowsy', 'mbs_others', 'ast_medication',
+        'ast_clothes', 'ast_eating', 'ast_bathing', 'ast_walking', 'ast_toileting', 'ast_others', 'num_medication',
+        'hearing_ability', 'vision_ability', 'mobility', 'dependency', 'dependency_comments')
+
+    @expose('/new/', methods=('GET', 'POST'))
+    def create_view(self):
+        form = RiskAssessmentForm()
+        return render_template('raforms.html', form=form, currentDate=datetime.now().strftime('%Y-%m'))
+
+    def is_accessible(self):
+        if current_user.staff_type == 'Admin':
+            return True
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('show_graphs'))
+
+
 class MyAdminIndexView(AdminIndexView):
 
     def is_accessible(self):
         return True
 
 
-# class MyAdminIndexView(AdminIndexView):
-#     def is_accessible(self):
-#         return current_user.is_authenticated
-#
-#     @expose('/')
-#     def index(self):
-#         if not current_user.is_authenticated:
-#             return redirect(url_for('.login_view'))
-#         return super(MyAdminIndexView, self).index()
-#
-#     @expose('/login/', methods=('GET', 'POST'))
-#     def login_view(self):
-#         # handle user login
-#         form = LoginForm()
-#         if helpers.validate_form_on_submit(form):
-#             user = form.get_user()
-#             flask_login.login_user(user)
-#
-#         if current_user.is_authenticated:
-#             return redirect(url_for('.index'))
-#         link = '<p>Don\'t have an account? <a href="' + url_for('.register_view') + '">Click here to register.</a></p>'
-#         self._template_args['form'] = form
-#         self._template_args['link'] = link
-#         return super(MyAdminIndexView, self).index()
-#
-#     @expose('/register/', methods=('GET', 'POST'))
-#     def register_view(self):
-#         form = RegistrationForm(request.form)
-#         if helpers.validate_form_on_submit(form):
-#             user = User()
-#
-#             form.populate_obj(user)
-#             # we hash the users password to avoid saving it as plaintext in the db,
-#             # remove to use plain text:
-#             user.password = generate_password_hash(form.password.data)
-#
-#             db.session.add(user)
-#             db.session.commit()
-#
-#             flask_login.login_user(user)
-#             return redirect(url_for('.index'))
-#         link = '<p>Already have an account? <a href="' + url_for('.login_view') + '">Click here to log in.</a></p>'
-#         self._template_args['form'] = form
-#         self._template_args['link'] = link
-#         return super(MyAdminIndexView, self).index()
-#
-#     @expose('/logout/')
-#     def logout_view(self):
-#         flask_login.logout_user()
-#         return redirect(url_for('.index'))
-
-
 admin = Admin(server, index_view=MyAdminIndexView(), base_template='my_master.html')
-admin.add_view(MyModelView(User, db.session))
-admin.add_view(ResidentView(Resident, db.session))
-admin.add_view(FormView(Shift_log, db.session))
+admin.add_view(MyModelView(User, db.session, 'User'))
+admin.add_view(ResidentView(Resident, db.session, 'Residents'))
+admin.add_view(FormView(Shift_log, db.session, 'Shift Logs'))
+admin.add_view(RiskAssessmentView(Risk_assessment, db.session, 'Risk Assessment Forms'))
 
 
 # utlity method for security
@@ -292,9 +339,6 @@ class LoginForm(FlaskForm):
     def get_user(self):
         return db.session.query(User).filter_by(login=self.username.data).first()
 
-
-# residents app
-# residents_app = dash.Dash(__name__, server=app.server, url_base_pathname='/residents')
 
 @login_manager.user_loader
 def load_user(user_name):

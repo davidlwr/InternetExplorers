@@ -6,7 +6,7 @@
   {% if field.errors %}
     <ul class=errors>
     {% for error in field.errors %}
-      <li style="color:red;">{{ error }}</li>
+      <li style="color:red;">Invalid Input</li>
     {% endfor %}
     </ul>
   {% endif %}
@@ -25,7 +25,7 @@
             {% if field.errors %}
               <ul class=errors>
                 {% for error in field.errors %}
-                <li style="color:red;">{{ error }}</li>
+                  <li style="color:red;">Invalid Input</li>
                 {% endfor %}
               </ul>
             {% endif %}
@@ -57,7 +57,7 @@
     {% if field.errors %}
     <ul class=errors>
       {% for error in field.errors %}
-      <li style="color:red;">{{ error }}</li>
+      <li style="color:red;">Invalid Input</li>
       {% endfor %}
     </ul>
     {% endif %}
