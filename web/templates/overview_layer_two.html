@@ -35,7 +35,7 @@ a.deco-none {
     <div class="col-lg-2 col-md-2 col-s-2">
         <div class="panel panel-default" align="center">
             <div class="panel-body" align="center">
-                <img src="https://image.freepik.com/free-photo/senior-woman-with-a-thumbs-up_1187-2563.jpg" alt="user image" style="width:140px;height:140px;" vertical-align: "baseline">
+                <img src="https://image.freepik.com/free-photo/senior-woman-with-a-thumbs-up_1187-2563.jpg" alt="user image" style="width:100%;height:100%;" vertical-align: "baseline">
             </div>
             <a class="btn btn-primary btn-xs" role="button">Upload Photo</a><br>
         </div>
@@ -71,9 +71,6 @@ a.deco-none {
                             </div>
                         </div>
                         <div class="panel-body">
-                            <div class="col-xs-12">
-                                <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'default' }}">
-                                    <div class="panel-body">
                                         <div class="row">
                                             <div class="col-xs-12">
 
@@ -117,19 +114,17 @@ a.deco-none {
                                                 var data = [trace1, trace2];
 
                                                 var layout = {
-													title: '% of Night Toilet Usage in a Day',
-													titlefont: {
-														size: 14,
-
-													},
-
+													title: '% of Night Toilet Usage',
+                                                    titlefont: {
+                                                        size: 14
+                                                    },
                                                     shapes: [
                                                         {
                                                             type: 'line',
                                                             xref: 'paper',
-                                                            x0: 0.3,
+                                                            x0: {{ resident['para_ratio_threshold'] }},
                                                             y0: -0.3,
-                                                            x1: 0.3,
+                                                            x1: {{ resident['para_ratio_threshold'] }},
                                                             y1: 0.3,
                                                             line:{
                                                                 color: 'rgb(255, 0, 0)',
@@ -142,7 +137,7 @@ a.deco-none {
                                                     ],
                                                     barmode: 'stack',
                                                     autosize: true,
-													height:250,
+													height:200,
                                                     xaxis: {
                                                         autorange: true,
                                                         showgrid: true,
@@ -158,7 +153,8 @@ a.deco-none {
                                                     margin: {
                                                         t: 40, //top margin
                                                         l: 10, //left margin
-                                                        r: 50
+                                                        r: 10,
+                                                        pad: 0
                                                     },
                                                     showlegend: true,
                                                     legend: {"orientation": "h",y:-0.2}
@@ -168,10 +164,18 @@ a.deco-none {
                                                 </script>
 
                                             </div>
+                                            <div class="col-xs-12">
+                                                <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_MA'] else 'info' }}">
+                                                    <div class="panel-heading">
+                                                        <div class="row">
+                                                            <div class="col-xs-12 text-right">
+                                                                This is {{ 'greater' if resident['toilet_night_to_both_ratio'] >= resident['para_ratio_threshold'] else 'less' }} than the set threshold of <span class="semihuge">{{ '%0.1f'|format((resident['para_ratio_threshold'] * 100)|float) }}%</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -189,7 +193,7 @@ a.deco-none {
                             <div class="col-xs-12">
                                 <div id="night_toilet_MA_chart" class="night_toilet_MA_chart_class svg-container container-fluid"></div>
                                 <script>
-                                var graphs = {{ night_toilet_MA_graph_json | safe }}
+                                var graphs = {{ night_toilet_MA_graph_json | safe }};
 
                                 Plotly.newPlot('night_toilet_MA_chart', graphs.data, graphs.layout || {} , {displayModeBar: false});
                                 window.onresize = function() {
@@ -247,7 +251,7 @@ a.deco-none {
                                                     <i class="material-icons" style="vertical-align:sup; align-content:center">
                                                         trending_{{ 'up' if resident['number_of_night_toilet_usage_in_past_week_diff'] >= 0 else 'down' }}
                                                     </i>{{ '%0.2f'|format((resident['number_of_night_toilet_usage_in_past_week_diff'])|float|abs) }}
-                                                </span><b>Times</b>
+                                                </span><b>Times</b><br/>
                                                 compared to the past 3 weeks
                                             </div>
                                         </div>
@@ -280,6 +284,14 @@ a.deco-none {
                         </div>
                         <div class="panel-body">
                             <div class="col-xs-12">
+                                <div id="sleeping_motion_chart" class="sleeping_motion_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var smgraph = {{ sleeping_motion_graph_json | safe }};
+
+                                    Plotly.newPlot('sleeping_motion_chart', smgraph.data, smgraph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
                                 <div class="panel panel-{{ 'red' if resident['check_indicator_sleep_movements'] else 'info' }}">
                                     <div class="panel-heading">
                                         <div class="row">
@@ -290,7 +302,7 @@ a.deco-none {
                                                         trending_{{ 'up' if resident['average_motion_during_sleep_difference'] >= 0 else 'down' }}
                                                     </i>{{ '%0.2f'|format((resident['average_motion_during_sleep_difference'] / 60)|float|abs) }}
                                                 </b></span>
-                                                <b>Minutes</b>
+                                                <b>Minutes</b><br/>
                                                 compared to the past 3 weeks
                                             </div>
                                         </div>

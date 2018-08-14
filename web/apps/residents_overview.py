@@ -9,6 +9,7 @@ import flask_login
 import datetime
 import plotly
 import json
+import pandas as pd
 # internal imports
 from apps import input_data
 from app import app, server
@@ -64,6 +65,8 @@ def detailedLayerTwoOverviewResidents(node_id):
     resident = resident_DAO.get_resident_by_id(node_id)
     if resident is None:
         return 'Resident not found<a href="/overview">Go Back</a>'
+    # parameters
+    resident['para_ratio_threshold'] = input_data.get_para_ratio_threshold()
 
     # sleep alerts
     resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'] = input_data.get_nightly_sleep_indicator(node_id, date_in_use)
@@ -130,6 +133,10 @@ def detailedLayerTwoOverviewResidents(node_id):
                 )
             ],
             layout = dict(
+                title = 'Night toilet usage in past week',
+                titlefont = dict(
+                    size = 14
+                ),
                 autosize = True,
                 height = 200,
                 showlegend = False,
@@ -137,8 +144,8 @@ def detailedLayerTwoOverviewResidents(node_id):
                     l = 20,
                     r = 20,
                     b = 25,
-                    t = 0,
-                    pad = 0
+                    t = 30,
+                    pad = 5
                 ),
                 yaxis = dict(
                     scaleanchor = 'x',
@@ -157,12 +164,58 @@ def detailedLayerTwoOverviewResidents(node_id):
             cls=plotly.utils.PlotlyJSONEncoder)
 
     # get the 7 days
+    sleeping_motion_df = pd.DataFrame()
+    sleeping_motion_df['gw_date_only'] = night_toilet_MA_graph_df_last_week['gw_date_only']
+    sleeping_motion_df['values'] = sleeping_motion_df.apply(lambda row: (input_data.motion_duration_during_sleep(
+            node_id, row['gw_date_only'], row['gw_date_only'] + datetime.timedelta(days=1))) / 60, axis=1)
+
+    # print(sleeping_motion_df)
 
     sleeping_motion_graph = dict(
             data=[
                 dict(
-
+                    x = sleeping_motion_df['gw_date_only'],
+                    y = sleeping_motion_df['values'],
+                    type = 'scatter',
+                    mode = 'lines',
+                    name = 'last wk duration',
+                    line = dict(
+                        width = 2,
+                        color = 'rgb(55, 128, 191)'
+                    )
                 )
-            ]
+            ],
+            layout = dict(
+                title = 'Sleep motion (mins) in past week',
+                titlefont = dict(
+                    size = 14
+                ),
+                autosize = True,
+                height = 200,
+                showlegend = False,
+                margin = dict(
+                    l = 25,
+                    r = 20,
+                    b = 25,
+                    t = 30,
+                    pad = 5
+                ),
+                yaxis = dict(
+                    scaleanchor = 'x',
+                    scaleratio = 0.5,
+                    hoverformat = '.2f'
+                ),
+                xaxis = dict(
+                    title = "Day",
+                    tickformat = "%a",
+                    showticklabels = True
+                ),
+                displayModeBar = False
+            )
     )
-    return render_template('overview_layer_two.html', resident=resident, night_toilet_MA_graph_json=night_toilet_MA_graph_json)
+
+    sleeping_motion_graph_json = json.dumps(sleeping_motion_graph,
+            cls=plotly.utils.PlotlyJSONEncoder)
+
+    return render_template('overview_layer_two.html', resident=resident,
+            night_toilet_MA_graph_json=night_toilet_MA_graph_json, sleeping_motion_graph_json=sleeping_motion_graph_json)
