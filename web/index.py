@@ -379,7 +379,7 @@ def login():
                 print("DEBUG: LOG: url marked as unsafe")
                 return abort(400)
 
-            return redirect(next or url_for('show_graphs'))
+            return redirect(next or url_for('showOverviewResidents'))
         # if wrong username or password
         flash('Invalid username or password')
         return render_template('login.html', form=form)
@@ -392,7 +392,7 @@ def login():
 @flask_login.login_required
 def logout():
     flask_login.logout_user()
-    return redirect(url_for('showOverviewResidents'))  # NOTE: replace with some index page next time
+    return redirect(url_for('login'))  # NOTE: replace with some index page next time
 
 
 # @app.callback(Output('page-content', 'children'),
