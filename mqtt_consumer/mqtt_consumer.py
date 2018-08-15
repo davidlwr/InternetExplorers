@@ -53,31 +53,35 @@ def process_msg(topic, message):
     Process json msgs from mqtt broker. Insert only event update msgs
     
     Input:
+    topic (str)
     message (str) - A single json string
     '''
     try:
         # Load JSON
         jdict = json.loads(message)
-
-        # Determine Sysmon or Sensor Data
-        topic = topic.split("/")
-        project_id  = topic[0]  # 'stb'
-        hub_id      = topic[1]  # '2100' presumably the building
-        dwelling_id = topic[2]  # 'room1' or 'room2'
-        data_type   = topic[3]  # 'sysmon' or 'data
         
-        # breakdown message
-        mode         = jdict['mode']        # i.e. 'motion'
-        sensor_id    = jdict['sensor_id']   # i.e. 'm-01'
-        key          = jdict['key']         # i.e. 'motion', 'ultraviolet'
-        value        = jdict['value']       # str (actually float)
-        gw_timestamp = datetime.datetime.fromtimestamp(jdict['gw_timestamp'] / 1e3)
+        topic = topic.split("/")
+        key_list = ('mode', 'sensor_id', 'key', 'value', 'gw_timestamp')
 
-        # SPLIT INTO SYSMON AND DATA
-        if data_type == "data":
-            if key == "motion": insert_sensorlog(dwelling_id, sensor_id, gw_timestamp, int(value))
-        elif data_type == "sysmon":
-            insert_sysmonlog(dwelling_id, sensor_id, gw_timestamp, key, float(value))  # Key is required
+        if len(topic) == 4 and all(k in jdict for k in key_list):         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
+            project_id  = topic[0]  # 'stb'
+            hub_id      = topic[1]  # '2100' presumably the building
+            dwelling_id = topic[2]  # 'room1' or 'room2'
+            data_type   = topic[3]  # 'sysmon' or 'data
+            
+            # breakdown message
+            mode         = jdict['mode']        # i.e. 'motion'
+            sensor_id    = jdict['sensor_id']   # i.e. 'm-01', 'm-02' or 'd-01'
+            key          = jdict['key']         # i.e. 'motion', 'ultraviolet'
+            value        = jdict['value']       # str (actually float)
+            gw_timestamp = datetime.datetime.fromtimestamp(jdict['gw_timestamp'] / 1e3)
+
+            # SPLIT INTO SYSMON AND DATA
+            if data_type == "data" and (key == "motion" or key == "door"): 
+                insert_sensorlog(dwelling_id, sensor_id, gw_timestamp, int(value))
+            elif data_type == "sysmon": 
+                insert_sysmonlog(dwelling_id, sensor_id, gw_timestamp, key, float(value))  # Key is required to differentiate between door and motion
+
 
     except Exception as e:
         msg = f"PROCESS MESSAGE FAILURE >> Exception: '{str(e)}, Msg: {message}'"

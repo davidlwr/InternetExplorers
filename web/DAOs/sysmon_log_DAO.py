@@ -32,6 +32,42 @@ class sysmon_log_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
+    
+    def insert_many(self, logs):
+        '''
+        INSERTs many logs at once
+
+        logs (list) -- [log, log, log]
+        '''
+
+        query = f"INSERT INTO {sysmon_log_DAO.table_name} VALUES(%s, %s, %s, %s, %s)"
+
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        # Batch insert
+        try:
+            batch = []
+            for log in logs:
+                uuid    = log.uuid
+                node_id = log.node_id
+                event   = log.event
+                key     = log.key
+                ts      = log.recieved_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                l = [uuid, node_id, event, key, ts]
+                
+                if len(batch) < 500: batch.append(l)    # Batch not full, continue filling
+                else:                                   # Batch full, run executemany
+                    cursor.executemany(query, batch)
+                    batch = []
+            
+            # Just to clear the last batch if there is anything inside
+            if len(batch) > 0: cursor.executemany(query, batch)
+
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
             
 
     def get_all_logs(self):

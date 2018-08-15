@@ -70,7 +70,6 @@ class shift_log_DAO(object):
         connection = factory.connection
         cursor = connection.cursor()
 
-
         try:
             cursor.execute(query, shift_log.var_list)
         except: raise

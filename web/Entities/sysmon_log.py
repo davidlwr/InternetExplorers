@@ -18,10 +18,10 @@ class Sysmon_Log(object):
         Constructor method
 
         Input:
-        uuid (str)
-        node_id (int)
-        event (float)
-        key (str)
+        uuid (str)      -- "2005-m-01"
+        node_id (int)   -- "2005"
+        event (float)   -- "255"
+        key (str)       -- "Burglar", "Battery Level"
         recieved_timestamp (datetime)
         '''        
         self.uuid               = uuid

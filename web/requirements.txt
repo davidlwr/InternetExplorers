@@ -39,3 +39,4 @@ WTForms-Alchemy==0.16.7
 WTForms-Components==0.10.3
 WTForms-SQLAlchemy==0.1
 paho-mqtt
+tqdm

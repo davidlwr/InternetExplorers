@@ -1,8 +1,9 @@
 import datetime, os, sys
-from DAOs.connection_manager import connection_manager
 import secrets
 import string
 
+if __name__ == '__main__':  sys.path.append("..")
+from DAOs.connection_manager import connection_manager
 from Entities.resident import Resident
 
 table_name = 'stbern.RESIDENT'
