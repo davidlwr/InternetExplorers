@@ -356,6 +356,11 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
                                      'title': 'Motion detected?'
                                  }
                              }
+                         },
+                         config={
+                            'editable': False,
+                            'displaylogo': False,
+                            'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
                          })
     except Exception as e:
         print('ERROR: ', end='')
@@ -493,6 +498,11 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                      'title': 'Number'
                                  }
                              }
+                         },
+                         config={
+                            'editable': False,
+                            'displaylogo': False,
+                            'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
                          })
     except Exception as e:
         print('ERROR: ', end='')
@@ -528,6 +538,11 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
                             'title': 'Duration of visit (seconds)'
                         }
                     }
+                },
+                config={
+                   'editable': False,
+                   'displaylogo': False,
+                   'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
                 })
     except Exception as e:
         print('ERROR: ', end='')
