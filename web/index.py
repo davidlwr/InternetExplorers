@@ -173,6 +173,7 @@ class MyModelView(ModelView):
             return True
 
     def inaccessible_callback(self, name, **kwargs):
+        flash('You do not have the user rights to access this page!')
         return redirect(url_for('show_graphs'))
 
     def get_create_form(self):
@@ -223,6 +224,7 @@ class ResidentView(ModelView):
             return True
 
     def inaccessible_callback(self, name, **kwargs):
+        flash('You do not have the user rights to access this page!')
         return redirect(url_for('show_graphs'))
 
     # def get_create_form(self):
@@ -280,7 +282,8 @@ class FormView(ModelView):
             return True
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('show_graphs'))
+        flash('You do not have the user rights to access this page!')
+        return redirect(url_for('showForms'))
 
 
 class RiskAssessmentView(ModelView):
@@ -308,7 +311,8 @@ class RiskAssessmentView(ModelView):
             return True
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('show_graphs'))
+        flash('You do not have the user rights to access this page!')
+        return redirect(url_for('showRiskForm'))
 
 
 class MyAdminIndexView(AdminIndexView):
