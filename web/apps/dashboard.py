@@ -21,52 +21,52 @@ app.layout = html.Div([
                 html.Span(className='icon-bar'),
                 html.Span(className='icon-bar')
             ], type='button', className='navbar-toggle'),
-            html.A('IE x ST b <3 IOT', className='navbar-brand', href='/overview')
+            html.A('IE Smart Healthcare', className='navbar-brand', href='/overview')
         ], className='navbar-header'),
         html.Ul([
-            html.Li([
-                html.A([
-                    html.I(className='fa fa-envelope fa-fw'),
-                    html.I(className='fa fa-caret-down')
-                ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
-                html.Ul([
-                    html.Li([
-                        html.A([
-                            html.Div([
-                                html.Strong('John Smith'),
-                                html.Span('Yesterday', className='pull-right text-muted')
-                            ]),
-                            html.Div('Lorem ipsum dolor sit amet')
-                        ], href='#')
-                    ]),
-                    html.Li(className='divider'),
-                    html.Li([
-                        html.A([
-                            html.Strong('Read All Messages'),
-                            html.I(className='fa fa-angle-right')
-                        ], className='text-center', href='#')
-                    ])
-                ], className='dropdown-menu dropdown-messages')
-            ], className='dropdown'),
+            # html.Li([
+            #     html.A([
+            #         html.I(className='fa fa-envelope fa-fw'),
+            #         html.I(className='fa fa-caret-down')
+            #     ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
+            #     html.Ul([
+            #         html.Li([
+            #             html.A([
+            #                 html.Div([
+            #                     html.Strong('John Smith'),
+            #                     html.Span('Yesterday', className='pull-right text-muted')
+            #                 ]),
+            #                 html.Div('Lorem ipsum dolor sit amet')
+            #             ], href='#')
+            #         ]),
+            #         html.Li(className='divider'),
+            #         html.Li([
+            #             html.A([
+            #                 html.Strong('Read All Messages'),
+            #                 html.I(className='fa fa-angle-right')
+            #             ], className='text-center', href='#')
+            #         ])
+            #     ], className='dropdown-menu dropdown-messages')
+            # ], className='dropdown'),
             html.Li([
                 html.A([
                     html.I(className='fa fa-user fa-fw'),
                     html.I(className='fa fa-caret-down')
                 ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
                 html.Ul([
-                    html.Li([
-                        html.A([
-                            html.I(className='fa fa-user fa-fw'),
-                            ' User Profile'
-                        ], href='#')
-                    ]),
-                    html.Li([
-                        html.A([
-                            html.I(className='fa fa-gear fa-fw'),
-                            ' Settings'
-                        ], href='#')
-                    ]),
-                    html.Li(className='divider'),
+                    # html.Li([
+                    #     html.A([
+                    #         html.I(className='fa fa-user fa-fw'),
+                    #         ' User Profile'
+                    #     ], href='#')
+                    # ]),
+                    # html.Li([
+                    #     html.A([
+                    #         html.I(className='fa fa-gear fa-fw'),
+                    #         ' Settings'
+                    #     ], href='#')
+                    # ]),
+                    # html.Li(className='divider'),
                     html.Li([
                         html.A([
                             html.I(className='fa fa-sign-out fa-fw'),
@@ -79,16 +79,16 @@ app.layout = html.Div([
         html.Div([
             html.Div([
                 html.Ul([
-                    html.Li([
-                        html.Div([
-                            dcc.Input(placeholder='Search...', type='text', className='form-control'),
-                            html.Span([
-                                html.Button([
-                                    html.I(className='fa fa-search')
-                                ], className='btn btn-default', type='button')
-                            ], className='input-group-btn')
-                        ], className='input-group custom-search-form')
-                    ], className='sidebar-search'),
+                    # html.Li([
+                    #     html.Div([
+                    #         dcc.Input(placeholder='Search...', type='text', className='form-control'),
+                    #         html.Span([
+                    #             html.Button([
+                    #                 html.I(className='fa fa-search')
+                    #             ], className='btn btn-default', type='button')
+                    #         ], className='input-group-btn')
+                    #     ], className='input-group custom-search-form')
+                    # ], className='sidebar-search'),
                     html.Li([
                         html.A([
                             html.I(className='fa fa-dashboard fa-fw'),
@@ -533,3 +533,22 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
         print('ERROR: ', end='')
         print(e)
         return ''
+
+# next three callbacks automatically updates the resident names live for each graph
+@app.callback(
+    Output('resident_input', 'options'),
+    [Input('resident_input', 'value')])
+def set_residents_options_one(selection):
+    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+
+@app.callback(
+    Output('resident_input_toilet_numbers', 'options'),
+    [Input('resident_input_toilet_numbers', 'value')])
+def set_residents_options_one(selection):
+    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+
+@app.callback(
+    Output('resident_input_visit_duration', 'options'),
+    [Input('resident_input_visit_duration', 'value')])
+def set_residents_options_one(selection):
+    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]

@@ -392,7 +392,7 @@ def login():
 @flask_login.login_required
 def logout():
     flask_login.logout_user()
-    return redirect(url_for('show_graphs'))  # NOTE: replace with some index page next time
+    return redirect(url_for('showOverviewResidents'))  # NOTE: replace with some index page next time
 
 
 # @app.callback(Output('page-content', 'children'),

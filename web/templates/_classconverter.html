@@ -14,15 +14,15 @@
 {% endmacro %}
 
 {% macro getGMHFromAlertLength(_length) %}
-{%+ if _length == 0 -%}Good{%+ endif -%}
-{%+ if _length == 1 -%}Moderate{%+ endif -%}
-{%+ if _length == 2 -%}High{%+ endif -%}
-{%+ if _length == 3 -%}High{%+ endif -%}
+{%+ if _length == 0 -%}Healthy{%+ endif -%}
+{%+ if _length == 1 -%}To Observe{%+ endif -%}
+{%+ if _length == 2 -%}High Risk{%+ endif -%}
+{%+ if _length == 3 -%}High Risk{%+ endif -%}
 {% endmacro %}
 
 {% macro getFooterFromAlertLength(_length) %}
-{%+ if _length == 0 -%}Normal{%+ endif -%}
+{%+ if _length == 0 -%}Healthy{%+ endif -%}
 {%+ if _length == 1 -%}To Observe{%+ endif -%}
-{%+ if _length == 2 -%}High Alert{%+ endif -%}
-{%+ if _length == 3 -%}High Alert{%+ endif -%}
+{%+ if _length == 2 -%}High Risk{%+ endif -%}
+{%+ if _length == 3 -%}High Risk{%+ endif -%}
 {% endmacro %}
