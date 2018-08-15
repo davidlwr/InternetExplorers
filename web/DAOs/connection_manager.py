@@ -33,10 +33,10 @@ class connection_manager(object):
         # Note: Cursors are what pymysql uses interact with databases, its the equivilant to a Statement in java
 
 
-    def close_all(self, cursor, connection):
+    def close_all(self, cursor=None, connection=None):
         '''
         Helper method to close cursor and connection
         '''
-        cursor.close()
+        if cursor is not None:
+            cursor.close()
         connection.close()
-

@@ -1,6 +1,14 @@
 import pandas as pd
 import datetime
 import os
+import sys
+
+# internal imports 
+if __name__ == '__main__':
+    sys.path.append(".")
+    from DAOs.sysmon_log_DAO import sysmon_log_DAO
+else:
+    from DAOs.sysmon_log_DAO import sysmon_log_DAO
 
 # specify file parameters
 file_folder = '../stbern-20180302-20180523-csv/'
@@ -10,31 +18,34 @@ if __name__ == '__main__':
     pd.options.mode.chained_assignment = None  # default='warn
 
 # initialize empty df
-sysmon_data = pd.DataFrame()
+# sysmon_data = pd.DataFrame()
+sysmon_data = sysmon_log_DAO.get_all_logs()
+# sysmon_data = pd.DataFrame(sysmon_data_sql)
+# print(sysmon_data)
 
 # combine and read all data
-for filename in os.listdir(file_folder):
-    if filename.endswith('sysmon.csv'):
-        try:
-            temp_df = pd.read_csv(file_folder + filename)
-            sysmon_data = pd.concat([sysmon_data, temp_df])
-        except:
-            print('something wrong with ' + filename)
+# for filename in os.listdir(file_folder):
+#     if filename.endswith('sysmon.csv'):
+#         try:
+#             temp_df = pd.read_csv(file_folder + filename)
+#             sysmon_data = pd.concat([sysmon_data, temp_df])
+#         except:
+#             print('something wrong with ' + filename)
 
 # print(sysmon_data.reading_type.unique())
 
 # look for time periods with disconnected
 # first get only disconnected and uptime rows
-sysmon_disconnected_data = sysmon_data.loc[sysmon_data['reading_type'].isin(['disconnected'])]
+sysmon_disconnected_data = sysmon_data.loc[sysmon_data['key'].isin(['disconnected'])]
 
 # convert datetime format
-sysmon_disconnected_data['gw_timestamp'] = pd.to_datetime(sysmon_disconnected_data['gw_timestamp'],
+sysmon_disconnected_data['recieved_timestamp'] = pd.to_datetime(sysmon_disconnected_data['recieved_timestamp'],
                                                           format='%Y-%m-%dT%H:%M:%S')
 
 # remove duplicates
-sysmon_disconnected_data.drop_duplicates(
-    ['device_id', 'device_loc', 'gw_device', 'gw_timestamp', 'key', 'reading_type'], inplace=True)
-sysmon_disconnected_data.reset_index(drop=True)
+# sysmon_disconnected_data.drop_duplicates(
+#     ['device_id', 'device_loc', 'gw_device', 'recieved_timestamp', 'key', 'reading_type'], inplace=True)
+# sysmon_disconnected_data.reset_index(drop=True)
 
 
 # get inactive period within time
@@ -54,17 +65,17 @@ def remove_disconnected_periods(current_data):
     current_data.reset_index(drop=True)
     # filter out sysmon data for what is relevant in the current data first (by time and location)
     current_user = current_data['node_id'].iloc[0]
-    sysmon_relevant_data = sysmon_disconnected_data[(sysmon_disconnected_data['gw_device'] == current_user)
-                                                    & (sysmon_disconnected_data['gw_timestamp'] > current_data[
+    sysmon_relevant_data = sysmon_disconnected_data[(sysmon_disconnected_data['node_id'] == current_user)
+                                                    & (sysmon_disconnected_data['recieved_timestamp'] > current_data[
         'recieved_timestamp'].min())
-                                                    & (sysmon_disconnected_data['gw_timestamp'] < current_data[
+                                                    & (sysmon_disconnected_data['recieved_timestamp'] < current_data[
         'recieved_timestamp'].max())]
 
     # issue where motion is considered active when sensor is disconnected
     previous_disconnection = current_data['recieved_timestamp'].min()
     current_disconnection = current_data['recieved_timestamp'].min()
     for i in range(0, len(sysmon_relevant_data)):
-        current_disconnection = sysmon_relevant_data['gw_timestamp'].iloc[i]
+        current_disconnection = sysmon_relevant_data['recieved_timestamp'].iloc[i]
         # select latest row before the disconnection, but after the previous disconnection and get its value
         try:
             current_index = current_data[(current_data['recieved_timestamp'] < current_disconnection)
@@ -84,7 +95,7 @@ def remove_disconnected_periods(current_data):
     current_disconnection = current_data['recieved_timestamp'].iloc[0]
     next_disconnection = current_data['recieved_timestamp'].iloc[0]
     for i in range(1, len(sysmon_relevant_data)):
-        next_disconnection = sysmon_relevant_data['gw_timestamp'].iloc[i]
+        next_disconnection = sysmon_relevant_data['recieved_timestamp'].iloc[i]
         # select earliest row after the disconnection, but before the next disconnection and get its value
         try:
             current_index = current_data[(current_data['recieved_timestamp'] > current_disconnection)
@@ -103,7 +114,7 @@ def remove_disconnected_periods(current_data):
 # below for testing
 # NOTE: For testing of functions requiring data from input_data, run test from input_data.py
 #       This is to 1. prevent cyclical imports and 2. be in line with how data will be called in the first place
-# if __name__ == '__main__':
-# print(sysmon_disconnected_data.head())
+if __name__ == '__main__':
+    print(sysmon_disconnected_data.head())
 # print(sysmon_disconnected_data['reading_type'].value_counts())
-# print(sysmon_disconnected_data[sysmon_disconnected_data.duplicated(['device_id','device_loc','gw_device','gw_timestamp','key','reading_type'], keep=False)])
+# print(sysmon_disconnected_data[sysmon_disconnected_data.duplicated(['device_id','device_loc','gw_device','recieved_timestamp','key','reading_type'], keep=False)])

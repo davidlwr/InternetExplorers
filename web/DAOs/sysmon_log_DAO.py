@@ -1,4 +1,5 @@
 import datetime, os, sys
+import pandas as pd
 
 if __name__ == '__main__':  sys.path.append("..")
 from Entities.sysmon_log import Sysmon_Log
@@ -21,7 +22,7 @@ class sysmon_log_DAO(object):
         query = "INSERT INTO {} VALUES('{}', '{}', '{}', '{}', '{}')"                        \
                     .format(sysmon_log_DAO.table_name, log.uuid, log.node_id,                \
                             log.event, log.key, log.recieved_timestamp.strftime('%Y-%m-%d %H:%M:%S'))
-        
+
         # Get connection
         factory = connection_manager()
         connection = factory.connection
@@ -32,9 +33,9 @@ class sysmon_log_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
-            
 
-    def get_all_logs(self):
+    @staticmethod
+    def get_all_logs():
         '''
         Returns all sysmon logs in the DB
         '''
@@ -42,26 +43,27 @@ class sysmon_log_DAO(object):
         # Get connection
         factory = connection_manager()
         connection = factory.connection
-        cursor = connection.cursor()
+        # cursor = connection.cursor()
 
         query = f"SELECT * FROM {sysmon_log_DAO.table_name}"
 
         try:
-            cursor.execute(query)
-            results = cursor.fetchall()
-            logs = []
-            if results != None:
-                for result in results:
-                    uuid    = result[Sysmon_Log.uuid_tname]
-                    node_id = result[Sysmon_Log.node_id_tname]
-                    event   = result[Sysmon_Log.event_tname]
-                    key     = result[Sysmon_Log.key_tname]
-                    ts      = result[Sysmon_Log.recieved_timestamp_tname]
-
-                    log = Sysmon_Log(uuid, node_id, event, key, ts)
-                    logs.append(log)
-            return logs
+            # cursor.execute(query)
+            # results = cursor.fetchall()
+            # logs = []
+            # if results != None:
+            #     for result in results:
+            #         uuid    = result[Sysmon_Log.uuid_tname]
+            #         node_id = result[Sysmon_Log.node_id_tname]
+            #         event   = result[Sysmon_Log.event_tname]
+            #         key     = result[Sysmon_Log.key_tname]
+            #         ts      = result[Sysmon_Log.recieved_timestamp_tname]
+            #
+            #         log = Sysmon_Log(uuid, node_id, event, key, ts)
+            #         logs.append(log)
+            # return logs
+            return pd.read_sql_query(query, connection)
 
         except: raise
-        finally: factory.close_all(cursor=cursor, connection=connection)
-
+        # finally: factory.close_all(cursor=cursor, connection=connection)
+        finally: factory.close_all(connection=connection)
