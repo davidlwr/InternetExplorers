@@ -155,7 +155,8 @@ def detailedLayerTwoOverviewResidents(node_id):
                 xaxis = dict(
                     title = "Day",
                     tickformat = "%a",
-                    showticklabels = True
+                    showticklabels = True,
+                    showline = True
                 ),
                 displayModeBar = False
             )
@@ -163,6 +164,7 @@ def detailedLayerTwoOverviewResidents(node_id):
     night_toilet_MA_graph_json = json.dumps(night_toilet_MA_graph,
             cls=plotly.utils.PlotlyJSONEncoder)
 
+    # motion during sleep graph
     # get the 7 days
     sleeping_motion_df = pd.DataFrame()
     sleeping_motion_df['gw_date_only'] = night_toilet_MA_graph_df_last_week['gw_date_only']
@@ -170,6 +172,9 @@ def detailedLayerTwoOverviewResidents(node_id):
             node_id, row['gw_date_only'], row['gw_date_only'] + datetime.timedelta(days=1))) / 60, axis=1)
 
     # print(sleeping_motion_df)
+
+    sleeping_motion_df['latest_mean'] = resident['average_motion_during_sleep'] / 60
+    sleeping_motion_df['past_mean'] = (resident['average_motion_during_sleep'] - resident['average_motion_during_sleep_difference']) / 60
 
     sleeping_motion_graph = dict(
             data=[
@@ -182,6 +187,28 @@ def detailedLayerTwoOverviewResidents(node_id):
                     line = dict(
                         width = 2,
                         color = 'rgb(55, 128, 191)'
+                    )
+                ),
+                dict(
+                    x = sleeping_motion_df['gw_date_only'],
+                    y = sleeping_motion_df['latest_mean'],
+                    type = 'scatter',
+                    mode = 'lines',
+                    name = 'last wk avg',
+                    line = dict(
+                        width = 2,
+                        color = 'rgba(55, 128, 191, .5)'
+                    )
+                ),
+                dict(
+                    x = sleeping_motion_df['gw_date_only'],
+                    y = sleeping_motion_df['past_mean'],
+                    type = 'scatter',
+                    mode = 'lines',
+                    name = 'prev 3 wk avg',
+                    line = dict(
+                        width = 2,
+                        color = 'rgb(0, 128, 0)'
                     )
                 )
             ],
@@ -208,7 +235,8 @@ def detailedLayerTwoOverviewResidents(node_id):
                 xaxis = dict(
                     title = "Day",
                     tickformat = "%a",
-                    showticklabels = True
+                    showticklabels = True,
+                    showline = True
                 ),
                 displayModeBar = False
             )
@@ -223,6 +251,9 @@ def detailedLayerTwoOverviewResidents(node_id):
     uninterrupted_sleep_df['values'] = uninterrupted_sleep_df.apply(lambda row: (input_data.get_average_longest_sleep(
             node_id, row['gw_date_only'], row['gw_date_only'] + datetime.timedelta(days=1))) / 3600, axis=1)
 
+    uninterrupted_sleep_df['latest_mean'] = resident['average_longest_uninterrupted_sleep'] / 3600
+    uninterrupted_sleep_df['past_mean'] = (resident['average_longest_uninterrupted_sleep'] - resident['average_longest_uninterrupted_sleep_difference']) / 3600
+
     uninterrupted_sleep_graph = dict(
             data=[
                 dict(
@@ -234,6 +265,28 @@ def detailedLayerTwoOverviewResidents(node_id):
                     line = dict(
                         width = 2,
                         color = 'rgb(55, 128, 191)'
+                    )
+                ),
+                dict(
+                    x = uninterrupted_sleep_df['gw_date_only'],
+                    y = uninterrupted_sleep_df['latest_mean'],
+                    type = 'scatter',
+                    mode = 'lines',
+                    name = 'last wk avg',
+                    line = dict(
+                        width = 2,
+                        color = 'rgba(55, 128, 191, .5)'
+                    )
+                ),
+                dict(
+                    x = uninterrupted_sleep_df['gw_date_only'],
+                    y = uninterrupted_sleep_df['past_mean'],
+                    type = 'scatter',
+                    mode = 'lines',
+                    name = 'prev 3 wk avg',
+                    line = dict(
+                        width = 2,
+                        color = 'rgb(0, 128, 0)'
                     )
                 )
             ],
@@ -260,7 +313,8 @@ def detailedLayerTwoOverviewResidents(node_id):
                 xaxis = dict(
                     title = "Day",
                     tickformat = "%a",
-                    showticklabels = True
+                    showticklabels = True,
+                    showline = True
                 ),
                 displayModeBar = False
             )
