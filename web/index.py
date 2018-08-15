@@ -317,11 +317,18 @@ class RiskAssessmentView(ModelView):
 
 class MyAdminIndexView(AdminIndexView):
 
+    @expose('/', methods=('GET', 'POST'))
+    def create_view(self):
+        return redirect(url_for('showOverviewResidents'))
+
+    def is_visible(self):
+        return False
+
     def is_accessible(self):
         return True
 
 
-admin = Admin(server, index_view=MyAdminIndexView(), base_template='my_master.html')
+admin = Admin(server, name='Home', index_view=MyAdminIndexView(), base_template='my_master.html')
 admin.add_view(MyModelView(User, db.session, 'User'))
 admin.add_view(ResidentView(Resident, db.session, 'Residents'))
 admin.add_view(FormView(Shift_log, db.session, 'Shift Logs'))
