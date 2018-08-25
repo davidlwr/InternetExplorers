@@ -17,7 +17,7 @@ dao = sensor_log_DAO()
 
 print(log)
 pd.options.mode.chained_assignment = None
-file_folder = '../stbern-20180302-20180523-csv/'
+file_folder = 'D:\\FYP\\Git\\InternetExplorers\\stbern-20180523-20180801\\'
 # initialize empty df
 input_raw_data = pd.DataFrame()
 
@@ -33,11 +33,11 @@ for filename in os.listdir(file_folder):
 # convert datetime format
 input_raw_data['gw_timestamp'] = pd.to_datetime(input_raw_data['gw_timestamp'], format='%Y-%m-%dT%H:%M:%S')
 
+# remove duplicates
+input_raw_data.drop_duplicates(subset=['gw_timestamp'], inplace=True)
+
 for row in input_raw_data.itertuples(index=True, name='Pandas'):
     log = Sensor_Log(getattr(row, 'device_id'), getattr(row, 'gw_device'), getattr(row, 'value'),
                      getattr(row, 'gw_timestamp'))
     dao = sensor_log_DAO()
     dao.insert_sensor_log(log)
-
-
-
