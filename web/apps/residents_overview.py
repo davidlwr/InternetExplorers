@@ -10,11 +10,75 @@ import datetime
 import plotly
 import json
 import pandas as pd
+import sys
+import dill
 # internal imports
-from apps import input_data
-from app import app, server
-from DAOs import resident_DAO
-from Entities import resident
+if __name__ == '__main__':
+    sys.path.append(".")
+    import input_data
+    from app import app, server
+    from DAOs import resident_DAO
+    from Entities import resident
+    from juvo_api import JuvoAPI
+else:
+    from apps import input_data
+    from app import app, server
+    from DAOs import resident_DAO
+    from Entities import resident
+    from juvo_api import JuvoAPI
+
+# handle the information retrieval for vital signs
+def retrieve_vital_signs_info(node_id='2005'):
+    '''
+    Returns vital sign information from juvo API for the resident corresponding
+    with the node_id input as parameter for this function
+    '''
+    date_in_use = datetime.datetime(2018, 8, 16, 23, 34, 12) # datetime.datetime.now()
+    # Retrieve relevant juvo API id from node_id first
+    target = 0
+    # supposed to get target from DB (when there are multiple juvo sensors deployed)
+    if node_id == '2005':
+        target = 460
+    # Get all the relevant data from the past week
+    one_week_ago = date_in_use + datetime.timedelta(days=-7)
+
+    ###### Either this (only for development)
+    with open('sleeps_json.pyobjcache', 'rb') as f:
+        # NOTE: THIS IS FOR DEV USE ONLY
+        #+To prevent unnecessary high volume of API calls, the test json is dumped
+        #+to a local file for testing purposes while in development
+        sleeps_json = dill.load(f)
+        vitals_json = dill.load(f)
+    ###### Or this
+    # japi = JuvoAPI.JuvoAPI()
+    # sleeps_json = japi.get_target_sleeps(target, one_week_ago, date_in_use)
+    # vitals_json = japi.get_target_vitals(target, one_week_ago, date_in_use)
+    # with open('sleeps_json.pyobjcache', 'wb') as f:
+    #     dill.dump(sleeps_json, f)
+    #     dill.dump(vitals_json, f)
+    ######
+
+    # print(sleeps_json)
+    sleeps_dict = sleeps_json['data']['sleeps']
+    # print(type(sleeps_dict))
+
+    sleeps_juvo_df = pd.DataFrame(sleeps_dict)
+    print(sleeps_juvo_df)
+
+    # Get first instance of sleep at night as start of sleep
+
+    # Get first instance of no detection in the morning as end of sleep
+
+    # Below for vitals
+    # print(vitals_json)
+    vitals_dict = vitals_json['data']['epoch_metrics']
+    vitals_juvo_df = pd.DataFrame(vitals_dict)
+    print(vitals_juvo_df)
+    # Get daily breathing and heartbeat rates
+    # Remove rows where both values are 0 first
+
+
+    return None
 
 # settle routing
 @server.route("/overview", methods=['GET', 'POST'])
@@ -325,3 +389,6 @@ def detailedLayerTwoOverviewResidents(node_id):
 
     return render_template('overview_layer_two.html', resident=resident,
             night_toilet_MA_graph_json=night_toilet_MA_graph_json, sleeping_motion_graph_json=sleeping_motion_graph_json, uninterrupted_sleep_graph_json=uninterrupted_sleep_graph_json)
+
+if __name__ == '__main__':
+    retrieve_vital_signs_info()
