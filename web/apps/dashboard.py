@@ -309,7 +309,51 @@ app.layout = html.Div([
                     html.Div([
                         html.Div(id='visit_duration_output', className='col-md-12')
                     ], className='row')
-                ], id='visit_duration_graph')
+                ], id='visit_duration_graph'),
+                html.Div([
+                    html.Div([
+                        html.H3('View resident\'s vital signs')
+                    ], className='row'),
+                    html.Div([
+                        html.Div([
+                            dcc.Dropdown(
+                                id='resident_input_vital_signs',
+                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
+                                placeholder='Select resident(s) to view',
+                                value=[],
+                                multi=True
+                            )
+                        ], className='col-md-4'),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='vital_sign_selector',
+                                options=[{'label': 'Heart Rate', 'value': 'heart_rate'}, {'label': 'Breathing Rate', 'value': 'breathing_rate'}],
+                                placeholder='Select vital sign(s) to view',
+                                value=[],
+                                multi=True
+                            )
+                        ], className='col-md-4'),
+                        html.Div([
+                            dcc.DatePickerRange(
+                                id='date_picker_vital_signs',
+                                min_date_allowed=input_data.input_raw_min_date,
+                                max_date_allowed=input_data.input_raw_max_date,
+                                start_date=input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                                                                 microsecond=0),
+                                # need to truncate the dates here
+                                end_date=input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0),
+                                # to prevent unconverted data error
+                                start_date_placeholder_text='Select start date',
+                                end_date_placeholder_text='Select end date',
+                                minimum_nights=0
+                            )
+                        ], className='col-md-4')
+                    ], className='row'),
+                    html.Div([
+                        html.Div(id='vital_signs_output', className='col-md-12')
+                    ], className='row')
+                ], id='vital_signs_graph')
             ], className='row-fluid')
         ], id='page-wrapper')
         # this is where the page content goes
@@ -549,6 +593,55 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
         print(e)
         return ''
 
+@app.callback(
+    Output('vital_signs_output', component_property='children'),
+    [Input('resident_input_vital_signs', 'value'),
+    Input('vital_sign_selector', 'value'),
+    Input('date_picker_vital_signs', 'start_date'),
+    Input('date_picker_vital_signs', 'end_date')])
+def update_graph_04(input_residents, input_vital_signs, start_date, end_date):
+    try:
+        # add one day to the entered end date as a workaround to allow one day picks (since entered dates are at time 00:00:00)
+        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = modified_date #datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        draw_data = []
+        if 'heart_rate' in input_vital_signs:
+            for r in input_residents:
+                df = input_data.retrieve_heart_rate_info(r, start_date, end_date)
+                if isinstance(df, str):
+                    continue
+                draw_data.append({'x': df['local_start_time'], 'y': df['heart_rate'], 'mode': 'markers', 'name': str(r) + ' ' + 'heart_rate'})
+        if 'breathing_rate' in input_vital_signs:
+            for r in input_residents:
+                df = input_data.retrieve_breathing_rate_info(r, start_date, end_date)
+                if isinstance(df, str):
+                    continue
+                draw_data.append({'x': df['local_start_time'], 'y': df['breathing_rate'], 'mode': 'markers', 'name': str(r) + ' ' + 'breathing_rate'})
+        return dcc.Graph(id='vital_signs_plot',
+                figure = {
+                    'data': draw_data,
+                    'layout': {
+                        'title':'Vital signs information of elderly',
+                        'xaxis': {
+                            'title': 'Start datetime of recorded vitals'
+                        },
+                        'yaxis': {
+                            'title': 'Vitals reading values'
+                        }
+                    }
+                },
+                config={
+                    'editable': False,
+                    'displaylogo': False,
+                    'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
+                })
+    except Exception as e:
+        print('ERROR: ', end='')
+        print(e)
+        return ''
+
 # next three callbacks automatically updates the resident names live for each graph
 @app.callback(
     Output('resident_input', 'options'),
@@ -565,5 +658,11 @@ def set_residents_options_one(selection):
 @app.callback(
     Output('resident_input_visit_duration', 'options'),
     [Input('resident_input_visit_duration', 'value')])
+def set_residents_options_one(selection):
+    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+
+@app.callback(
+    Output('resident_input_vital_signs', 'options'),
+    [Input('resident_input_vital_signs', 'value')])
 def set_residents_options_one(selection):
     return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]

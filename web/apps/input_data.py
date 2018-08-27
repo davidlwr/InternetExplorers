@@ -636,6 +636,7 @@ def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None)
     Returns a dict of vital sign information from juvo API for the resident corresponding
     with the node_id input as parameter for this function
     '''
+    # print(type(start_date))
     if end_date is None:
         date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12) # datetime.datetime.now()
     else:
@@ -643,8 +644,11 @@ def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None)
     # Retrieve relevant juvo API id from node_id first
     target = 0
     # supposed to get target from DB (when there are multiple juvo sensors deployed)
-    if node_id == '2005':
+    if node_id == '2005' or node_id == 2005:
         target = 460
+    else:
+        print('resident has no vitla signs info from juvo')
+        return ''
     # Get all the relevant data from the past week
     one_week_ago = date_in_use + datetime.timedelta(days=-7)
     if start_date is None:
@@ -652,19 +656,19 @@ def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None)
         start_date = one_month_ago
 
     ###### Either this (only for development)
-    with open('sleeps_json.pyobjcache', 'rb') as f:
-        # NOTE: THIS IS FOR DEV USE ONLY
-        #+To prevent unnecessary high volume of API calls, the test json is dumped
-        #+to a local file for testing purposes while in development
-        # sleeps_json = dill.load(f)
-        vitals_json = dill.load(f)
+    # with open('sleeps_json.pyobjcache', 'rb') as f:
+    #     # NOTE: THIS IS FOR DEV USE ONLY
+    #     #+To prevent unnecessary high volume of API calls, the test json is dumped
+    #     #+to a local file for testing purposes while in development
+    #     # sleeps_json = dill.load(f)
+    #     vitals_json = dill.load(f)
     ###### Or this
-    # japi = JuvoAPI.JuvoAPI()
-    # # sleeps_json = japi.get_target_sleeps(target, start_date, date_in_use)
-    # vitals_json = japi.get_target_vitals(target, start_date, date_in_use)
-    # with open('sleeps_json.pyobjcache', 'wb') as f:
-    #     # dill.dump(sleeps_json, f)
-    #     dill.dump(vitals_json, f)
+    japi = JuvoAPI.JuvoAPI()
+    # sleeps_json = japi.get_target_sleeps(target, start_date, date_in_use)
+    vitals_json = japi.get_target_vitals(target, start_date, date_in_use)
+    with open('sleeps_json.pyobjcache', 'wb') as f:
+        # dill.dump(sleeps_json, f)
+        dill.dump(vitals_json, f)
     ######
 
     # print(sleeps_json)
@@ -696,8 +700,9 @@ def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None)
     breathing_mean = breathing_rate_df[['breathing_rate']].mean().values[0]
 
     # print((breathing_mean + 3 * breathing_sd).values[0])
-    breathing_rate_filtered_df = breathing_rate_df[breathing_rate_df['breathing_rate'] < (breathing_mean + 3 * breathing_sd)]
-    breathing_rate_filtered_df = breathing_rate_filtered_df[breathing_rate_filtered_df['breathing_rate'] > (breathing_mean - 3 * breathing_sd)]
+    breathing_rate_filtered_df = breathing_rate_df[(breathing_rate_df['breathing_rate'] < (breathing_mean + 3 * breathing_sd))
+            & (breathing_rate_df['breathing_rate'] > (breathing_mean - 3 * breathing_sd))]
+    # breathing_rate_filtered_df = breathing_rate_filtered_df[breathing_rate_filtered_df['breathing_rate'] > (breathing_mean - 3 * breathing_sd)]
     breathing_rate_filtered_df.sort_values('local_start_time', inplace=True)
     breathing_rate_filtered_df.reset_index(drop=True, inplace=True)
     # print(breathing_rate_filtered_df)
@@ -712,8 +717,11 @@ def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
     # Retrieve relevant juvo API id from node_id first
     target = 0
     # supposed to get target from DB (when there are multiple juvo sensors deployed)
-    if node_id == '2005':
+    if node_id == '2005' or node_id == 2005:
         target = 460
+    else:
+        print('resident has no vital signs info from juvo')
+        return ''
     # Get all the relevant data from the past week
     one_week_ago = date_in_use + datetime.timedelta(days=-7)
     if start_date is None:
@@ -721,16 +729,16 @@ def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
         start_date = one_month_ago
 
     ###### Either this (only for development)
-    with open('sleeps_json.pyobjcache', 'rb') as f:
-        # NOTE: THIS IS FOR DEV USE ONLY
-        #+To prevent unnecessary high volume of API calls, the test json is dumped
-        #+to a local file for testing purposes while in development
-        # sleeps_json = dill.load(f)
-        vitals_json = dill.load(f)
+    # with open('sleeps_json.pyobjcache', 'rb') as f:
+    #     # NOTE: THIS IS FOR DEV USE ONLY
+    #     #+To prevent unnecessary high volume of API calls, the test json is dumped
+    #     #+to a local file for testing purposes while in development
+    #     # sleeps_json = dill.load(f)
+    #     vitals_json = dill.load(f)
     ###### Or this
-    # japi = JuvoAPI.JuvoAPI()
+    japi = JuvoAPI.JuvoAPI()
     # sleeps_json = japi.get_target_sleeps(target, start_date, date_in_use)
-    # vitals_json = japi.get_target_vitals(target, start_date, date_in_use)
+    vitals_json = japi.get_target_vitals(target, start_date, date_in_use)
     # with open('sleeps_json.pyobjcache', 'wb') as f:
     #     dill.dump(sleeps_json, f)
     #     dill.dump(vitals_json, f)
@@ -748,8 +756,9 @@ def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
     heartbeat_sd = heart_rate_df[['heart_rate']].std().values[0]
     heartbeat_mean = heart_rate_df[['heart_rate']].mean().values[0]
 
-    heart_rate_filtered_df = heart_rate_df[heart_rate_df['heart_rate'] < (heartbeat_mean + 3 * heartbeat_sd)]
-    heart_rate_filtered_df = heart_rate_filtered_df[heart_rate_filtered_df['heart_rate'] > (heartbeat_mean - 3 * heartbeat_sd)]
+    heart_rate_filtered_df = heart_rate_df[(heart_rate_df['heart_rate'] < (heartbeat_mean + 3 * heartbeat_sd))
+            & (heart_rate_df['heart_rate'] > (heartbeat_mean - 3 * heartbeat_sd))]
+    # heart_rate_filtered_df = heart_rate_filtered_df[heart_rate_filtered_df['heart_rate'] > (heartbeat_mean - 3 * heartbeat_sd)]
     heart_rate_filtered_df.sort_values('local_start_time', inplace=True)
     heart_rate_filtered_df.reset_index(drop=True, inplace=True)
     # print(heart_rate_filtered_df)
