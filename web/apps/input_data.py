@@ -631,12 +631,15 @@ def get_percentage_of_night_toilet_usage(user_id, current_sys_time=None):
     return ratio_series.mean(), ratio_series.std()
 
 # handle the information retrieval for vital signs
-def retrieve_vital_signs_info(node_id='2005'):
+def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None):
     '''
     Returns a dict of vital sign information from juvo API for the resident corresponding
     with the node_id input as parameter for this function
     '''
-    date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12) # datetime.datetime.now()
+    if end_date is None:
+        date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12) # datetime.datetime.now()
+    else:
+        date_in_use = end_date
     # Retrieve relevant juvo API id from node_id first
     target = 0
     # supposed to get target from DB (when there are multiple juvo sensors deployed)
@@ -644,29 +647,31 @@ def retrieve_vital_signs_info(node_id='2005'):
         target = 460
     # Get all the relevant data from the past week
     one_week_ago = date_in_use + datetime.timedelta(days=-7)
-    one_month_ago = date_in_use + datetime.timedelta(days=-30)
+    if start_date is None:
+        one_month_ago = date_in_use + datetime.timedelta(days=-30)
+        start_date = one_month_ago
 
     ###### Either this (only for development)
     with open('sleeps_json.pyobjcache', 'rb') as f:
         # NOTE: THIS IS FOR DEV USE ONLY
         #+To prevent unnecessary high volume of API calls, the test json is dumped
         #+to a local file for testing purposes while in development
-        sleeps_json = dill.load(f)
+        # sleeps_json = dill.load(f)
         vitals_json = dill.load(f)
     ###### Or this
     # japi = JuvoAPI.JuvoAPI()
-    # sleeps_json = japi.get_target_sleeps(target, one_month_ago, date_in_use)
-    # vitals_json = japi.get_target_vitals(target, one_month_ago, date_in_use)
+    # # sleeps_json = japi.get_target_sleeps(target, start_date, date_in_use)
+    # vitals_json = japi.get_target_vitals(target, start_date, date_in_use)
     # with open('sleeps_json.pyobjcache', 'wb') as f:
-    #     dill.dump(sleeps_json, f)
+    #     # dill.dump(sleeps_json, f)
     #     dill.dump(vitals_json, f)
     ######
 
     # print(sleeps_json)
-    sleeps_dict = sleeps_json['data']['sleeps']
+    # sleeps_dict = sleeps_json['data']['sleeps']
     # print(type(sleeps_dict))
 
-    sleeps_juvo_df = pd.DataFrame(sleeps_dict)
+    # sleeps_juvo_df = pd.DataFrame(sleeps_dict)
     # print(sleeps_juvo_df)
 
     # Get first instance of sleep at night as start of sleep
@@ -686,11 +691,6 @@ def retrieve_vital_signs_info(node_id='2005'):
     breathing_rate_df.reset_index(drop=True, inplace=True)
     # print(breathing_rate_df)
 
-    heart_rate_df = vitals_juvo_df[['vital_id', 'sensor_status', 'heart_rate', 'high_movement_rejection_heartbeat', 'local_start_time', 'local_end_time']]
-    heart_rate_df = heart_rate_df[heart_rate_df['heart_rate'] > 0]
-    heart_rate_df.reset_index(drop=True, inplace=True)
-    # print(heart_rate_df)
-
     # remove outliers (> 3 s.d. away)
     breathing_sd = breathing_rate_df[['breathing_rate']].std().values[0]
     breathing_mean = breathing_rate_df[['breathing_rate']].mean().values[0]
@@ -700,7 +700,50 @@ def retrieve_vital_signs_info(node_id='2005'):
     breathing_rate_filtered_df = breathing_rate_filtered_df[breathing_rate_filtered_df['breathing_rate'] > (breathing_mean - 3 * breathing_sd)]
     breathing_rate_filtered_df.sort_values('local_start_time', inplace=True)
     breathing_rate_filtered_df.reset_index(drop=True, inplace=True)
-    print(breathing_rate_filtered_df)
+    # print(breathing_rate_filtered_df)
+    # group average by date
+    return breathing_rate_filtered_df
+
+def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
+    if end_date is None:
+        date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12) # datetime.datetime.now()
+    else:
+        date_in_use = end_date
+    # Retrieve relevant juvo API id from node_id first
+    target = 0
+    # supposed to get target from DB (when there are multiple juvo sensors deployed)
+    if node_id == '2005':
+        target = 460
+    # Get all the relevant data from the past week
+    one_week_ago = date_in_use + datetime.timedelta(days=-7)
+    if start_date is None:
+        one_month_ago = date_in_use + datetime.timedelta(days=-30)
+        start_date = one_month_ago
+
+    ###### Either this (only for development)
+    with open('sleeps_json.pyobjcache', 'rb') as f:
+        # NOTE: THIS IS FOR DEV USE ONLY
+        #+To prevent unnecessary high volume of API calls, the test json is dumped
+        #+to a local file for testing purposes while in development
+        # sleeps_json = dill.load(f)
+        vitals_json = dill.load(f)
+    ###### Or this
+    # japi = JuvoAPI.JuvoAPI()
+    # sleeps_json = japi.get_target_sleeps(target, start_date, date_in_use)
+    # vitals_json = japi.get_target_vitals(target, start_date, date_in_use)
+    # with open('sleeps_json.pyobjcache', 'wb') as f:
+    #     dill.dump(sleeps_json, f)
+    #     dill.dump(vitals_json, f)
+    ######
+
+    vitals_dict = vitals_json['data']['epoch_metrics']
+    vitals_juvo_df = pd.DataFrame(vitals_dict)
+    # print(vitals_juvo_df.info())
+
+    heart_rate_df = vitals_juvo_df[['vital_id', 'sensor_status', 'heart_rate', 'high_movement_rejection_heartbeat', 'local_start_time', 'local_end_time']]
+    heart_rate_df = heart_rate_df[heart_rate_df['heart_rate'] > 0]
+    heart_rate_df.reset_index(drop=True, inplace=True)
+    # print(heart_rate_df)
 
     heartbeat_sd = heart_rate_df[['heart_rate']].std().values[0]
     heartbeat_mean = heart_rate_df[['heart_rate']].mean().values[0]
@@ -709,12 +752,9 @@ def retrieve_vital_signs_info(node_id='2005'):
     heart_rate_filtered_df = heart_rate_filtered_df[heart_rate_filtered_df['heart_rate'] > (heartbeat_mean - 3 * heartbeat_sd)]
     heart_rate_filtered_df.sort_values('local_start_time', inplace=True)
     heart_rate_filtered_df.reset_index(drop=True, inplace=True)
-    print(heart_rate_filtered_df)
+    # print(heart_rate_filtered_df)
 
-    # group average by date
-
-
-    return None
+    return heart_rate_filtered_df
 
 # below for testing only
 if __name__ == '__main__':
@@ -744,5 +784,6 @@ if __name__ == '__main__':
     # test night toilet ratios
     # get_percentage_of_night_toilet_usage(2005, input_raw_max_date + datetime.timedelta(days=-10))
     # get_percentage_of_night_toilet_usage(2006, input_raw_max_date + datetime.timedelta(days=-10))
-    retrieve_vital_signs_info()
+    print(retrieve_breathing_rate_info())
+    print(retrieve_heart_rate_info())
     pass # prevents error when no debug tests are being done
