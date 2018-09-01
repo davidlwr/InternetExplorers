@@ -41,11 +41,13 @@ a.deco-none {
                     <div class="table-responsive">
                         <table class="table">
                             <tbody>
-                                <tr class="success">
+                                <tr class="{{ getSWDFromAlertLength(resident['vitals_alerts']|length) }}">
                                     <td><i class="material-icons" style="font-size:15px; vertical-align:sup; align-content:center">favorite</i> </td>
                                     <td><b>Vital signs</b></td>
-                                    <td>Healthy</td>
-                                    <td></td>
+                                    <td><div>{{ getFooterFromAlertLength(resident['vitals_alerts']|length) }}</div></td>
+                                    <td class="text-center"><div data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['vitals_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
+                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
+                                    </div></td>
                                 </tr>
 
                                 <tr class="{{ getSWDFromAlertLength(resident['sleep_alerts']|length) }}">

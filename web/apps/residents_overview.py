@@ -61,8 +61,15 @@ def showOverviewResidents():
         else: # NOTE: for future changes
             r['sleep_tooltip'].extend(r['sleep_alerts'])
 
+        r['vitals_alerts'] = input_data.get_vital_signs_indicator(resident['node_id'], date_in_use)
+        r['vitals_tooltip'] = []
+        if len(r['vitals_alerts']) == 0:
+            r['vitals_tooltip'].append("Vital signs from previous week appear to be normal")
+        else:
+            r['vitals_tooltip'].extend(r['vitals_alerts'])
+
         # print("DEBUG resident id sleep_alerts", resident['node_id'], r['sleep_alerts'])
-        r['alert_highest'] = max(0, len(r['toilet_alerts']), len(r['sleep_alerts']))
+        r['alert_highest'] = max(0, len(r['toilet_alerts']), len(r['sleep_alerts']), len(r['vitals_alerts']))
         residents.append(r)
     return render_template('overview_residents.html', residents=residents)
 

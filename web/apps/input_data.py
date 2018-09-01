@@ -526,7 +526,6 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
 def get_overview_change_values(user_id, current_sys_time=None):
     pass
 
-
 def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     '''
     Returns list of night toilet usage alerts so as to determine what the colour
@@ -686,6 +685,9 @@ def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None)
     # print(vitals_json)
     vitals_dict = vitals_json['data']['epoch_metrics']
     vitals_juvo_df = pd.DataFrame(vitals_dict)
+    if vitals_juvo_df.empty:
+        print("empty data returned from juvo")
+        return pd.DataFrame()
     # print(vitals_juvo_df.info())
 
     # Get daily breathing and heartbeat rates
@@ -748,6 +750,10 @@ def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
     vitals_juvo_df = pd.DataFrame(vitals_dict)
     # print(vitals_juvo_df.info())
 
+    if vitals_juvo_df.empty:
+        print("empty data returned from juvo")
+        return pd.DataFrame()
+        
     heart_rate_df = vitals_juvo_df[['vital_id', 'sensor_status', 'heart_rate', 'high_movement_rejection_heartbeat', 'local_start_time', 'local_end_time']]
     heart_rate_df = heart_rate_df[heart_rate_df['heart_rate'] > 0]
     heart_rate_df.reset_index(drop=True, inplace=True)
@@ -764,6 +770,50 @@ def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
     # print(heart_rate_filtered_df)
 
     return heart_rate_filtered_df
+
+def get_vital_signs_indicator(user_id, current_sys_time=None):
+    '''
+    Returns list of vital signs alerts
+    '''
+    alerts_of_interest = []
+    confidence = 0.90
+    if current_sys_time is None:
+        current_sys_time = datetime.datetime.now()
+    normal_lower_bound_rr = 16
+    normal_upper_bound_rr = 25
+    # get one week's worth of readings
+    one_week_ago = current_sys_time + datetime.timedelta(days=-7)
+
+    past_week_breathing_df = retrieve_breathing_rate_info(user_id, one_week_ago, current_sys_time)
+    if isinstance(past_week_breathing_df, str) or past_week_breathing_df.empty:
+        print("empty data received")
+        # possibly flash an error message
+    else:
+        breathings = past_week_breathing_df.breathing_rate
+        breathing_n = len(breathings)
+        breathing_mean = np.mean(breathings)
+        breathing_se = scipy.stats.sem(breathings)
+        breathing_h = breathing_se * scipy.stats.t.ppf((1 + confidence) / 2., breathing_n-1)
+        if (breathing_mean + breathing_h) < normal_lower_bound_rr:
+            alerts_of_interest.append(f"Night respiratory rate from previous week significantly lower than normal ({normal_lower_bound_rr})")
+        elif (breathing_mean - breathing_h) > normal_upper_bound_rr:
+            alerts_of_interest.append(f"Night respiratory rate from previous week significantly higher than normal ({normal_upper_bound_rr})")
+
+    normal_upper_bound_hb = 65
+    past_week_heartbeat_df = retrieve_heart_rate_info(user_id, one_week_ago, current_sys_time)
+    if isinstance(past_week_heartbeat_df, str) or past_week_heartbeat_df.empty:
+        print("empty data received")
+        # possibly flash an error message
+    else:
+        heartbeats = past_week_heartbeat_df.heart_rate
+        heart_n = len(heartbeats)
+        heart_mean = np.mean(heartbeats)
+        heart_se = scipy.stats.sem(heartbeats)
+        heart_h = heart_se * scipy.stats.t.ppf((1 + confidence) / 2., heart_n-1)
+        if (heart_mean - heart_h) > normal_upper_bound_hb:
+            alerts_of_interest.append(f"Pulse rate during sleep from previous week significantly higher than normal ({normal_upper_bound_hb})")
+
+    return alerts_of_interest
 
 # below for testing only
 if __name__ == '__main__':
@@ -793,6 +843,7 @@ if __name__ == '__main__':
     # test night toilet ratios
     # get_percentage_of_night_toilet_usage(2005, input_raw_max_date + datetime.timedelta(days=-10))
     # get_percentage_of_night_toilet_usage(2006, input_raw_max_date + datetime.timedelta(days=-10))
-    print(retrieve_breathing_rate_info())
-    print(retrieve_heart_rate_info())
+    # print(retrieve_breathing_rate_info())
+    # print(retrieve_heart_rate_info())
+    print(get_vital_signs_indicator('2005'), datetime.datetime(2018, 8, 12, 23, 34, 12))
     pass # prevents error when no debug tests are being done
