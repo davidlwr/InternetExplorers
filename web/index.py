@@ -359,6 +359,7 @@ def load_user(user_name):
 @server.route("/graphs", methods=['GET', 'POST'])
 @flask_login.login_required
 def show_graphs():
+    input_data.updateInputData()
     return app.index()
 
 
