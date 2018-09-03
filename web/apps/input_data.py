@@ -76,6 +76,9 @@ para_ratio_threshold_default = 0.3  # changeable: if night usage is higher than 
                                     #+is really that high, nocturia index is much likely to be that high
                                     # can be customised based on different patients and estimated nocturnal bladder capacity
 
+def updateInputData():
+    input_raw_data = sensor_log_DAO.get_all_logs()
+
 def get_para_ratio_threshold():
     return para_ratio_threshold_default
 
@@ -753,7 +756,7 @@ def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
     if vitals_juvo_df.empty:
         print("empty data returned from juvo")
         return pd.DataFrame()
-        
+
     heart_rate_df = vitals_juvo_df[['vital_id', 'sensor_status', 'heart_rate', 'high_movement_rejection_heartbeat', 'local_start_time', 'local_end_time']]
     heart_rate_df = heart_rate_df[heart_rate_df['heart_rate'] > 0]
     heart_rate_df.reset_index(drop=True, inplace=True)
@@ -761,6 +764,8 @@ def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
 
     heartbeat_sd = heart_rate_df[['heart_rate']].std().values[0]
     heartbeat_mean = heart_rate_df[['heart_rate']].mean().values[0]
+
+    print(f"DEBUG: heartbeat mean and sd is {heartbeat_mean} and {heartbeat_sd}")
 
     heart_rate_filtered_df = heart_rate_df[(heart_rate_df['heart_rate'] < (heartbeat_mean + 3 * heartbeat_sd))
             & (heart_rate_df['heart_rate'] > (heartbeat_mean - 3 * heartbeat_sd))]
@@ -783,6 +788,7 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
     normal_upper_bound_rr = 25
     # get one week's worth of readings
     one_week_ago = current_sys_time + datetime.timedelta(days=-7)
+    four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
 
     past_week_breathing_df = retrieve_breathing_rate_info(user_id, one_week_ago, current_sys_time)
     if isinstance(past_week_breathing_df, str) or past_week_breathing_df.empty:
@@ -795,10 +801,30 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
         breathing_se = scipy.stats.sem(breathings)
         breathing_h = breathing_se * scipy.stats.t.ppf((1 + confidence) / 2., breathing_n-1)
         if (breathing_mean + breathing_h) < normal_lower_bound_rr:
-            alerts_of_interest.append(f"Night respiratory rate from previous week significantly lower than normal ({normal_lower_bound_rr})")
+            alerts_of_interest.append(f"Night respiratory rate from previous week significantly lower than normal (<{normal_lower_bound_rr})")
         elif (breathing_mean - breathing_h) > normal_upper_bound_rr:
-            alerts_of_interest.append(f"Night respiratory rate from previous week significantly higher than normal ({normal_upper_bound_rr})")
+            alerts_of_interest.append(f"Night respiratory rate from previous week significantly higher than normal (>{normal_upper_bound_rr})")
 
+    # get average respiratory rate of previous 3 weeks (comparing personal baselines)
+    previous_weeks_breathing_df = retrieve_breathing_rate_info(user_id, four_weeks_ago, one_week_ago)
+    if isinstance(previous_weeks_breathing_df, str) or past_week_breathing_df.empty:
+        print("empty data received")
+        # possibly flash an error message
+    else:
+        prev_breathings = previous_weeks_breathing_df.breathing_rate
+        if not (isinstance(past_week_breathing_df, str) or past_week_breathing_df.empty):
+            breathings = past_week_breathing_df.breathing_rate
+            breathing_n = len(breathings)
+            breathing_mean = np.mean(breathings)
+            prev_breathings_mean = np.mean(prev_breathings)
+            breathing_se = scipy.stats.sem(breathings)
+            breathing_h = breathing_se * scipy.stats.t.ppf((1 + confidence) / 2., breathing_n-1)
+            if (breathing_mean - breathing_h) > prev_breathings_mean:
+                alerts_of_interest.append(f"Significant increase of respiratory rate compared to past month")
+            elif (breathing_mean + breathing_h) < prev_breathings_mean:
+                alerts_of_interest.append(f"Significant decrease of respiratory rate compared to past month")
+
+    ### below for heartbeat
     normal_upper_bound_hb = 65
     past_week_heartbeat_df = retrieve_heart_rate_info(user_id, one_week_ago, current_sys_time)
     if isinstance(past_week_heartbeat_df, str) or past_week_heartbeat_df.empty:
@@ -810,8 +836,27 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
         heart_mean = np.mean(heartbeats)
         heart_se = scipy.stats.sem(heartbeats)
         heart_h = heart_se * scipy.stats.t.ppf((1 + confidence) / 2., heart_n-1)
+        print(f"DEBUG: heart statistic for comparison {heart_mean - heart_h}")
         if (heart_mean - heart_h) > normal_upper_bound_hb:
-            alerts_of_interest.append(f"Pulse rate during sleep from previous week significantly higher than normal ({normal_upper_bound_hb})")
+            alerts_of_interest.append(f"Pulse rate during sleep from previous week significantly higher than normal (>{normal_upper_bound_hb})")
+
+    # get average pulse rate of previous 3 weeks (comparing personal baselines)
+    previous_weeks_heartbeat_df = retrieve_heart_rate_info(user_id, four_weeks_ago, one_week_ago)
+    if isinstance(previous_weeks_heartbeat_df, str) or previous_weeks_heartbeat_df.empty:
+        print("empty data received")
+    else:
+        prev_heartbeat = previous_weeks_heartbeat_df.heart_rate
+        if not (isinstance(past_week_heartbeat_df, str) or past_week_heartbeat_df.empty):
+            heartbeats = past_week_heartbeat_df.heart_rate
+            heart_n = len(heartbeats)
+            heart_mean = np.mean(heartbeats)
+            prev_heartbeats_mean = np.mean(prev_heartbeat)
+            heart_se = scipy.stats.sem(heartbeats)
+            heart_h = heart_se * scipy.stats.t.ppf((1 + confidence) / 2., heart_n-1)
+            if (heart_mean - heart_h) > prev_heartbeats_mean:
+                alerts_of_interest.append(f"Significant increase of pulse rate compared to past month")
+            elif (heart_mean + heart_h) < prev_heartbeats_mean:
+                alerts_of_interest.append(f"Significant decrease of pulse rate compared to past month")
 
     return alerts_of_interest
 

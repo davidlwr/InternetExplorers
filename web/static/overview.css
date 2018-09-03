@@ -5762,7 +5762,7 @@ button.close {
   color: #df8a13;
 }
 .semihuge{
-    font-size:28px
+    font-size:24px
 }
 table.dataTable thead .sorting:after{content:"\f0dc";float:right;font-family:fontawesome;color:rgba(50,50,50,.5)}
 .btn-circle{width:30px;height:30px;padding:6px 0;border-radius:15px;text-align:center;font-size:12px;line-height:1.428571429}

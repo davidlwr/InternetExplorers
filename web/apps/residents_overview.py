@@ -40,6 +40,7 @@ def showOverviewResidents():
     residents_raw = resident_DAO.get_list_of_residents()
     residents = []
     date_in_use = datetime.datetime(2018, 4, 19, 23, 34, 12) # TODO: change to current system time once live data is available
+    juvo_date_in_use = datetime.datetime(2018, 8, 12, 18, 18, 18) # TODO: change to current system time once live data is available
     for resident in residents_raw:
         r = {}
         r['name'] = resident['name']
@@ -61,7 +62,7 @@ def showOverviewResidents():
         else: # NOTE: for future changes
             r['sleep_tooltip'].extend(r['sleep_alerts'])
 
-        r['vitals_alerts'] = input_data.get_vital_signs_indicator(resident['node_id'], date_in_use)
+        r['vitals_alerts'] = input_data.get_vital_signs_indicator(resident['node_id'], juvo_date_in_use)
         r['vitals_tooltip'] = []
         if len(r['vitals_alerts']) == 0:
             r['vitals_tooltip'].append("Vital signs from previous week appear to be normal")
