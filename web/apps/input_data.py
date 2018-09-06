@@ -635,7 +635,7 @@ def get_percentage_of_night_toilet_usage(user_id, current_sys_time=None):
 # handle the information retrieval for vital signs
 def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None):
     '''
-    Returns a dict of vital sign information from juvo API for the resident corresponding
+    Returns a dict of respiratory rate information from juvo API for the resident corresponding
     with the node_id input as parameter for this function
     '''
     # print(type(start_date))
@@ -715,6 +715,10 @@ def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None)
     return breathing_rate_filtered_df
 
 def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
+    '''
+    Returns a dict of pulse rate information from juvo API for the resident corresponding
+    with the node_id input as parameter for this function
+    '''
     if end_date is None:
         date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12) # datetime.datetime.now()
     else:
@@ -778,7 +782,11 @@ def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
 
 def get_vital_signs_indicator(user_id, current_sys_time=None):
     '''
-    Returns list of vital signs alerts
+    Returns tuple of (1) list of vital signs alerts (2) past week respiratory rate average
+    (3) previous three weeks respiratory rate average
+
+    NOTE: for (2) and (3) they are calculated after grouping by day while for (1) the alerts
+    are generated before grouping by day and the averages are aggregated by all readings in a week
     '''
     alerts_of_interest = []
     confidence = 0.90
@@ -799,7 +807,7 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
         breathing_n = len(breathings)
         breathing_mean = np.mean(breathings)
         breathing_se = scipy.stats.sem(breathings)
-        breathing_h = breathing_se * scipy.stats.t.ppf((1 + confidence) / 2., breathing_n-1)
+        breathing_h = breathing_se * scipy.stats.t.pdf((1 + confidence) / 2., breathing_n-1)
         if (breathing_mean + breathing_h) < normal_lower_bound_rr:
             alerts_of_interest.append(f"Night respiratory rate from previous week significantly lower than normal (<{normal_lower_bound_rr})")
         elif (breathing_mean - breathing_h) > normal_upper_bound_rr:
@@ -818,11 +826,11 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
             breathing_mean = np.mean(breathings)
             prev_breathings_mean = np.mean(prev_breathings)
             breathing_se = scipy.stats.sem(breathings)
-            breathing_h = breathing_se * scipy.stats.t.ppf((1 + confidence) / 2., breathing_n-1)
+            breathing_h = breathing_se * scipy.stats.t.pdf((1 + confidence) / 2., breathing_n-1)
             if (breathing_mean - breathing_h) > prev_breathings_mean:
-                alerts_of_interest.append(f"Significant increase of respiratory rate compared to past month")
+                alerts_of_interest.append(f"Significant increase of respiratory rate in the past month")
             elif (breathing_mean + breathing_h) < prev_breathings_mean:
-                alerts_of_interest.append(f"Significant decrease of respiratory rate compared to past month")
+                alerts_of_interest.append(f"Significant decrease of respiratory rate in the past month")
 
     ### below for heartbeat
     normal_upper_bound_hb = 65
@@ -835,7 +843,8 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
         heart_n = len(heartbeats)
         heart_mean = np.mean(heartbeats)
         heart_se = scipy.stats.sem(heartbeats)
-        heart_h = heart_se * scipy.stats.t.ppf((1 + confidence) / 2., heart_n-1)
+        heart_h = heart_se * scipy.stats.t.pdf((1 + confidence) / 2., heart_n-1)
+        print(f"DEBUG: heart_h {heart_h}")
         print(f"DEBUG: heart statistic for comparison {heart_mean - heart_h}")
         if (heart_mean - heart_h) > normal_upper_bound_hb:
             alerts_of_interest.append(f"Pulse rate during sleep from previous week significantly higher than normal (>{normal_upper_bound_hb})")
@@ -852,13 +861,45 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
             heart_mean = np.mean(heartbeats)
             prev_heartbeats_mean = np.mean(prev_heartbeat)
             heart_se = scipy.stats.sem(heartbeats)
-            heart_h = heart_se * scipy.stats.t.ppf((1 + confidence) / 2., heart_n-1)
+            heart_h = heart_se * scipy.stats.t.pdf((1 + confidence) / 2., heart_n-1)
             if (heart_mean - heart_h) > prev_heartbeats_mean:
-                alerts_of_interest.append(f"Significant increase of pulse rate compared to past month")
+                alerts_of_interest.append(f"Significant increase of pulse rate in the past month")
             elif (heart_mean + heart_h) < prev_heartbeats_mean:
-                alerts_of_interest.append(f"Significant decrease of pulse rate compared to past month")
+                alerts_of_interest.append(f"Significant decrease of pulse rate in the past month")
 
-    return alerts_of_interest
+    ### below aggregated by day first
+    past_week_average_breathing = 0
+    previous_weeks_average_breathing = 0
+    past_week_average_heart = 0
+    previous_weeks_average_heart = 0
+
+    # breathing first
+    past_week_breathing_df['reading_timestamp'] = pd.to_datetime(past_week_breathing_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+    past_week_breathing_df['date_only'] = past_week_breathing_df['reading_timestamp'].apply(date_only)
+
+    breathing_graph_df = past_week_breathing_df.groupby(['date_only'], as_index=False)['breathing_rate'].mean()
+    past_week_average_breathing = breathing_graph_df.breathing_rate.mean()
+
+    previous_weeks_breathing_df['reading_timestamp'] = pd.to_datetime(previous_weeks_breathing_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+    previous_weeks_breathing_df['date_only'] = previous_weeks_breathing_df['reading_timestamp'].apply(date_only)
+
+    previous_weeks_breathing_result_df = previous_weeks_breathing_df.groupby(['date_only'], as_index=False)['breathing_rate'].mean()
+    previous_weeks_average_breathing = previous_weeks_breathing_result_df.breathing_rate.mean()
+
+    # heartbeat
+    past_week_heartbeat_df['reading_timestamp'] = pd.to_datetime(past_week_heartbeat_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+    past_week_heartbeat_df['date_only'] = past_week_heartbeat_df['reading_timestamp'].apply(date_only)
+
+    past_week_heartbeat_result_df = past_week_heartbeat_df.groupby(['date_only'], as_index=False)['heart_rate'].mean()
+    past_week_average_heart = past_week_heartbeat_result_df.heart_rate.mean()
+
+    previous_weeks_heartbeat_df['reading_timestamp'] = pd.to_datetime(previous_weeks_heartbeat_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+    previous_weeks_heartbeat_df['date_only'] = previous_weeks_heartbeat_df['reading_timestamp'].apply(date_only)
+
+    previous_weeks_heartbeat_result_df = previous_weeks_heartbeat_df.groupby(['date_only'], as_index=False)['heart_rate'].mean()
+    previous_weeks_average_heart = previous_weeks_heartbeat_result_df.heart_rate.mean()
+
+    return alerts_of_interest, past_week_average_breathing, previous_weeks_average_breathing, past_week_average_heart, previous_weeks_average_heart
 
 # below for testing only
 if __name__ == '__main__':
@@ -890,5 +931,5 @@ if __name__ == '__main__':
     # get_percentage_of_night_toilet_usage(2006, input_raw_max_date + datetime.timedelta(days=-10))
     # print(retrieve_breathing_rate_info())
     # print(retrieve_heart_rate_info())
-    print(get_vital_signs_indicator('2005'), datetime.datetime(2018, 8, 12, 23, 34, 12))
+    print(get_vital_signs_indicator('2005', datetime.datetime(2018, 8, 12, 23, 34, 12)))
     pass # prevents error when no debug tests are being done
