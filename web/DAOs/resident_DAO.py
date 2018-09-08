@@ -7,6 +7,7 @@ from Entities.resident import Resident
 
 table_name = 'stbern.RESIDENT'
 
+
 def get_resident_by_id(node_id):
     '''
     Returns a resident (in a dict) based on node_id (in int)
@@ -24,6 +25,36 @@ def get_resident_by_id(node_id):
         return result
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
+
+
+def get_resident_by_resident_id(resident_id):
+    '''
+    Returns a resident (in a dict) based on node_id (in int)
+    '''
+    query = 'SELECT * FROM {} WHERE resident_id = %s'.format(table_name)
+
+    # Get connection
+    factory = connection_manager()
+    connection = factory.connection
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(query, (resident_id, ))
+        result = cursor.fetchone()
+        return result
+    except: raise
+    finally: factory.close_all(cursor=cursor, connection=connection)
+
+
+def get_resident_name_by_resident_id(resident_id):
+    '''
+    Returns the name of the resident based on current node_id
+    '''
+    resident = get_resident_by_resident_id(resident_id)
+    if resident is None:
+        return None
+
+    return resident['name']
 
 
 def get_list_of_residents(filter_active=True, location_filter=None):

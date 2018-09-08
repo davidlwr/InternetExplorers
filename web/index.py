@@ -24,7 +24,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 # internal imports
 from app import app, server, db
-from apps import input_data, dashboard, reports, residents_overview, shift_log_form, risk_assessment_form
+from apps import input_data,input_shiftlogs, dashboard, reports, residents_overview, shift_log_form, risk_assessment_form, sensors_health
 from apps.shift_log_form import Resident, ShiftLogForm
 from apps.risk_assessment_form import RiskAssessmentForm
 from Entities.user import User
