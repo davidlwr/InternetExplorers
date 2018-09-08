@@ -146,6 +146,9 @@ class sysmon_log_DAO(object):
         Inputs:
         uuid (str) -- ie "2005-m-01"
         limit (int) -- default 1
+
+        Return
+        Entity.Sysmon_log
         '''
         query = f"""SELECT * FROM {sysmon_log_DAO.table_name} 
                     WHERE `{Sysmon_Log.uuid_tname}` = "{uuid}" 
@@ -161,7 +164,6 @@ class sysmon_log_DAO(object):
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            logs = []
             if results != None:
                 for result in results:
                     uuid    = result[Sysmon_Log.uuid_tname]
@@ -170,9 +172,8 @@ class sysmon_log_DAO(object):
                     key     = result[Sysmon_Log.key_tname]
                     ts      = result[Sysmon_Log.recieved_timestamp_tname]
 
-                    log = Sysmon_Log(uuid, node_id, event, key, ts)
-                    logs.append(log)
-            return logs
+                    return Sysmon_Log(uuid, node_id, event, key, ts)
+            else: return None
 
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
@@ -185,6 +186,9 @@ class sysmon_log_DAO(object):
         uuid (str) -- ie "2005-m-01"
         event (int) -- default 0
         limit (int) -- default 1
+
+        Reutrn
+        Entity.Sysmon_log
         '''
         query = f"""SELECT * FROM {sysmon_log_DAO.table_name} 
                     WHERE `{Sysmon_Log.uuid_tname}` = "{uuid}" 
@@ -200,7 +204,6 @@ class sysmon_log_DAO(object):
         try:
             cursor.execute(query)
             results = cursor.fetchall()
-            logs = []
             if results != None:
                 for result in results:
                     uuid    = result[Sysmon_Log.uuid_tname]
@@ -209,9 +212,8 @@ class sysmon_log_DAO(object):
                     key     = result[Sysmon_Log.key_tname]
                     ts      = result[Sysmon_Log.recieved_timestamp_tname]
 
-                    log = Sysmon_Log(uuid, node_id, event, key, ts)
-                    logs.append(log)
-            return logs
+                    return Sysmon_Log(uuid, node_id, event, key, ts)
+            else: return None
 
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
