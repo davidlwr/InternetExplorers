@@ -6,7 +6,7 @@ class Sysmon_Log(object):
     '''
 
     # Table col names
-    uuid_tname               = "uuid"
+    uuid_tname               = "uuid"           # Correct format should be "2005-d-01" for example
     node_id_tname            = "node_id"
     event_tname              = "event"
     key_tname                = "key"

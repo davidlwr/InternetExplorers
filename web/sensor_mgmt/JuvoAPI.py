@@ -421,7 +421,7 @@ class JuvoAPI(object):
         if not precheck_status: return None 
             
         # API 
-        url = f"{cls.BASE_URL}/targets/{target}/sleep/"
+        url = f"{cls.BASE_URL}/targets/{target}/vitals/"
         headers = {"Content-Type": "application/json",
                    "Authorization": f"Bearer {cls.ACCESS_TOKEN}"}
         payload = {'start_time': cls.sudo_utc_datetime(start_time).isoformat(),

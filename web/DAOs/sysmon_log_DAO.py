@@ -3,6 +3,7 @@ import datetime, os, sys
 if __name__ == '__main__':  sys.path.append("..")
 from Entities.sysmon_log import Sysmon_Log
 from DAOs.connection_manager import connection_manager
+from DAOs.sysmon_log_DAO import sensor_log_DAO
 
 class sysmon_log_DAO(object):
     '''
@@ -81,6 +82,120 @@ class sysmon_log_DAO(object):
         cursor = connection.cursor()
 
         query = f"SELECT * FROM {sysmon_log_DAO.table_name}"
+
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            logs = []
+            if results != None:
+                for result in results:
+                    uuid    = result[Sysmon_Log.uuid_tname]
+                    node_id = result[Sysmon_Log.node_id_tname]
+                    event   = result[Sysmon_Log.event_tname]
+                    key     = result[Sysmon_Log.key_tname]
+                    ts      = result[Sysmon_Log.recieved_timestamp_tname]
+
+                    log = Sysmon_Log(uuid, node_id, event, key, ts)
+                    logs.append(log)
+            return logs
+
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
+
+    @staticmethod
+    def get_last_sysmon(uuid, limit=1):
+        '''
+        Inputs:
+        uuid (str) -- ie "2005-m-01"
+        limit (int) -- default 1
+        '''
+        query = f"""SELECT * FROM {sysmon_log_DAO.table_name} 
+                    WHERE `{Sysmon_Log.uuid_tname}` = "{uuid}" 
+                    ORDER BY `{Sysmon_Log.recieved_timestamp_tname}` 
+                    DESC LIMIT {limit}"""
+        
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            logs = []
+            if results != None:
+                for result in results:
+                    uuid    = result[Sysmon_Log.uuid_tname]
+                    node_id = result[Sysmon_Log.node_id_tname]
+                    event   = result[Sysmon_Log.event_tname]
+                    key     = result[Sysmon_Log.key_tname]
+                    ts      = result[Sysmon_Log.recieved_timestamp_tname]
+
+                    log = Sysmon_Log(uuid, node_id, event, key, ts)
+                    logs.append(log)
+            return logs
+
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+        
+
+    @staticmethod
+    def get_last_battery_level(uuid, limit=1):
+        '''
+        Inputs:
+        uuid (str) -- ie "2005-m-01"
+        limit (int) -- default 1
+        '''
+        query = f"""SELECT * FROM {sysmon_log_DAO.table_name} 
+                    WHERE `{Sysmon_Log.uuid_tname}` = "{uuid}" 
+                    AND `{Sysmon_Log.key_tname}` = "Battery Level"
+                    ORDER BY `{Sysmon_Log.recieved_timestamp_tname}` 
+                    DESC LIMIT {limit}"""
+        
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            logs = []
+            if results != None:
+                for result in results:
+                    uuid    = result[Sysmon_Log.uuid_tname]
+                    node_id = result[Sysmon_Log.node_id_tname]
+                    event   = result[Sysmon_Log.event_tname]
+                    key     = result[Sysmon_Log.key_tname]
+                    ts      = result[Sysmon_Log.recieved_timestamp_tname]
+
+                    log = Sysmon_Log(uuid, node_id, event, key, ts)
+                    logs.append(log)
+            return logs
+
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
+    
+    @staticmethod
+    def get_last_burglar(uuid, event=0, limit=1):
+        '''
+        Inputs:
+        uuid (str) -- ie "2005-m-01"
+        event (int) -- default 0
+        limit (int) -- default 1
+        '''
+        query = f"""SELECT * FROM {sysmon_log_DAO.table_name} 
+                    WHERE `{Sysmon_Log.uuid_tname}` = "{uuid}" 
+                    AND `{Sysmon_Log.key_tname}` = "Burglar"
+                    ORDER BY `{Sysmon_Log.recieved_timestamp_tname}` 
+                    DESC LIMIT {limit}"""
+        
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
 
         try:
             cursor.execute(query)
