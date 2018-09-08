@@ -161,7 +161,7 @@ class JuvoAPI(object):
     def get_sensors(cls):
         '''
         Returns a dict if successfull, None if response code is anything other than 200
-        Note: Target field in successfull return is important
+        Note: Target field in successfull return is important as it is the sensor_id in a sense
         
         Return:
         {
@@ -507,8 +507,8 @@ class JuvoAPI(object):
 
         Input:
         target (int)
-        start_date (datetime)
-        end_date (datetime)
+        start_date (datetime) -- Only date matters
+        end_date (datetime)   -- Only date matters
 
         Return array of tuples: [(datetime, secs), (datetime, secs)]
         [] if no result, None if error
