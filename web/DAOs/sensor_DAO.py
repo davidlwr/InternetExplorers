@@ -51,7 +51,8 @@ class sensor_DAO(object):
             sensors = []
             if result != None:
                 for r in result:
-                    sensors.append(Sensor(uuid=r[Sensor.uuid_tname], type=r[Sensor.type_tname], location=r[Sensor.locaiton_tname], description=r[Sensor.description_tname]))
+                    sensors.append(Sensor(uuid=r[Sensor.uuid_tname], type=r[Sensor.type_tname], location=r[Sensor.locaiton_tname], \
+                                          description=r[Sensor.description_tname], juvo_target=r[Sensor.juvo_target_tname]))
             return sensors
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)

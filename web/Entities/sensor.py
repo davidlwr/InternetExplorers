@@ -8,8 +8,9 @@ class Sensor(object):
     type_tname = "type"
     locaiton_tname = "location"
     description_tname = "description"
+    juvo_target_tname = "juvo_target"
 
-    def __init__(self, uuid, type, location, description=""):
+    def __init__(self, uuid, type, location, description="", juvo_target=None):
         '''
         Constructor method
 
@@ -18,19 +19,21 @@ class Sensor(object):
         type (str) -- "motion" | "door" | "bed sensor"
         location (str) -- "bed" | "bedroom" | "toilet"
         description (str)
+        juvo_target (int) -- default None
         '''
         self.uuid = uuid
         self.type = type
         self.location = location
         self.description = description
-        self.var_list = [self.uuid, self.type, self.location, self.description]
+        self.juvo_target = juvo_target
+        self.var_list = [self.uuid, self.type, self.location, self.description, juvo_target]
 
     
     def __str__ (self):
         '''
         String representation of object
         '''
-        return f"UUID:'{self.uuid}', type:'{self.type}', location:'{self.location}', desc:'{self.description}'"
+        return f"UUID:'{self.uuid}', type:'{self.type}', location:'{self.location}', desc:'{self.description}', 'juvo_target':{self.juvo_target}"
 
     def __repr__(self):
         '''
