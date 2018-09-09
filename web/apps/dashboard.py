@@ -599,7 +599,7 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
     Input('vital_sign_selector', 'value'),
     Input('date_picker_vital_signs', 'start_date'),
     Input('date_picker_vital_signs', 'end_date')])
-def update_graph_04(input_residents, input_vital_signs, start_date, end_date):
+def update_graph_05(input_residents, input_vital_signs, start_date, end_date):
     try:
         # add one day to the entered end date as a workaround to allow one day picks (since entered dates are at time 00:00:00)
         start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')

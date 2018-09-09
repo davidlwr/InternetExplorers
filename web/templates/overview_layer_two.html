@@ -71,111 +71,111 @@ a.deco-none {
                             </div>
                         </div>
                         <div class="panel-body">
-                                        <div class="row">
-                                            <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12">
 
 
-                                                <div id="night_toilet_ratio_chart" class="night_toilet_ratio_chart_class svg_container container-fluid"><!-- Plotly chart will be drawn inside this DIV --></div>
-                                                <script>
+                                    <div id="night_toilet_ratio_chart" class="night_toilet_ratio_chart_class svg_container container-fluid"><!-- Plotly chart will be drawn inside this DIV --></div>
+                                    <script>
 
-                                                var xValue = [100 - {{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];
-                                                var xValue2 = [{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];;
+                                    var xValue = [100 - {{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];
+                                    var xValue2 = [{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];;
 
-                                                var yValue = ["% of Night Toilet Usage in a Day"]
+                                    var yValue = ["% of Night Toilet Usage in a Day"]
 
-                                                var trace1 = {
-                                                    x: xValue2,
-                                                    y: yValue,
-                                                    width: 0.5,
-                                                    name: 'Night',
-                                                    orientation: 'h',
-                                                    marker: {
-                                                        color: 'rgb(100, 250, 96)',
-                                                        width: 1
-                                                    },
-                                                    type: 'bar'
+                                    var trace1 = {
+                                        x: xValue2,
+                                        y: yValue,
+                                        width: 0.5,
+                                        name: 'Night',
+                                        orientation: 'h',
+                                        marker: {
+                                            color: 'rgb(100, 250, 96)',
+                                            width: 1
+                                        },
+                                        type: 'bar'
 
-                                                };
+                                    };
 
-                                                var trace2 = {
-                                                    x: xValue,
-                                                    y: yValue,
-                                                    width: 0.5,
-                                                    name: 'Day',
-                                                    orientation: 'h',
-                                                    type: 'bar',
+                                    var trace2 = {
+                                        x: xValue,
+                                        y: yValue,
+                                        width: 0.5,
+                                        name: 'Day',
+                                        orientation: 'h',
+                                        type: 'bar',
 
-                                                    marker: {
-                                                        color: 'rgb(200,230,255)',
-                                                        width: 1
-                                                    }
-                                                };
+                                        marker: {
+                                            color: 'rgb(200,230,255)',
+                                            width: 1
+                                        }
+                                    };
 
-                                                var data = [trace1, trace2];
+                                    var data = [trace1, trace2];
 
-                                                var layout = {
-													title: '% of Toilet Usage at Night',
-                                                    titlefont: {
-                                                        size: 14
-                                                    },
-                                                    shapes: [
-                                                        {
-                                                            type: 'line',
-                                                            xref: 'paper',
-                                                            x0: {{ resident['para_ratio_threshold'] }},
-                                                            y0: -0.3,
-                                                            x1: {{ resident['para_ratio_threshold'] }},
-                                                            y1: 0.3,
-                                                            line:{
-                                                                color: 'rgb(255, 0, 0)',
-                                                                width: 3,
-                                                                dash:'dot'
-                                                            }
-                                                        },
+                                    var layout = {
+										title: '% of Toilet Usage at Night',
+                                        titlefont: {
+                                            size: 14
+                                        },
+                                        shapes: [
+                                            {
+                                                type: 'line',
+                                                xref: 'paper',
+                                                x0: {{ resident['para_ratio_threshold'] }},
+                                                y0: -0.3,
+                                                x1: {{ resident['para_ratio_threshold'] }},
+                                                y1: 0.3,
+                                                line:{
+                                                    color: 'rgb(255, 0, 0)',
+                                                    width: 3,
+                                                    dash:'dot'
+                                                }
+                                            },
 
 
-                                                    ],
-                                                    barmode: 'stack',
-                                                    autosize: true,
-													height:200,
-                                                    xaxis: {
-                                                        autorange: true,
-                                                        showgrid: true,
-                                                        zeroline: false,
-                                                        showline: true,
-                                                        autotick: true,
-                                                        ticks: '',
-                                                        showticklabels: true
-                                                    },
-													yaxis: {
-														showticklabels: false
-													},
-                                                    margin: {
-                                                        t: 40, //top margin
-                                                        l: 10, //left margin
-                                                        r: 10,
-                                                        pad: 0
-                                                    },
-                                                    showlegend: true,
-                                                    legend: {"orientation": "h",y:-0.2}
-                                                };
+                                        ],
+                                        barmode: 'stack',
+                                        autosize: true,
+										height:200,
+                                        xaxis: {
+                                            autorange: true,
+                                            showgrid: true,
+                                            zeroline: false,
+                                            showline: true,
+                                            autotick: true,
+                                            ticks: '',
+                                            showticklabels: true
+                                        },
+										yaxis: {
+											showticklabels: false
+										},
+                                        margin: {
+                                            t: 40, //top margin
+                                            l: 10, //left margin
+                                            r: 10,
+                                            pad: 0
+                                        },
+                                        showlegend: true,
+                                        legend: {"orientation": "h",y:-0.2}
+                                    };
 
-                                                Plotly.newPlot('night_toilet_ratio_chart', data, layout, {displayModeBar: false});
-                                                </script>
+                                    Plotly.newPlot('night_toilet_ratio_chart', data, layout, {displayModeBar: false});
+                                    </script>
 
-                                            </div>
-                                            <div class="col-xs-12">
-                                                <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'info' }}">
-                                                    <div class="panel-heading">
-                                                        <div class="row">
-                                                            <div class="col-xs-12 text-right">
-                                                                This is {{ 'greater' if resident['toilet_night_to_both_ratio'] >= resident['para_ratio_threshold'] else 'less' }} than the set threshold of <span class="semihuge">{{ '%0.1f'|format((resident['para_ratio_threshold'] * 100)|float) }}%</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                </div>
+                                <div class="col-xs-12">
+                                    <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'info' }}">
+                                        <div class="panel-heading">
+                                            <div class="row">
+                                                <div class="col-xs-12 text-right">
+                                                    This is {{ 'greater' if resident['toilet_night_to_both_ratio'] >= resident['para_ratio_threshold'] else 'less' }} than the set threshold of <span class="semihuge">{{ '%0.1f'|format((resident['para_ratio_threshold'] * 100)|float) }}%</span>
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
