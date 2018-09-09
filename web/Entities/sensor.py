@@ -6,7 +6,7 @@ class Sensor(object):
 
     uuid_tname = "uuid"
     type_tname = "type"
-    locaiton_tname = "location"
+    location_tname = "location"
     description_tname = "description"
     juvo_target_tname = "juvo_target"
 

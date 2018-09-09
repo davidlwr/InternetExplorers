@@ -8,12 +8,14 @@ from sensor_mgmt.JuvoAPI import JuvoAPI
 
 class Sensor_mgmt(object):
 
+    # RETURN STATUS CODES
     INVALID_SENSOR = -1
     OK           = 0     # Can be OK and LOW_BATT at the same time
     DISCONNECTED = 1
     LOW_BATT     = 2 
     CHECK_WARN   = 3    # Potentially down
 
+    # SETTINGS
     batt_thresh  = 5    # 5%
 
 
