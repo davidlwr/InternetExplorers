@@ -32,8 +32,8 @@ def date_only(original_date):
 def get_logs_filter_options():
     '''Returns labels and values in an array of tuples'''
     return [('No. of Falls', 'num_falls'), ('No. of Near Falls', 'num_near_falls'),
-            ('Food Consumption', 'food_consumption'), ('Temperature', 'temperature'), ('Systolic Bp', 'systolic_bp'),
-            ('Diastolic Bp', 'diastolic_bp'), ('Pulse Pressure', 'pulse_pressure'), ('Pulse Rate', 'pulse_rate')]
+            ('Food Consumption', 'food_consumption'), ('Temperature', 'temperature'), ('Systolic//Diastolic Bp', 'sys_dia'),
+            ('Pulse Pressure', 'pulse_pressure'), ('Pulse Rate', 'pulse_rate')]
 
 
 def get_relevant_data(start_date, end_date, patient_id):

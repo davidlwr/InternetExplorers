@@ -625,23 +625,38 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
         if filter_input == 'None':  # default option
             for r in input_resident:
                 df = input_shiftlogs.get_logs_by_date(start_date, end_date, r)
-                draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': r})
+                if filter_type != 'sys_dia':
+                    draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': r})
+                else:
+                    draw_data.append({'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers', 'name': r})
+                    draw_data.append({'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers', 'name': r})
 
         else:
 
             if filter_input != 'Night':  # if not night means have to display for 'Day'
                 for r in input_resident:
                     df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Day')
+                    if filter_type != 'sys_dia':
+                        draw_data.append(
+                            {'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+                    else:
+                        draw_data.append(
+                            {'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+                        draw_data.append(
+                            {'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
 
-                    draw_data.append(
-                        {'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
 
             if filter_input != 'Day':  # if not day means have to display for 'Night'
                 for r in input_resident:
                     df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Night')
-
-                    draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers',
-                                      'name': str(r) + ' - Night'})
+                    if filter_type != 'sys_dia':
+                        draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers',
+                                          'name': str(r) + ' - Night'})
+                    else:
+                        draw_data.append({'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers',
+                                          'name': str(r) + ' - Night'})
+                        draw_data.append({'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers',
+                                          'name': str(r) + ' - Night'})
 
         return dcc.Graph(id='logs_plot',
                          figure={
