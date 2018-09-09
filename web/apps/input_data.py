@@ -780,6 +780,10 @@ def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
 
     return heart_rate_filtered_df
 
+normal_lower_bound_rr = 16
+normal_upper_bound_rr = 25
+normal_upper_bound_hb = 65
+
 def get_vital_signs_indicator(user_id, current_sys_time=None):
     '''
     Returns tuple of (1) list of vital signs alerts (2) past week respiratory rate average
@@ -792,15 +796,21 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
     confidence = 0.90
     if current_sys_time is None:
         current_sys_time = datetime.datetime.now()
-    normal_lower_bound_rr = 16
-    normal_upper_bound_rr = 25
     # get one week's worth of readings
     one_week_ago = current_sys_time + datetime.timedelta(days=-7)
     four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
 
+    ### below aggregated by day first
+    past_week_average_breathing = 0
+    previous_weeks_average_breathing = 0
+    past_week_average_heart = 0
+    previous_weeks_average_heart = 0
+    ###
+
     past_week_breathing_df = retrieve_breathing_rate_info(user_id, one_week_ago, current_sys_time)
     if isinstance(past_week_breathing_df, str) or past_week_breathing_df.empty:
-        print("empty data received")
+        # print("empty data received")
+        pass
         # possibly flash an error message
     else:
         breathings = past_week_breathing_df.breathing_rate
@@ -812,11 +822,17 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
             alerts_of_interest.append(f"Night respiratory rate from previous week significantly lower than normal (<{normal_lower_bound_rr})")
         elif (breathing_mean - breathing_h) > normal_upper_bound_rr:
             alerts_of_interest.append(f"Night respiratory rate from previous week significantly higher than normal (>{normal_upper_bound_rr})")
+        past_week_breathing_df['reading_timestamp'] = pd.to_datetime(past_week_breathing_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+        past_week_breathing_df['date_only'] = past_week_breathing_df['reading_timestamp'].apply(date_only)
+
+        breathing_graph_df = past_week_breathing_df.groupby(['date_only'], as_index=False)['breathing_rate'].mean()
+        past_week_average_breathing = breathing_graph_df.breathing_rate.mean()
 
     # get average respiratory rate of previous 3 weeks (comparing personal baselines)
     previous_weeks_breathing_df = retrieve_breathing_rate_info(user_id, four_weeks_ago, one_week_ago)
     if isinstance(previous_weeks_breathing_df, str) or past_week_breathing_df.empty:
-        print("empty data received")
+        # print("empty data received")
+        pass
         # possibly flash an error message
     else:
         prev_breathings = previous_weeks_breathing_df.breathing_rate
@@ -832,11 +848,17 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
             elif (breathing_mean + breathing_h) < prev_breathings_mean:
                 alerts_of_interest.append(f"Significant decrease of respiratory rate in the past month")
 
+            previous_weeks_breathing_df['reading_timestamp'] = pd.to_datetime(previous_weeks_breathing_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+            previous_weeks_breathing_df['date_only'] = previous_weeks_breathing_df['reading_timestamp'].apply(date_only)
+
+            previous_weeks_breathing_result_df = previous_weeks_breathing_df.groupby(['date_only'], as_index=False)['breathing_rate'].mean()
+            previous_weeks_average_breathing = previous_weeks_breathing_result_df.breathing_rate.mean()
+
     ### below for heartbeat
-    normal_upper_bound_hb = 65
     past_week_heartbeat_df = retrieve_heart_rate_info(user_id, one_week_ago, current_sys_time)
     if isinstance(past_week_heartbeat_df, str) or past_week_heartbeat_df.empty:
-        print("empty data received")
+        # print("empty data received")
+        pass
         # possibly flash an error message
     else:
         heartbeats = past_week_heartbeat_df.heart_rate
@@ -849,10 +871,17 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
         if (heart_mean - heart_h) > normal_upper_bound_hb:
             alerts_of_interest.append(f"Pulse rate during sleep from previous week significantly higher than normal (>{normal_upper_bound_hb})")
 
+        past_week_heartbeat_df['reading_timestamp'] = pd.to_datetime(past_week_heartbeat_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+        past_week_heartbeat_df['date_only'] = past_week_heartbeat_df['reading_timestamp'].apply(date_only)
+
+        past_week_heartbeat_result_df = past_week_heartbeat_df.groupby(['date_only'], as_index=False)['heart_rate'].mean()
+        past_week_average_heart = past_week_heartbeat_result_df.heart_rate.mean()
+
     # get average pulse rate of previous 3 weeks (comparing personal baselines)
     previous_weeks_heartbeat_df = retrieve_heart_rate_info(user_id, four_weeks_ago, one_week_ago)
     if isinstance(previous_weeks_heartbeat_df, str) or previous_weeks_heartbeat_df.empty:
-        print("empty data received")
+        # print("empty data received")
+        pass
     else:
         prev_heartbeat = previous_weeks_heartbeat_df.heart_rate
         if not (isinstance(past_week_heartbeat_df, str) or past_week_heartbeat_df.empty):
@@ -866,38 +895,11 @@ def get_vital_signs_indicator(user_id, current_sys_time=None):
                 alerts_of_interest.append(f"Significant increase of pulse rate in the past month")
             elif (heart_mean + heart_h) < prev_heartbeats_mean:
                 alerts_of_interest.append(f"Significant decrease of pulse rate in the past month")
+            previous_weeks_heartbeat_df['reading_timestamp'] = pd.to_datetime(previous_weeks_heartbeat_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+            previous_weeks_heartbeat_df['date_only'] = previous_weeks_heartbeat_df['reading_timestamp'].apply(date_only)
 
-    ### below aggregated by day first
-    past_week_average_breathing = 0
-    previous_weeks_average_breathing = 0
-    past_week_average_heart = 0
-    previous_weeks_average_heart = 0
-
-    # breathing first
-    past_week_breathing_df['reading_timestamp'] = pd.to_datetime(past_week_breathing_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
-    past_week_breathing_df['date_only'] = past_week_breathing_df['reading_timestamp'].apply(date_only)
-
-    breathing_graph_df = past_week_breathing_df.groupby(['date_only'], as_index=False)['breathing_rate'].mean()
-    past_week_average_breathing = breathing_graph_df.breathing_rate.mean()
-
-    previous_weeks_breathing_df['reading_timestamp'] = pd.to_datetime(previous_weeks_breathing_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
-    previous_weeks_breathing_df['date_only'] = previous_weeks_breathing_df['reading_timestamp'].apply(date_only)
-
-    previous_weeks_breathing_result_df = previous_weeks_breathing_df.groupby(['date_only'], as_index=False)['breathing_rate'].mean()
-    previous_weeks_average_breathing = previous_weeks_breathing_result_df.breathing_rate.mean()
-
-    # heartbeat
-    past_week_heartbeat_df['reading_timestamp'] = pd.to_datetime(past_week_heartbeat_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
-    past_week_heartbeat_df['date_only'] = past_week_heartbeat_df['reading_timestamp'].apply(date_only)
-
-    past_week_heartbeat_result_df = past_week_heartbeat_df.groupby(['date_only'], as_index=False)['heart_rate'].mean()
-    past_week_average_heart = past_week_heartbeat_result_df.heart_rate.mean()
-
-    previous_weeks_heartbeat_df['reading_timestamp'] = pd.to_datetime(previous_weeks_heartbeat_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
-    previous_weeks_heartbeat_df['date_only'] = previous_weeks_heartbeat_df['reading_timestamp'].apply(date_only)
-
-    previous_weeks_heartbeat_result_df = previous_weeks_heartbeat_df.groupby(['date_only'], as_index=False)['heart_rate'].mean()
-    previous_weeks_average_heart = previous_weeks_heartbeat_result_df.heart_rate.mean()
+            previous_weeks_heartbeat_result_df = previous_weeks_heartbeat_df.groupby(['date_only'], as_index=False)['heart_rate'].mean()
+            previous_weeks_average_heart = previous_weeks_heartbeat_result_df.heart_rate.mean()
 
     return alerts_of_interest, past_week_average_breathing, previous_weeks_average_breathing, past_week_average_heart, previous_weeks_average_heart
 

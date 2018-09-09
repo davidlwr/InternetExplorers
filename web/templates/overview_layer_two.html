@@ -236,6 +236,26 @@ a.deco-none {
                                         svg_container.style.height = (window_height - 40) + 'px';
                                         Plotly.Plots.resize('uninterrupted_sleep_chart');
                                     }
+
+                                    Plotly.Plots.resize('vitals_breathing_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('vitals_breathing_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('vitals_breathing_chart').getElementsByClassName('vitals_breathing_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('vitals_breathing_chart');
+                                    }
+
+                                    Plotly.Plots.resize('vitals_heartbeat_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('vitals_heartbeat_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('vitals_heartbeat_chart').getElementsByClassName('vitals_heartbeat_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('vitals_heartbeat_chart');
+                                    }
                                 };
 
                                 $(document).ready(function () {
@@ -277,6 +297,26 @@ a.deco-none {
                                         var svg_container = document.getElementById('uninterrupted_sleep_chart').getElementsByClassName('uninterrupted_sleep_chart_class')[0].getElementsByClassName('svg-container')[0];
                                         svg_container.style.height = (window_height - 40) + 'px';
                                         Plotly.Plots.resize('uninterrupted_sleep_chart');
+                                    }
+
+                                    Plotly.Plots.resize('vitals_breathing_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('vitals_breathing_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('vitals_breathing_chart').getElementsByClassName('vitals_breathing_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('vitals_breathing_chart');
+                                    }
+
+                                    Plotly.Plots.resize('vitals_heartbeat_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('vitals_heartbeat_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('vitals_heartbeat_chart').getElementsByClassName('vitals_heartbeat_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('vitals_heartbeat_chart');
                                     }
                                 });
                                 </script>
@@ -397,5 +437,83 @@ a.deco-none {
         </div>
     </div>
 </div>
-<!-- /.actual on top, below just keep for now -->
+<div class="row"> {# edit here for vital signs #}
+    <div class="col-lg-12">
+        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['vitals_alerts']|length) }}">
+            <div class="panel-heading">
+                Vital Signs Details
+            </div>
+            <div class="panel-body">
+                <div class="col-lg-4 col-md-6 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    Average sleep respiratory rate<br/>
+                                    <span class="huge"><b>{{ '%0.2f'|format((resident['past_week_average_breathing'])|float) }}</b>
+                                    </span><b> /min</b>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="vitals_breathing_chart" class="vitals_breathing_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var breathing_graph = {{ breathing_rates_json | safe }};
+
+                                    Plotly.newPlot('vitals_breathing_chart', breathing_graph.data, breathing_graph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_out_of_rr_range'] else 'info' }}">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                Sleep respiratory rates are {{ 'outside of' if resident['check_out_of_rr_range'] else 'within' }} the typical range in the past week
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    Average sleep pulse rates<br/>
+                                    <span class="huge"><b>{{ '%0.2f'|format((resident['past_week_average_heart'])|float) }}</b>
+                                    </span><b> /min</b>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="vitals_heartbeat_chart" class="vitals_heartbeat_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var heartbeat_graph = {{ heartbeat_rates_json | safe }};
+
+                                    Plotly.newPlot('vitals_heartbeat_chart', heartbeat_graph.data, heartbeat_graph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_out_of_hb_range'] else 'info' }}">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                Sleep pulse rates are {{ 'outside of' if resident['check_out_of_hb_range'] else 'within' }} the typical range in the past week
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
