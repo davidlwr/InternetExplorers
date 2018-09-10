@@ -58,7 +58,7 @@ class Risk_assessment(object):
         Constructor
         '''
 
-        self.datetime           = datetime              # datetime
+        self.datetime           = datetime + '-01 00:00:00'              # datetime
         self.patient_id         = patient_id            # int
         self.weight             = weight                # float
         self.mbs_normal         = mbs_normal            # bool
@@ -89,7 +89,7 @@ class Risk_assessment(object):
         self.dependency_comments = dependency_comments  # str
 
         self.tname_list = []
-        self.var_list = [self.datetime.strftime('%Y-%m-%d %H:%M:%S'), self.patient_id, self.weight, self.mbs_normal, self.mbs_confusion, self.mbs_restlessness,           \
+        self.var_list = [self.datetime, self.patient_id, self.weight, self.mbs_normal, self.mbs_confusion, self.mbs_restlessness,           \
                          self.mbs_agitation, self.mbs_uncooperative, self.mbs_hallucination, self.mbs_drowsy, self.mbs_others, self.ast_medication, self.ast_clothes,     \
                          self.ast_eating, self.ast_bathing, self.ast_walking, self.ast_toileting,self.ast_others, self.pain_none, self.pain_general, self.pain_joint, self.pain_critical, \
                          self.pain_other, self.num_medication, self.hearing_ability, self.vision_ability, self.mobility, self.dependency, self.dependency_comments]

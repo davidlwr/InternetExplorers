@@ -20,15 +20,24 @@ db = SQLAlchemy(server)
 app = dash.Dash(__name__, server=server, url_base_pathname='/insertsomeotherrandomstringhere')
 # server = app.server
 app.config.suppress_callback_exceptions = True
-csspath = ''
+csspath1 = ''
 csspath2 = ''
+csspath3 = ''
+jspath1 = ''
+jspath2 = ''
 
 with server.test_request_context():
-    csspath = url_for('static', filename='overview.css')
+    csspath1 = url_for('static', filename='bootstrap.css')
     csspath2 = url_for('static', filename='sb-admin-2.css')
     csspath3 = url_for('static', filename='metis-menu.min.css')
+    jspath1 = url_for('static', filename='metis-menu.min.js')
+    jspath2 = url_for('static', filename='sb-admin-2.js')
+
 # Bootstrap sample template for css
-css_source = ['https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css',
-              csspath, csspath2, csspath3]
+css_source = ['https://fonts.googleapis.com/icon?family=Material+Icons', csspath1, csspath2, csspath3, 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css']
 for css in css_source:
     app.css.append_css({'external_url': css})
+
+js_source = ['https://blackrockdigital.github.io/startbootstrap-sb-admin-2/vendor/jquery/jquery.min.js', 'https://blackrockdigital.github.io/startbootstrap-sb-admin-2/vendor/bootstrap/js/bootstrap.min.js', jspath1, jspath2]
+for jspath in js_source:
+    app.scripts.append_script({'external_url': jspath})

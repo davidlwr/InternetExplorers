@@ -5,7 +5,7 @@ import datetime
 
 # internal imports
 from app import app
-from apps import input_data
+from apps import input_data, input_shiftlogs
 from DAOs import resident_DAO
 
 locationMap = input_data.get_location_options()
@@ -13,51 +13,128 @@ locationMap = input_data.get_location_options()
 # define page layout
 
 app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
-    html.Div([
+    html.Nav([
+        html.Div([
+            html.Button([
+                html.Span('Toggle navigation', className='sr-only'),
+                html.Span(className='icon-bar'),
+                html.Span(className='icon-bar'),
+                html.Span(className='icon-bar')
+            ], type='button', className='navbar-toggle'),
+            html.A('IE Smart Healthcare', className='navbar-brand', href='/overview')
+        ], className='navbar-header'),
+        html.Ul([
+            # html.Li([
+            #     html.A([
+            #         html.I(className='fa fa-envelope fa-fw'),
+            #         html.I(className='fa fa-caret-down')
+            #     ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
+            #     html.Ul([
+            #         html.Li([
+            #             html.A([
+            #                 html.Div([
+            #                     html.Strong('John Smith'),
+            #                     html.Span('Yesterday', className='pull-right text-muted')
+            #                 ]),
+            #                 html.Div('Lorem ipsum dolor sit amet')
+            #             ], href='#')
+            #         ]),
+            #         html.Li(className='divider'),
+            #         html.Li([
+            #             html.A([
+            #                 html.Strong('Read All Messages'),
+            #                 html.I(className='fa fa-angle-right')
+            #             ], className='text-center', href='#')
+            #         ])
+            #     ], className='dropdown-menu dropdown-messages')
+            # ], className='dropdown'),
+            html.Li([
+                html.A([
+                    html.I(className='fa fa-user fa-fw'),
+                    html.I(className='fa fa-caret-down')
+                ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
+                html.Ul([
+                    # html.Li([
+                    #     html.A([
+                    #         html.I(className='fa fa-user fa-fw'),
+                    #         ' User Profile'
+                    #     ], href='#')
+                    # ]),
+                    # html.Li([
+                    #     html.A([
+                    #         html.I(className='fa fa-gear fa-fw'),
+                    #         ' Settings'
+                    #     ], href='#')
+                    # ]),
+                    # html.Li(className='divider'),
+                    html.Li([
+                        html.A([
+                            html.I(className='fa fa-sign-out fa-fw'),
+                            ' Logout'
+                        ], href='/logout')
+                    ])
+                ], className='dropdown-menu dropdown-user')
+            ], className='dropdown')
+        ], className='nav navbar-top-links navbar-right'),
         html.Div([
             html.Div([
                 html.Ul([
+                    # html.Li([
+                    #     html.Div([
+                    #         dcc.Input(placeholder='Search...', type='text', className='form-control'),
+                    #         html.Span([
+                    #             html.Button([
+                    #                 html.I(className='fa fa-search')
+                    #             ], className='btn btn-default', type='button')
+                    #         ], className='input-group-btn')
+                    #     ], className='input-group custom-search-form')
+                    # ], className='sidebar-search'),
                     html.Li([
-                        html.Div([
-                            html.A('Graphs', href='/graphs')
-                        ], className='nav-link')
-                    ], className='nav-item'),
+                        html.A([
+                            html.I(className='fa fa-dashboard fa-fw'),
+                            ' Residents Overview'
+                        ], href='/overview')
+                    ]),
                     html.Li([
-                        html.Div([
-                            html.A('Residents Overview', href='/overview')
-                        ], className='nav-link')
-                    ], className='nav-item'),
+                        html.A([
+                            html.I(className='fa fa-chart-o fa-fw'),
+                            ' Detailed Charts'
+                        ], href='/graphs')
+                    ]),
                     html.Li([
-                        html.Div([
-                            html.A('Shift Reports', href='/reports')
-                            # {isActive}'.format(isActive = ' active' if current_page == 'reports' else ''), href='/reports')
-                        ], className='nav-link')
-                    ], className='nav-item'),
+                        html.A([
+                            html.I(className='fa fa-edit fa-fw'),
+                            ' Forms',
+                            html.Span(className='fa arrow')
+                        ], href='#'),
+                        html.Ul([
+                            html.Li([
+                                html.A('End of Shift Forms', href='/eosforms')
+                            ]),
+                            html.Li([
+                                html.A('Risk Assessment Forms', href='/raforms')
+                            ])
+                        ], className='nav nav-second-level')
+                    ]),
                     html.Li([
-                        html.Div([
-                            html.A('End of Shift Forms', href='/eosforms')
-                        ], className='nav-link')
-                    ], className='nav-item'),
+                        html.A([
+                            html.I(className='fa fa-wrench fa-fw'),
+                            ' Manage Users/Residents'
+                        ], href='/admin/resident')
+                    ]),
                     html.Li([
-                        html.Div([
-                            html.A('Risk Assessment Forms', href='/raforms')
-                        ], className='nav-link')
-                    ], className='nav-item'),
-                    html.Li([
-                        html.Div([
-                            html.A('Manage User/Residents', href='/admin/resident')
-                        ], className='nav-link')
-                    ], className='nav-item'),
-                    html.Li([
-                        html.Div([
-                            html.A('Logout', href='/logout')
-                        ], className='nav-link')
-                    ], className='nav-item')
-                ], className='nav')
+                        html.A([
+                            html.I(className='fa fa-wrench fa-fw'),
+                            ' Sensors Health'
+                        ], href='/sensorsHealth')
+                    ])
+                ], className='nav', id='side-menu')
             ], className='sidebar-nav navbar-collapse')
-        ], className='navbar-default sidebar col-md-2 col-xs-12'),
-        html.Main([
+        ], className='navbar-default sidebar', role='navigation')
+    ], className='navbar navbar-default navbar-static-top', role='navigation', style={'margin-bottom': 0}),
+        # sidebar above
+        # main body below
+    html.Div([
             html.Div([
                 html.Div([
                     html.H1('Home Page')
@@ -111,7 +188,7 @@ app.layout = html.Div([
                     html.Div([
                         html.Div(id='location_output', className='col-md-12')
                     ], className='row')
-                ], id='activity_graph', className='container-fluid'),
+                ], id='activity_graph'),
                 html.Div([
                     html.Div([
                         html.H3('View resident\'s toilet usage numbers')
@@ -196,7 +273,7 @@ app.layout = html.Div([
                     html.Div([
                         html.Div(id='toilet_numbers_output', className='col-md-12')
                     ], className='row')
-                ], id='toilet_numbers_graph', className='container-fluid'),
+                ], id='toilet_numbers_graph'),
                 html.Div([
                     html.Div([
                         html.H3('View resident\'s activity durations')
@@ -238,12 +315,64 @@ app.layout = html.Div([
                     html.Div([
                         html.Div(id='visit_duration_output', className='col-md-12')
                     ], className='row')
-                ], id='visit_duration_graph', className='container-fluid')
-            ], className='col-md-12')
-        ], role='main', id='page-content', className='col-md-10 ml-sm-auto col-lg-10')
+                ], id='visit_duration_graph'),
+                html.Div([
+                    html.Div([
+                        html.H3('View resident\'s logs')
+                    ], className='row'),
+                    html.Div([
+                        html.Div([
+                            dcc.Dropdown(
+                                id='resident_input_logs',
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_shiftlogs.get_residents_options()],
+                                placeholder='Select resident(s) to view',
+                                value=[],
+                                multi=True
+                            )
+                        ], className='col-md-4'),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='filter_input_day_night',
+                                options=[{'label': i, 'value': j} for i, j in
+                                         input_data.get_num_visits_filter_options()],
+                                value='None',
+                                clearable=False
+                            )
+                        ], className='col-md-4'),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='filter_input_temp_bp_pulse',
+                                options=[{'label': i, 'value': j} for i, j in
+                                         input_shiftlogs.get_logs_filter_options()],
+                                value='temperature',
+                                clearable=False
+                            )
+                        ], className='col-md-4'),
+                        html.Div([
+                            dcc.DatePickerRange(
+                                id='date_picker_visit_duration',
+                                min_date_allowed=input_shiftlogs.input_raw_min_date,
+                                max_date_allowed=input_shiftlogs.input_raw_max_date,
+                                start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                                                                 microsecond=0),
+                                # need to truncate the dates here
+                                end_date=input_shiftlogs.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0),
+                                # to prevent unconverted data error
+                                start_date_placeholder_text='Select start date',
+                                end_date_placeholder_text='Select end date',
+                                minimum_nights=0
+                            )
+                        ], className='col-md-4')
+                    ], className='row'),
+                    html.Div([
+                        html.Div(id='logs_output', className='col-md-12')
+                    ], className='row')
+                ], id='logs_graph')
+            ], className='row-fluid')
+        ], id='page-wrapper')
         # this is where the page content goes
-    ], className='row')
-], className='container-fluid')
+])
 
 
 @app.callback(
@@ -286,6 +415,11 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
                                      'title': 'Motion detected?'
                                  }
                              }
+                         },
+                         config={
+                            'editable': False,
+                            'displaylogo': False,
+                            'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
                          })
     except Exception as e:
         print('ERROR: ', end='')
@@ -423,6 +557,11 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                      'title': 'Number'
                                  }
                              }
+                         },
+                         config={
+                            'editable': False,
+                            'displaylogo': False,
+                            'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
                          })
     except Exception as e:
         print('ERROR: ', end='')
@@ -458,8 +597,114 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
                             'title': 'Duration of visit (seconds)'
                         }
                     }
+                },
+                config={
+                   'editable': False,
+                   'displaylogo': False,
+                   'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
                 })
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
         return ''
+
+
+@app.callback(
+    Output(component_id='logs_output', component_property='children'),
+    [Input(component_id='resident_input_logs', component_property='value'),
+     Input('filter_input_day_night', 'value'),
+     Input('filter_input_temp_bp_pulse', 'value'),
+     Input('date_picker_visit_duration', 'start_date'),
+     Input('date_picker_visit_duration', 'end_date')])
+def update_graph_04(input_resident, filter_input, filter_type, start_date, end_date):
+    try:
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        draw_data = []
+        if filter_input == 'None':  # default option
+            for r in input_resident:
+                df = input_shiftlogs.get_logs_by_date(start_date, end_date, r)
+                if filter_type != 'sys_dia':
+                    draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': r})
+                else:
+                    draw_data.append({'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers', 'name': r})
+                    draw_data.append({'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers', 'name': r})
+
+        else:
+
+            if filter_input != 'Night':  # if not night means have to display for 'Day'
+                for r in input_resident:
+                    df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Day')
+                    if filter_type != 'sys_dia':
+                        draw_data.append(
+                            {'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+                    else:
+                        draw_data.append(
+                            {'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+                        draw_data.append(
+                            {'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+
+
+            if filter_input != 'Day':  # if not day means have to display for 'Night'
+                for r in input_resident:
+                    df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Night')
+                    if filter_type != 'sys_dia':
+                        draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers',
+                                          'name': str(r) + ' - Night'})
+                    else:
+                        draw_data.append({'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers',
+                                          'name': str(r) + ' - Night'})
+                        draw_data.append({'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers',
+                                          'name': str(r) + ' - Night'})
+
+        return dcc.Graph(id='logs_plot',
+                         figure={
+                             'data': draw_data,
+                             'layout': {
+                                 'title': 'Shift Logs',
+                                 'xaxis': {
+                                     'title': 'Date'
+                                 },
+                                 'yaxis': {
+                                     'title': filter_type
+                                 }
+                             }
+                         },
+                         config={
+                             'editable': False,
+                             'displaylogo': False,
+                             'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
+                         })
+    except Exception as e:
+        print('ERROR: ', end='')
+        print(e)
+        return ''
+
+
+
+# next three callbacks automatically updates the resident names live for each graph
+@app.callback(
+    Output('resident_input', 'options'),
+    [Input('resident_input', 'value')])
+def set_residents_options_one(selection):
+    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+
+@app.callback(
+    Output('resident_input_toilet_numbers', 'options'),
+    [Input('resident_input_toilet_numbers', 'value')])
+def set_residents_options_one(selection):
+    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+
+@app.callback(
+    Output('resident_input_visit_duration', 'options'),
+    [Input('resident_input_visit_duration', 'value')])
+def set_residents_options_one(selection):
+    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+
+@app.callback(
+    Output('resident_input_logs', 'options'),
+    [Input('resident_input_logs', 'value')])
+def set_residents_options_one(selection):
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_shiftlogs.get_residents_options()]
+

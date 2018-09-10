@@ -7,8 +7,8 @@
         <i class="icon-user"></i> {{ current_user.username }} <span class="caret"></span>
     </a>
     <ul class="dropdown-menu">
+        <li><a href="{{ url_for('showOverviewResidents') }}">Back to Overview</a></li>
         <li><a href="{{ url_for('logout') }}">Log out</a></li>
-        <li><a href="{{ url_for('show_graphs') }}">Back to Graphs</a></li>
     </ul>
 </div>
 {% endif %}

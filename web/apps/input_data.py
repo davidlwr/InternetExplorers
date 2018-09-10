@@ -67,7 +67,14 @@ nighttime_start = daytime_end
 nighttime_end = daytime_start
 default_sleep_start = datetime.time(22, 0)
 default_sleep_end = datetime.time(6, 30)
+para_ratio_threshold_default = 0.3  # changeable: if night usage is higher than this ratio of total usage, alert
+                                    # here we use number of toilet visits as a proxy for urinal volume
+                                    # nocturnal bladder capacity is usually higher than in the day, so if the amount
+                                    #+is really that high, nocturia index is much likely to be that high
+                                    # can be customised based on different patients and estimated nocturnal bladder capacity
 
+def get_para_ratio_threshold():
+    return para_ratio_threshold_default
 
 # replace date to be date only
 def date_only(original_date):
@@ -135,7 +142,12 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
         end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
     all_days_range = pd.date_range(start_date.date(), end_date.date() + datetime.timedelta(days=-1), freq='D')
-    result_data = result_data.loc[all_days_range]
+    try:
+        result_data = result_data.loc[all_days_range]
+    except KeyError as e:
+        erroroutput = pd.DataFrame()
+        erroroutput['event'] = []
+        erroroutput['gw_date_only'] = []
     result_data.fillna(0, inplace=True)
 
     # undo set index
@@ -334,7 +346,10 @@ def get_average_longest_sleep(node_id, start_date, end_date, use_door=False):
         # get latest reading before start
         temp_data = current_data[current_data.recieved_timestamp < datetime.datetime.combine(single_date, start_time)]
         # print(temp_data)
-        last_active_value = temp_data.loc[temp_data['recieved_timestamp'].idxmax()].event
+        try:
+            last_active_value = temp_data.loc[temp_data['recieved_timestamp'].idxmax()].event
+        except ValueError as e:
+            return 0
         # print("DEBUG: last active value", last_active_value)
         current_longest = 0
         night_data = current_data[(current_data.recieved_timestamp > datetime.datetime.combine(single_date, start_time))
@@ -427,7 +442,10 @@ def motion_duration_during_sleep(node_id, start_date, end_date, use_door=False):
         # get latest reading before start
         temp_data = current_data[current_data.recieved_timestamp < datetime.datetime.combine(single_date, start_time)]
         # print(single_date, temp_data)
-        last_active_value = temp_data.loc[temp_data['recieved_timestamp'].idxmax()].event
+        try:
+            last_active_value = temp_data.loc[temp_data['recieved_timestamp'].idxmax()].event
+        except ValueError as e:
+            return 0
         # print("DEBUG: last active value", last_active_value)
 
         night_data = current_data[(current_data.recieved_timestamp > datetime.datetime.combine(single_date, start_time))
@@ -474,6 +492,7 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
     Returns (1) the list of alerts of interest, (2) the past week's average duration of motion during sleep
             and (3) the difference between motion during sleep in the past week versus the previous 3 weeks
             and (4) the average longest uninterrupted sleep for the past week (in seconds)
+            and (5) the difference between average longest uninterrupted sleep for the past week versus the previous 3 weeks
     '''
     alerts_of_interest = [] # add alerts here, can use in the next layer to priortise things to show also
     if current_sys_time is None: # used in testing - pass in a different time for simulation
@@ -499,7 +518,7 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
     if difference_longest_sleep < -.75 * old_three_longest_sleep_average: # NOTE: changeable here
         alerts_of_interest.append("Longest interval of uninterrupted sleep decreased significantly")
 
-    return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average
+    return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average, difference_longest_sleep
 
 def get_overview_change_values(user_id, current_sys_time=None):
     pass
@@ -553,38 +572,40 @@ def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     # print("current_date", current_date)
     # print(three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'])
     # print(one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'])
-    difference_MA = (one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
-            - three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'].values[0])
+    try:
+        current_MA = one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
+        difference_MA = (current_MA
+                - three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'].values[0])
+    except IndexError as e:
+        difference_MA = 0
+        current_MA = 0
     # print("difference_MA", difference_MA)
     if difference_MA > para_SD_threshold * three_week_std:
         alerts_of_interest.append("Increased number of night toilet usage in the last week")
 
     # now check for ratio of night to day toilet usage | can be split to new method
     # NOTE: we use 4 weeks approx. equal to a month and ~30 (28) for good sample size
-    para_ratio_threshold = 0.1 # changeable: if night usage is higher than this ratio of total usage, alert
-                               # here we use number of toilet visits as a proxy for urinal volume
-                               # nocturnal bladder capacity is usually higher than in the day, so if the amount
-                               #+is really that high, nocturia index is much likely to be that high
-                               # can be customised based on different patients and estimated nocturnal bladder capacity
-
-
+    para_ratio_threshold = get_para_ratio_threshold()
     # get night usage
     past_month_data_night = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
     # print("past_month_data_night", past_month_data_night)
     # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
     past_month_data_both = get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, offset=True, grouped=True)
-    past_month_data_both['threshold_cmp_value'] = past_month_data_both.apply(lambda row: row['event'] * para_ratio_threshold, axis=1)
-    # print("past_month_data_both", past_month_data_both)
-    # alert if difference in average over the past week is statistically significant beyond the para_ratio_threshold, 95% confidence interval
+    try:
+        past_month_data_both['threshold_cmp_value'] = past_month_data_both.apply(lambda row: row['event'] * para_ratio_threshold, axis=1)
+        # print("past_month_data_both", past_month_data_both)
+        # alert if difference in average over the past week is statistically significant beyond the para_ratio_threshold, 95% confidence interval
 
-    _confidence_interval = 0.95
-    _alpha = 0.05
-    # use paired t-tests and check for ratio difference of 0.3
-    (_t_stat, _p_value) = scipy.stats.ttest_rel(past_month_data_night['event'], past_month_data_both['threshold_cmp_value'])
-    if (_t_stat > 0) and (_p_value < (_alpha / 2)):
-        alerts_of_interest.append(f"Night toilet usage higher than {para_ratio_threshold * 100}% of total daily usage in the past month")
-    # print(alerts_of_interest)
-    return alerts_of_interest, one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
+        _confidence_interval = 0.95
+        _alpha = 0.05
+        # use paired t-tests and check for ratio difference of 0.3
+        (_t_stat, _p_value) = scipy.stats.ttest_rel(past_month_data_night['event'], past_month_data_both['threshold_cmp_value'])
+        if (_t_stat > 0) and (_p_value < (_alpha / 2)):
+            alerts_of_interest.append(f"Night toilet usage higher than {para_ratio_threshold * 100}% of total daily usage in the past month")
+        # print(alerts_of_interest)
+    except ValueError as e:
+        pass
+    return alerts_of_interest, current_MA
 
 def get_percentage_of_night_toilet_usage(user_id, current_sys_time=None):
     '''

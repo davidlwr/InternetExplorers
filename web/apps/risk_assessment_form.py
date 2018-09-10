@@ -1,4 +1,4 @@
-from flask import render_template, Flask, request
+from flask import render_template, Flask, request, flash, Markup, redirect, url_for
 from flask_wtf import Form
 from wtforms import StringField, PasswordField, SubmitField, RadioField, FloatField, SelectField, SelectMultipleField, \
     TextField
@@ -29,18 +29,18 @@ from Entities.risk_assessment import Risk_assessment
 
 class RiskAssessmentForm(Form):
     name = QuerySelectField(query_factory=resident_query, allow_blank=False, get_label='name')
-    date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')])
+    # date = DateField('Date', format='%Y-%m', validators=[InputRequired('Please enter date!')], default=datetime.today)
     weight = FloatField('Monthly weight updates (kg)')
     medication_amount = RadioField('Number of medication',
-                                   choices=[(0, '0'), (1, '1-2'), (2, '3-4'), (3, '>=5')], coerce=int)
+                                   choices=[(0, '0'), (1, '1-2'), (2, '3-4'), (3, '>=5')], coerce=int, default=0)
     hearing = RadioField('Hearing Ability (based on observation)',
-                         choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], coerce=int)
+                         choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], coerce=int, default=3)
     vision = RadioField('Vision (based on observation)',
-                        choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], coerce=int)
+                        choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], coerce=int, default=3)
     mobility = RadioField('Mobility',
-                          choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], coerce=int)
+                          choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], coerce=int, default=3)
     dependent = RadioField('Dependent',
-                           choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], coerce=int)
+                           choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], coerce=int, default=3)
     dependency = TextField(
         'If dependency is increasing, please describe what type (Example, toilet usage assistance, mobility assistance, daily activities, etc). ')
     submit = SubmitField('Submit')
@@ -55,9 +55,10 @@ def showRiskForm():
         if form.validate_on_submit():
             # handle submitted data here
             # process form here
-            submitted_name = form.name.data.id
+            submitted_name = form.name.data.resident_id
             name_to_show = form.name.data.name
-            submitted_date = form.date.data
+            submitted_date = request.form.get('year_month')
+            print(submitted_date)
             submitted_weight = form.weight.data
 
             submitted_normal = request.form.get('normal')
@@ -103,12 +104,24 @@ def showRiskForm():
                                              submitted_hearing, submitted_vision,
                                              submitted_mobility, submitted_dependent,
                                              submitted_dependency)
-            riskAssessmentDAO.insert_risk_assessment(riskAssessment)
-            return render_template('FormResponse.html', name=name_to_show)
+
+            response = 'Risk Assessment for ' + name_to_show + ' on ' + submitted_date + ' has already been recorded. Please enter another date.'
+            try:
+                riskAssessmentDAO.insert_risk_assessment(riskAssessment)
+            except:
+                flash(response)
+                print("error here")
+                return render_template('raforms.html', form=form, currentDate=datetime.now().strftime('%Y-%m'))
+
+            response = 'Risk Assessment for ' + name_to_show + ' has been successfully recorded. Click <a href="/admin/risk_assessment" class="alert-link">here</a> to view/edit responses.'
+            flash(Markup(response))
+            return redirect(url_for('showRiskForm'))
         else:
-            return render_template('raforms.html', form=form)
+            print("error here2")
+            return render_template('raforms.html', form=form, currentDate=datetime.now().strftime('%Y-%m'))
     else:
-        return render_template('raforms.html', form=form)
+        print("error here3")
+        return render_template('raforms.html', form=form, currentDate=datetime.now().strftime('%Y-%m'))
 
 # @server.route("/donewithform")
 # def processForms():
