@@ -20,6 +20,7 @@ class Sensor(object):
         location (str) -- "bed" | "bedroom" | "toilet"
         description (str)
         juvo_target (int) -- default None
+
         '''
         self.uuid = uuid
         self.type = type
@@ -27,7 +28,6 @@ class Sensor(object):
         self.description = description
         self.juvo_target = juvo_target
         self.var_list = [self.uuid, self.type, self.location, self.description, juvo_target]
-
     
     def __str__ (self):
         '''

@@ -102,6 +102,9 @@ def get_connection(read_timeout=30, write_timeout=30, connect_timeout=30, local_
 dwelling_to_nodeid = {"room 1": 2005, "room 2": 2006}
 def insert_sensorlog(dwelling_id, sensor_id, gw_timestamp, value):
     '''
+    Sensor `uuid` for dwelling_ids "room 1" and "room 2" will be converted to 2005 and 2006 respectively
+    `uuid` will follow the format "2005-m-01" for example
+
     Inputs:
     dwelling_id (str)
     sensor_id (str)
@@ -112,7 +115,9 @@ def insert_sensorlog(dwelling_id, sensor_id, gw_timestamp, value):
             INSERT INTO stbern.SENSOR_LOG (`uuid`, `node_id`, `event`, `recieved_timestamp`)
             VALUES (%s, %s, %s, %s)
             """
-    node_id = dwelling_to_nodeid[dwelling_id]
+    node_id = dwelling_id
+    if dwelling_id in dwelling_to_nodeid: node_id = dwelling_to_nodeid[dwelling_id]
+    
     uuid = f"{node_id}-{sensor_id}"
     event = value
     recieved_timestamp = gw_timestamp.strftime('%Y-%m-%d %H:%M:%S')

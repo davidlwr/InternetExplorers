@@ -1,8 +1,10 @@
-import sys
+import sys, datetime
+from collections import defaultdict
 
 if __name__ == '__main__':  sys.path.append("..")
 from DAOs.connection_manager import connection_manager
 from Entities.sensor import Sensor
+from Entities.resident import Resident
 
 class sensor_DAO(object):
     """
@@ -12,22 +14,27 @@ class sensor_DAO(object):
 
 
     @staticmethod
-    def get_sensors(type=None, location=None):
+    def get_sensors(type=None, location=None, uuid=None):
         """
-        Get Sesnors by `type` and `location`
+        Get Sesnors by `type` andor `location` andor `uuid` or all
 
         Inputs
         type (str)
         location (str)
+        uuid (str)
         """
         query = f"SELECT * FROM {sensor_DAO.table_name}"
 
         param_set = []
         if type != None: param_set.append((Sensor.type_tname, type))
         if location != None: param_set.append((Sensor.location_tname, location))
+        if uuid != None: param_set.append((Sensor.uuid_tname, uuid))
 
-        if len(param_set) == 2: query + f" WHERE `{param_set[0][0]}` = \"{param_set[0][1]}\" AND `{param_set[1][0]}` = \"{param_set[1][1]}\""
-        elif len(param_set) == 1: query + f" WHERE `{param_set[0][0]}` = \"{param_set[0][1]}\""
+        if len(param_set) == 3:   query = query + f" WHERE `{param_set[0][0]}` = \"{param_set[0][1]}\" AND `{param_set[1][0]}` = \"{param_set[1][1]}\" AND `{param_set[2][0]}` = \"{param_set[2][1]}\"" 
+        elif len(param_set) == 2: query = query + f" WHERE `{param_set[0][0]}` = \"{param_set[0][1]}\" AND `{param_set[1][0]}` = \"{param_set[1][1]}\""
+        elif len(param_set) == 1: query = query + f" WHERE `{param_set[0][0]}` = \"{param_set[0][1]}\""
+
+        print(query)
 
         # Get connection
         factory = connection_manager()
@@ -65,6 +72,58 @@ class sensor_DAO(object):
 
         try:
             cursor.execute(query, sensor.var_list)
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
+
+    # SENSOR OWNERSHIP HISTORY ==============================================================
+    soh_table_name   = "stbern.SENSOR_OWNERSHIP_HIST"
+    soh_period_start = "period_start"
+    soh_resident_id  = "resident_id"
+    soh_uuid         = "uuid"
+    @staticmethod
+    def get_ownership_hist(residentID):
+        """
+        Returns ownership hisotry of sensor: Which resident was using the sensor during a period
+
+        Inputs:
+        residentID (int)
+
+        Return:
+        Dict: {"uuid1": [(startdate, enddate), (datetime, datetime)],
+               "uuid2": [(startdate, enddate)]}
+        * NOTE: (startdate, enddate) are (inclusive, exclusive)
+        """
+        query = f"SELECT * FROM {sensor_DAO.soh_table_name} WHERE `{sensor_DAO.soh_resident_id}` = %s ORDER BY '{sensor_DAO.soh_period_start}' DESC"
+
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query, [residentID])
+            result = cursor.fetchall()
+
+            records = []
+            if result != None:
+                for r in result:
+                    records.append((r[sensor_DAO.soh_uuid], r[sensor_DAO.soh_period_start]))
+            
+            # Create and populate dict
+            rdict = defaultdict(list)
+            if len(records) > 1:
+                for i in range(len(records)-1):
+                    uuid, period_start = records[i]
+                    tuuid, period_end  = records[i+1]
+
+                    rdict[uuid].append(period_start, period_end)
+
+                # Convert last record to period of: record ---- curr datetime
+                uuid, period_start = records[-1]
+                rdict[uuid].append(period_start, datetime.datetime.now())
+
+            return rdict
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
@@ -230,6 +289,18 @@ class sensor_DAO(object):
 if __name__ == '__main__': 
     ss = sensor_DAO.get_sensors()
     for s in ss: print(f"sensor:{s}")
+
+    ss = sensor_DAO.get_sensors(type="motion")
+    for s in ss: print(f"ss 1 mot:{s}")
+
+    ss = sensor_DAO.get_sensors(location="bed")
+    for s in ss: print(f"ss 1 loc:{s}")
+
+    ss = sensor_DAO.get_sensors(uuid="2005-m-01")
+    for s in ss: print(f"ss 1 uid:{s}")
+
+    ss = sensor_DAO.get_sensors(type="motion", location="bedroom", uuid="2005-m-01")
+    for s in ss: print(f"ss 3:{s}")
     
     # sensor_DAO.insert_type("test")
     ts = sensor_DAO.get_types()
