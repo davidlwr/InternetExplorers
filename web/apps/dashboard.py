@@ -2,15 +2,18 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import datetime
+import pandas as pd
 
 # internal imports
 from app import app
 from apps import input_data
 from DAOs import resident_DAO
+from juvo_api import JuvoAPI
 
 locationMap = input_data.get_location_options()
 
 # define page layout
+# TODO: can return the bank plotly graph output after the exception so that the graph is still there
 
 app.layout = html.Div([
     html.Nav([
@@ -144,14 +147,14 @@ app.layout = html.Div([
                                 options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
                                 placeholder='Select a resident to view'
                             )
-                        ], className='col-md-4'),
+                        ], className='col-md-4 col-xs-12'),
                         html.Div([
                             dcc.Dropdown(
                                 id='location_input',
                                 options=[{'label': i, 'value': locationMap[i]} for i in locationMap],
                                 placeholder='Select a location to view'
                             )
-                        ], className='col-md-4'),
+                        ], className='col-md-4 col-xs-12'),
                         html.Div([
                             dcc.DatePickerRange(
                                 id='date_picker',
@@ -167,7 +170,7 @@ app.layout = html.Div([
                                 end_date_placeholder_text='Select end date',
                                 minimum_nights=0
                             )
-                        ], className='col-md-4')
+                        ], className='col-md-4 col-xs-12')
                     ], className='row'),
                     html.Div([
                         html.Div([
@@ -312,7 +315,7 @@ app.layout = html.Div([
                 ], id='visit_duration_graph'),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s vital signs')
+                        html.H3('View resident\'s sleep vital signs')
                     ], className='row'),
                     html.Div([
                         html.Div([
@@ -353,7 +356,42 @@ app.layout = html.Div([
                     html.Div([
                         html.Div(id='vital_signs_output', className='col-md-12')
                     ], className='row')
-                ], id='vital_signs_graph')
+                ], id='vital_signs_graph'),
+                html.Div([
+                    html.Div([
+                        html.H3('View resident\'s quality of sleep (from juvo)')
+                    ], className='row'),
+                    html.Div([
+                        html.Div([
+                            dcc.Dropdown(
+                                id='resident_input_qos',
+                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
+                                placeholder='Select resident(s) to view',
+                                value=[],
+                                multi=True
+                            )
+                        ], className='col-md-6'),
+                        html.Div([
+                            dcc.DatePickerRange(
+                                id='date_picker_qos',
+                                min_date_allowed=input_data.input_raw_min_date,
+                                max_date_allowed=input_data.input_raw_max_date,
+                                start_date=input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                                                                 microsecond=0),
+                                # need to truncate the dates here
+                                end_date=input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0),
+                                # to prevent unconverted data error
+                                start_date_placeholder_text='Select start date',
+                                end_date_placeholder_text='Select end date',
+                                minimum_nights=0
+                            )
+                        ], className='col-md-6')
+                    ], className='row'),
+                    html.Div([
+                        html.Div(id='qos_output', className='col-md-12')
+                    ], className='row')
+                ], id='qos_graph')
             ], className='row-fluid')
         ], id='page-wrapper')
         # this is where the page content goes
@@ -600,6 +638,7 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
     Input('date_picker_vital_signs', 'start_date'),
     Input('date_picker_vital_signs', 'end_date')])
 def update_graph_05(input_residents, input_vital_signs, start_date, end_date):
+    # NOTE: input_residents here are the node_ids
     try:
         # add one day to the entered end date as a workaround to allow one day picks (since entered dates are at time 00:00:00)
         start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
@@ -628,7 +667,7 @@ def update_graph_05(input_residents, input_vital_signs, start_date, end_date):
                             'title': 'Start datetime of recorded vitals'
                         },
                         'yaxis': {
-                            'title': 'Vitals reading values'
+                            'title': 'Vitals reading values (/min)'
                         }
                     }
                 },
@@ -642,7 +681,54 @@ def update_graph_05(input_residents, input_vital_signs, start_date, end_date):
         print(e)
         return ''
 
-# next three callbacks automatically updates the resident names live for each graph
+@app.callback(
+    Output('qos_output', component_property='children'),
+    [Input('resident_input_qos', 'value'),
+    Input('date_picker_qos', 'start_date'),
+    Input('date_picker_qos', 'end_date')])
+def update_graph_06(input_residents, start_date, end_date):
+    try:
+        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = modified_date #datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        japi = JuvoAPI.JuvoAPI()
+        draw_data = []
+        for r in input_residents:
+            # first get the target (using API for future refactor)
+            curr_target = 460 if r == 2005 else 0 # TODO: to change to proper target id
+
+            tuple_list = japi.get_qos_by_day(curr_target, start_date, end_date)
+            try:
+                qos_df = pd.DataFrame(list(tuple_list), columns=['date_timestamp', 'qos'])
+                draw_data.append({'x': qos_df['date_timestamp'], 'y': qos_df['qos'], 'mode': 'markers', 'name': str(r) + ' - ' + 'qos'})
+            except TypeError as e:
+                pass # just don't add to draw data
+
+        return dcc.Graph(id='qos_plot',
+                figure = {
+                    'data': draw_data,
+                    'layout': {
+                        'title':'Sleep quality information of elderly (Juvo)',
+                        'xaxis': {
+                            'title': 'Date'
+                        },
+                        'yaxis': {
+                            'title': 'Sleep quality (%)'
+                        }
+                    }
+                },
+                config={
+                    'editable': False,
+                    'displaylogo': False,
+                    'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
+                })
+    except Exception as e:
+        print('ERROR: ', end='')
+        print(e)
+        return ''
+
+# next callbacks automatically updates the resident names live for each graph
 @app.callback(
     Output('resident_input', 'options'),
     [Input('resident_input', 'value')])
@@ -664,5 +750,11 @@ def set_residents_options_one(selection):
 @app.callback(
     Output('resident_input_vital_signs', 'options'),
     [Input('resident_input_vital_signs', 'value')])
+def set_residents_options_one(selection):
+    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+
+@app.callback(
+    Output('resident_input_qos', 'options'),
+    [Input('resident_input_qos', 'value')])
 def set_residents_options_one(selection):
     return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]

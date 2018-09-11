@@ -504,6 +504,8 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
     if current_sys_time is None: # used in testing - pass in a different time for simulation
         current_sys_time = datetime.datetime.now()
 
+    juvo_date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12)
+
     current_sys_date = current_sys_time.date()
     three_weeks_ago = current_sys_date + datetime.timedelta(days=-21)
     one_week_ago = current_sys_date + datetime.timedelta(days=-7)
@@ -524,7 +526,28 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
     if difference_longest_sleep < -.75 * old_three_longest_sleep_average: # NOTE: changeable here
         alerts_of_interest.append("Longest interval of uninterrupted sleep decreased significantly")
 
-    return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average, difference_longest_sleep
+    # check for quality of sleep from juvo
+    target = 0
+    # supposed to get target from DB (when there are multiple juvo sensors deployed)
+    if user_id == '2005' or user_id == 2005:
+        target = 460
+    else:
+        print('resident has no vital signs info from juvo')
+
+    if target:
+        japi = JuvoAPI.JuvoAPI()
+        tuple_list = japi.get_qos_by_day(target, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
+        qos_df = pd.DataFrame(list(tuple_list), columns=['date_timestamp', 'qos'])
+
+        # exclude 0 for mean calculation
+        temp_series = qos_df['qos'].replace(0, np.NaN)
+        qos_mean = temp_series.mean()
+        # print(qos_mean)
+        qos_threshold = 50
+        if qos_mean < qos_threshold:
+            alerts_of_interest.append(f"Quality of sleep lower than {qos_threshold}%")
+
+    return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average, difference_longest_sleep, qos_mean
 
 def get_overview_change_values(user_id, current_sys_time=None):
     pass
@@ -649,7 +672,7 @@ def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None)
     if node_id == '2005' or node_id == 2005:
         target = 460
     else:
-        print('resident has no vitla signs info from juvo')
+        print('resident has no vital signs info from juvo')
         return ''
     # Get all the relevant data from the past week
     one_week_ago = date_in_use + datetime.timedelta(days=-7)
@@ -928,10 +951,13 @@ if __name__ == '__main__':
     # result = get_nightly_toilet_indicator(2006, input_raw_max_date + datetime.timedelta(days=-10))
     # print ("result", result)
 
+    result = get_nightly_sleep_indicator(2005)
+    print ("result", result)
+
     # test night toilet ratios
     # get_percentage_of_night_toilet_usage(2005, input_raw_max_date + datetime.timedelta(days=-10))
     # get_percentage_of_night_toilet_usage(2006, input_raw_max_date + datetime.timedelta(days=-10))
     # print(retrieve_breathing_rate_info())
     # print(retrieve_heart_rate_info())
-    print(get_vital_signs_indicator('2005', datetime.datetime(2018, 8, 12, 23, 34, 12)))
+    # print(get_vital_signs_indicator('2005', datetime.datetime(2018, 8, 12, 23, 34, 12)))
     pass # prevents error when no debug tests are being done

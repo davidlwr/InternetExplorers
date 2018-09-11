@@ -55,7 +55,7 @@ def showOverviewResidents():
             r['toilet_tooltip'].extend(r['toilet_alerts'])
 
         # settle sleep duration
-        r['sleep_alerts'], __, __, __, __ = input_data.get_nightly_sleep_indicator(int(resident['node_id']), date_in_use)
+        r['sleep_alerts'], __, __, __, __, __ = input_data.get_nightly_sleep_indicator(int(resident['node_id']), date_in_use)
         r['sleep_tooltip'] = []
         if len(r['sleep_alerts']) == 0:
             r['sleep_tooltip'].append("Normal level of motion during sleep detected")
@@ -88,7 +88,7 @@ def detailedLayerTwoOverviewResidents(node_id):
     resident['para_ratio_threshold'] = input_data.get_para_ratio_threshold()
 
     # sleep alerts
-    resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'], resident['average_longest_uninterrupted_sleep_difference'] = input_data.get_nightly_sleep_indicator(node_id, date_in_use)
+    resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'], resident['average_longest_uninterrupted_sleep_difference'], resident['qos_mean'] = input_data.get_nightly_sleep_indicator(node_id, date_in_use)
 
     # toilet alerts
     resident['toilet_alerts'], resident['number_of_night_toilet_usage_in_past_week'] = input_data.get_nightly_toilet_indicator(node_id, date_in_use)
