@@ -34,7 +34,6 @@ class sysmon_log_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
-<<<<<<< HEAD
     
     def insert_many(self, logs):
         '''
@@ -72,8 +71,6 @@ class sysmon_log_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
             
-=======
->>>>>>> origin/Jed-Graphs
 
     @staticmethod
     def get_all_logs():
@@ -84,29 +81,28 @@ class sysmon_log_DAO(object):
         # Get connection
         factory = connection_manager()
         connection = factory.connection
-        # cursor = connection.cursor()
+        cursor = connection.cursor()
 
         query = f"SELECT * FROM {sysmon_log_DAO.table_name}"
 
         try:
-            # cursor.execute(query)
-            # results = cursor.fetchall()
-            # logs = []
-            # if results != None:
-            #     for result in results:
-            #         uuid    = result[Sysmon_Log.uuid_tname]
-            #         node_id = result[Sysmon_Log.node_id_tname]
-            #         event   = result[Sysmon_Log.event_tname]
-            #         key     = result[Sysmon_Log.key_tname]
-            #         ts      = result[Sysmon_Log.recieved_timestamp_tname]
-            #
-            #         log = Sysmon_Log(uuid, node_id, event, key, ts)
-            #         logs.append(log)
-            # return logs
-            return pd.read_sql_query(query, connection)
+            cursor.execute(query)
+            results = cursor.fetchall()
+            logs = []
+            if results != None:
+                for result in results:
+                    uuid    = result[Sysmon_Log.uuid_tname]
+                    node_id = result[Sysmon_Log.node_id_tname]
+                    event   = result[Sysmon_Log.event_tname]
+                    key     = result[Sysmon_Log.key_tname]
+                    ts      = result[Sysmon_Log.recieved_timestamp_tname]
+            
+                    log = Sysmon_Log(uuid, node_id, event, key, ts)
+                    logs.append(log)
+            return logs
+            # return pd.read_sql_query(query, connection)
 
         except: raise
-<<<<<<< HEAD
         finally: factory.close_all(cursor=cursor, connection=connection)
 
 
@@ -225,7 +221,3 @@ class sysmon_log_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
-=======
-        # finally: factory.close_all(cursor=cursor, connection=connection)
-        finally: factory.close_all(connection=connection)
->>>>>>> origin/Jed-Graphs

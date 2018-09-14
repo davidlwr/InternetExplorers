@@ -45,13 +45,16 @@ def log_msg(filename, msg):
     with open(filename, "a+") as f:
         time = datetime.datetime.now().replace(microsecond=0).isoformat()
         f.write(f"{time} {msg}\n")
-        print(msg)
+        # print(msg)
 
-
+dwelling_to_nodeid = {"room 1": 2005, "room 2": 2006}
 def process_msg(topic, message):
     '''
     Process json msgs from mqtt broker. Insert only event update msgs
-    
+    NOTE:   Conversion for 2 specific sets of sensors will be done. This is to preserve the format found in the Master students data/proj
+            'stb', '2100', 'room 1' >> "2005-m-01"
+            'stb', '2100', 'room 2' >> "2006-m-01"       
+                
     Input:
     topic (str)
     message (str) - A single json string
@@ -64,24 +67,32 @@ def process_msg(topic, message):
         key_list = ('mode', 'sensor_id', 'key', 'value', 'gw_timestamp')
 
         if len(topic) == 4 and all(k in jdict for k in key_list):         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
+            # Breakdown topic
             project_id  = topic[0]  # 'stb'
             hub_id      = topic[1]  # '2100' presumably the building
             dwelling_id = topic[2]  # 'room1' or 'room2'
             data_type   = topic[3]  # 'sysmon' or 'data
             
-            # breakdown message
+            # Breakdown message
             mode         = jdict['mode']        # i.e. 'motion'
             sensor_id    = jdict['sensor_id']   # i.e. 'm-01', 'm-02' or 'd-01'
             key          = jdict['key']         # i.e. 'motion', 'ultraviolet'
             value        = jdict['value']       # str (actually float)
             gw_timestamp = datetime.datetime.fromtimestamp(jdict['gw_timestamp'] / 1e3)
 
+            # Determine the uuid identifier of the sensor. Mostly for the conversion of the 2 sensors
+            uuid = None
+            if project_id=="stb" and hub_id=="2100" and dwelling_id in dwelling_to_nodeid:
+                uuid = f"{dwelling_to_nodeid[dwelling_id]}-{sensor_id}"
+            else:
+                uuid = hub_id + dwelling_id + sensor_id
+
             # SPLIT INTO SYSMON AND DATA
             if data_type == "data" and (key == "motion" or key == "door"): 
-                insert_sensorlog(dwelling_id, sensor_id, gw_timestamp, int(value))
+                insert_sensorlog(uuid=uuid, node_id=hub_id, gw_timestamp=gw_timestamp, event=int(value))
             elif data_type == "sysmon": 
-                insert_sysmonlog(dwelling_id, sensor_id, gw_timestamp, key, float(value))  # Key is required to differentiate between door and motion
-
+                insert_sysmonlog(uuid=uuid, node_id=hub_id, gw_timestamp=gw_timestamp, key=key, event=float(value))  
+                # Key is required to differentiate between door and motion
 
     except Exception as e:
         msg = f"PROCESS MESSAGE FAILURE >> Exception: '{str(e)}, Msg: {message}'"
@@ -99,15 +110,12 @@ def get_connection(read_timeout=30, write_timeout=30, connect_timeout=30, local_
     # Note: Cursors are what pymysql uses interact with databases, its the equivilant to a Statement in java
 
 
-dwelling_to_nodeid = {"room 1": 2005, "room 2": 2006}
-def insert_sensorlog(dwelling_id, sensor_id, gw_timestamp, value):
-    '''
-    Sensor `uuid` for dwelling_ids "room 1" and "room 2" will be converted to 2005 and 2006 respectively
-    `uuid` will follow the format "2005-m-01" for example
 
+def insert_sensorlog(uuid, node_id, gw_timestamp, event):
+    '''
     Inputs:
-    dwelling_id (str)
-    sensor_id (str)
+    uuid (str)
+    node_id (str)
     gw_timestamp (datetime)
     value (int)
     '''
@@ -115,11 +123,7 @@ def insert_sensorlog(dwelling_id, sensor_id, gw_timestamp, value):
             INSERT INTO stbern.SENSOR_LOG (`uuid`, `node_id`, `event`, `recieved_timestamp`)
             VALUES (%s, %s, %s, %s)
             """
-    node_id = dwelling_id
-    if dwelling_id in dwelling_to_nodeid: node_id = dwelling_to_nodeid[dwelling_id]
-    
-    uuid = f"{node_id}-{sensor_id}"
-    event = value
+
     recieved_timestamp = gw_timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
     connection = get_connection()
@@ -133,11 +137,11 @@ def insert_sensorlog(dwelling_id, sensor_id, gw_timestamp, value):
         connection.close()
 
 
-def insert_sysmonlog(dwelling_id, sensor_id, gw_timestamp, key, value):
+def insert_sysmonlog(uuid, node_id, gw_timestamp, key, event):
     '''
     Inputs:
-    dwelling_id (str)
-    sensor_id (str)
+    uuid (str)
+    node_id (str)
     gw_timestamp (datetime)
     key (str)
     value (float)
@@ -146,9 +150,7 @@ def insert_sysmonlog(dwelling_id, sensor_id, gw_timestamp, key, value):
             INSERT INTO stbern.SYSMON_LOG (`uuid`, `node_id`, `key`, `event`, `recieved_timestamp`)
             VALUES (%s, %s, %s, %s, %s)
             """
-    node_id = dwelling_to_nodeid[dwelling_id]
-    uuid = f"{node_id}-{sensor_id}"
-    event = value
+
     recieved_timestamp = gw_timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
     connection = get_connection()
