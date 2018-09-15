@@ -3,6 +3,8 @@ from collections import defaultdict
 
 if __name__ == '__main__':  sys.path.append("..")
 from DAOs.connection_manager import connection_manager
+from DAOs.sensor_log_DAO import sensor_log_DAO
+from DAOs.sysmon_log_DAO import sysmon_log_DAO
 from Entities.sensor import Sensor
 from Entities.resident import Resident
 
@@ -14,7 +16,7 @@ class sensor_DAO(object):
 
 
     @staticmethod
-    def get_sensors(type=None, location=None, uuid=None):
+    def get_sensors(type=None, location=None, facility=None, uuid=None):
         """
         Get Sesnors by `type` andor `location` andor `uuid` or all
 
@@ -25,16 +27,15 @@ class sensor_DAO(object):
         """
         query = f"SELECT * FROM {sensor_DAO.table_name}"
 
-        param_set = []
-        if type != None: param_set.append((Sensor.type_tname, type))
-        if location != None: param_set.append((Sensor.location_tname, location))
-        if uuid != None: param_set.append((Sensor.uuid_tname, uuid))
-
-        if len(param_set) == 3:   query = query + f" WHERE `{param_set[0][0]}` = \"{param_set[0][1]}\" AND `{param_set[1][0]}` = \"{param_set[1][1]}\" AND `{param_set[2][0]}` = \"{param_set[2][1]}\"" 
-        elif len(param_set) == 2: query = query + f" WHERE `{param_set[0][0]}` = \"{param_set[0][1]}\" AND `{param_set[1][0]}` = \"{param_set[1][1]}\""
-        elif len(param_set) == 1: query = query + f" WHERE `{param_set[0][0]}` = \"{param_set[0][1]}\""
-
-        print(query)
+        ps = []     # param_set
+        if type != None:     ps.append((Sensor.type_tname, type))
+        if location != None: ps.append((Sensor.location_tname, location))
+        if facility != None: ps.append(Sensor.facility_tname, facility)
+        if uuid != None:     ps.append((Sensor.uuid_tname, uuid))
+        
+        for i in range(len(ps)):
+            if i==0: query += f" WHERE  `{ps[i][0]}` = \"{ps[i][1]}\""
+            else:    query += f" AND    `{ps[i][0]}` = \"{ps[i][1]}\""
 
         # Get connection
         factory = connection_manager()
@@ -48,7 +49,8 @@ class sensor_DAO(object):
             sensors = []
             if result != None:
                 for r in result:
-                    sensors.append(Sensor(uuid=r[Sensor.uuid_tname], type=r[Sensor.type_tname], location=r[Sensor.location_tname], \
+                    sensors.append(Sensor(uuid=r[Sensor.uuid_tname], type=r[Sensor.type_tname],                 \
+                                          location=r[Sensor.location_tname], facility=r[Sensor.facility_tname], \
                                           description=r[Sensor.description_tname], juvo_target=r[Sensor.juvo_target_tname]))
             return sensors
         except: raise
@@ -59,11 +61,19 @@ class sensor_DAO(object):
     def insert_sensor(sensor):
         """
         INSERTs a sensor entry into the database
+        NOTE: only sensor.type="bed sensor" can be assigned sensor.location="bed"
 
         Inputs:
         sensor (Entities.sensor)
         """
-        query = f"INSERT INTO {sensor_DAO.table_name} (`uuid`,`type`,`location`,`description`) VALUES (%s, %s, %s, %s)"
+        # Check exception: allow only bed sensor to be found in bed
+        if (sensor.type == "bed sensor" and sensor.location != "bed") or (sensor.type != "bed sensor" and sensor.location == "bed"): 
+            raise ValueError('only sensor.type=\"bed sensor\" can be assigned sensor.location=\"bed\"')
+
+        query = f"""INSERT INTO {sensor_DAO.table_name} 
+                    (`{Sensor.uuid_tname}`,`{Sensor.type_tname}`,`{Sensor.location_tname}`,
+                    `{Sensor.facility_tname}`,`{Sensor.description_tname}`, `{Sensor.juvo_target_tname}`) 
+                    VALUES (%s, %s, %s, %s, %s, %s)"""
 
         # Get connection
         factory = connection_manager()
@@ -76,11 +86,95 @@ class sensor_DAO(object):
         finally: factory.close_all(cursor=cursor, connection=connection)
 
 
+    @staticmethod
+    def get_unregistered_uuids():
+        """
+        Returns all distinct uuids found in `SENSOR_LOG` but not in `SENSOR` table
+
+        Returns
+        list of str: ["uuid1",... "uuid10"]
+        """
+        # Get all uuids found in `SENSOR_LOG`
+        senslog_uuids = sensor_log_DAO.get_all_uuids()
+
+        # Get all uuids found in `SENSOR`
+        query = f"SELECT DISTINCT(`{Sensor.uuid_tname}`) FROM {sensor_DAO.table_name}"
+
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query)
+            result = cursor.fetchall()
+
+            sensor_uuids = []
+            if result != None:
+                for r in result:
+                    sensor_uuids.append(r[Sensor.uuid_tname])
+            print("sensor: ", sensor_uuids)
+            print("logs:   ", senslog_uuids)
+            return [uuid for uuid in senslog_uuids if uuid not in sensor_uuids]
+
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+        
+
+    @staticmethod
+    def verify_sensor(uuid):
+        """
+        Verifies if logs with `uuid` exist in DB tables `SENSOR_LOG` or `SYSMON_LOG`
+        NOTE: this method services only the sensors transmitting via mqtt. NOT JUVO
+
+        Inputs
+        uuid (str)  -- uuid identifier of sensor
+        
+        Returns 
+        True if pass, False if fail
+        """
+        # Get all logs in SENSOR_LOG with uuid
+        sensorlog_DAO = sensor_log_DAO()
+        min_dt, max_dt = sensorlog_DAO.set_min_max_datetime
+        sensorlogs = sensorlog_DAO.get_logs(uuid=uuid, start_datetime=min_dt, end_datetime=max_dt)
+
+        # Get all logs in SYSMON_LOG with uuid
+        sysmonlogs = sysmon_log_DAO.get_all_logs(uuid=uuid)
+
+        # check if any records exist
+        if len(sensorlogs)>1 or len(sysmonlogs)>1: return True
+        else: return False
+
+
     # SENSOR OWNERSHIP HISTORY ==============================================================
     soh_table_name   = "stbern.SENSOR_OWNERSHIP_HIST"
     soh_period_start = "period_start"
     soh_resident_id  = "resident_id"
     soh_uuid         = "uuid"
+    @staticmethod
+    def insert_ownership_hist(uuid, resident_id, start_datetime):
+        """
+        Inserts a row of ownership history of sensor into the DB
+
+        Inputs
+        uuid (str)  -- Sensor uuid
+        resident_id (int)   
+        start_datetime (datetime)
+        """
+        query = f"""INSERT INTO {sensor_DAO.soh_table_name} ({sensor_DAO.soh_uuid}, {sensor_DAO.soh_resident_id}, {sensor_DAO.soh_period_start}) 
+                    VALUES (%s, %s, %s)"""
+
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query, [type])
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
+
     @staticmethod
     def get_ownership_hist(residentID):
         """
@@ -94,7 +188,7 @@ class sensor_DAO(object):
                "uuid2": [(startdate, enddate)]}
         * NOTE: (startdate, enddate) are (inclusive, exclusive)
         """
-        query = f"SELECT * FROM {sensor_DAO.soh_table_name} WHERE `{sensor_DAO.soh_resident_id}` = %s ORDER BY '{sensor_DAO.soh_period_start}' DESC"
+        query = f"SELECT * FROM {sensor_DAO.soh_table_name} WHERE `{sensor_DAO.soh_resident_id}` = %s ORDER BY `{sensor_DAO.soh_period_start}` DESC"
 
         # Get connection
         factory = connection_manager()
@@ -285,31 +379,3 @@ class sensor_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
-
-if __name__ == '__main__': 
-    ss = sensor_DAO.get_sensors()
-    for s in ss: print(f"sensor:{s}")
-
-    ss = sensor_DAO.get_sensors(type="motion")
-    for s in ss: print(f"ss 1 mot:{s}")
-
-    ss = sensor_DAO.get_sensors(location="bed")
-    for s in ss: print(f"ss 1 loc:{s}")
-
-    ss = sensor_DAO.get_sensors(uuid="2005-m-01")
-    for s in ss: print(f"ss 1 uid:{s}")
-
-    ss = sensor_DAO.get_sensors(type="motion", location="bedroom", uuid="2005-m-01")
-    for s in ss: print(f"ss 3:{s}")
-    
-    # sensor_DAO.insert_type("test")
-    ts = sensor_DAO.get_types()
-    for s in ts: print(f"type:{s}")
-
-    # sensor_DAO.insert_location("test")
-    ls = sensor_DAO.get_locations()
-    for s in ls: print(f"locs:{s}")
-
-    # sensor_DAO.insert_facilities(abrv="t", fullname="test", description="TESTTEST")
-    fs = sensor_DAO.get_facilities()
-    for s in fs: print(f"faci:{s}")

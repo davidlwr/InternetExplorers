@@ -4,7 +4,6 @@ import pandas as pd
 if __name__ == '__main__':  sys.path.append("..")
 from Entities.sysmon_log import Sysmon_Log
 from DAOs.connection_manager import connection_manager
-from DAOs.sysmon_log_DAO import sensor_log_DAO
 
 class sysmon_log_DAO(object):
     '''
@@ -73,9 +72,12 @@ class sysmon_log_DAO(object):
             
 
     @staticmethod
-    def get_all_logs():
+    def get_all_logs(uuid=None):
         '''
         Returns all sysmon logs in the DB
+
+        Inputs
+        uuid (str) -- Filters result by sensor uuid
         '''
 
         # Get connection
@@ -84,9 +86,11 @@ class sysmon_log_DAO(object):
         cursor = connection.cursor()
 
         query = f"SELECT * FROM {sysmon_log_DAO.table_name}"
+        if uuid != None: query += f" WHERE `{Sysmon_Log.uuid_tname}` = %s"
+        print(query)
 
         try:
-            cursor.execute(query)
+            cursor.execute(query, [uuid])
             results = cursor.fetchall()
             logs = []
             if results != None:

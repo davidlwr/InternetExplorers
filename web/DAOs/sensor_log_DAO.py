@@ -226,20 +226,36 @@ class sensor_log_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
-# Tests
-# dao = sensor_log_DAO()
-# print(dao.max_datetime, dao.min_datetime, dao.gateway_options)
-# dao.load_csv("C:\\Users\\David\\Desktop\\Anomaly Detection Tests\\data\\stbern-20180302-20180523-csv")
-# print(dao.max_datetime, dao.min_datetime, dao.gateway_options)
 
-# Insert log
-# log = Sensor_Log(sensor_id="1993", sensor_location="bukit timah", gateway_id="1994", gateway_timestamp=datetime.datetime.now(), key="7", reading_type="fun", server_timestamp=datetime.datetime.now(), value=9000)
-# dao.insert_log(log)
+    @staticmethod
+    def get_all_uuids():
+        """
+        Returns all distinct sensor UUIDs found in the table
 
-# Get log
-# log = dao.get_logs(sensor_location="2005-d-01", start_datetime="2018-01-02 14:55:04", end_datetime="2018-04-02 14:55:04", gateway_id=2005)
-# print(log)
+        Returns
+        list of str: ["uuid1",... "uuid10"]
+        """
+        query = f"SELECT DISTINCT(`uuid`) FROM {sensor_log_DAO.table_name}"
 
-# Get activities per period
-# activities = dao.get_activities_per_period(sensor_location="2005-m-01", start_datetime=dao.min_datetime, end_datetime=dao.max_datetime, gateway_id=2005)
-# print(activities)
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query)
+            result = cursor.fetchall()
+
+            uuids = []
+            if result != None:
+                for r in result:
+                    uuids.append(r[Sensor_Log.uuid_tname])
+            return uuids
+
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+            
+
+# TESTS ======================================================================================
+if __name__ == '__main__': 
+    print(sensor_log_DAO.get_all_uuids())
