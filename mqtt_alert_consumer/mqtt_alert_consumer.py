@@ -7,9 +7,10 @@ import requests
 import json
 import datetime
 
-import telepot
-from telepot.loop import MessageLoop
-from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
+# from dbhelper import DBHelper
+import alert_DAO
 
 from pprint import pprint
 import time
@@ -40,8 +41,6 @@ MOTION_END   = 0
 
 DOOR_CLOSE = 0
 DOOR_OPEN  = 225
-
-TOKEN="687512562:AAGEoEH8wpDU3PK5TU0X3lar40FIfDetAHY" 
 
 token = '687512562:AAGEoEH8wpDU3PK5TU0X3lar40FIfDetAHY'
 teleurl = 'https://api.telegram.org/bot' + token + '/'
@@ -74,60 +73,29 @@ def log_msg(filename, msg, verbose=True):
         f.write(f"{time} {msg}\n")
         if verbose: print(msg)
 
+# db = DBHelper()
+# db.setup()
+
 
 def action_motion(event):
     if event == 255:
+        
         print("called action motion")
-        reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "toiletPoh"}], [{"text": "False Alarm", "callback_data": "falseAlarm"}]]}
-        text='sensor 1 alert: mr poh'
+        ts = time.time()
+        reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
+        text='Sensor 1 Alert: Mr Poh at ' + datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
-
-
-    # Process / Send to DB
-    # process_msg(topic=message.topic, message=payload)
+        alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
 
 def action_door(event):
-	# FILL WTIH SHIT
-	print(f"in action_door: event {event} ============================================================")
-	# content_type, chat_type, chat_id = telepot.glance(msg)
-	bot = telepot.Bot(TOKEN)
-	chat_id = 260905740
-	keyboard1 = InlineKeyboardMarkup(inline_keyboard=[
-                     [InlineKeyboardButton(text='Yes, using toilet', callback_data='toiletJoy'),
-                     InlineKeyboardButton(text='False Alarm', callback_data='falsealarm')],
-					 ])
-	keyboard2 = InlineKeyboardMarkup(inline_keyboard=[
-                     [InlineKeyboardButton(text='Yes, using toilet', callback_data='toiletPoh'),
-                     InlineKeyboardButton(text='False Alarm', callback_data='falsealarm')],
-					 ])
-	if event == 255:
-		bot.sendMessage(chat_id, "Sensor 1 Alert: Mr Poh", reply_markup=keyboard2)
-		MessageLoop(bot, {'callback_query': on_callback_query}).run_as_thread() 
+    if event == 255:
+        print("called action_door motion")
+        ts = time.time()
+        reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
+        text='Sensor 1 Alert: Mr Poh at ' + datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+        send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
+        alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
 
-# def process_msg(topic, message):
-    # '''
-    # Process json msgs from mqtt broker. Insert only event update msgs
-    
-    # Input:
-    # message (str) - A single json string
-    # '''
-    # try:
-        # Load JSON
-        # jdict = json.loads(message)
-        
-        # topic = topic.split("/")
-        # if len(topic) == 1 and topic[0] == "test" and len(jdict) == 3:         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
-            # if 'nodeid' in jdict and 'event' in jdict and 'uuid' in jdict:     # Ensure this is the right message
-                # nodeid = jdict['nodeid']    # int
-                # event  = jdict['event']     # int
-                # uuid   = jdict['uuid']      # str
-
-                # if nodeid == NODEID_MOTION: action_motion(event=event)
-                # if nodeid == NODEID_DOOR: action_door(event=event)
-
-    # except Exception as e:
-        # msg = f"PROCESS MESSAGE FAILURE >> Exception: '{str(e)}, Msg: {message}'"
-        # log_msg(LOGGING_FILE, msg)
 
 
 # Call back functions ============================================================================================================
