@@ -444,6 +444,27 @@ a.deco-none {
                                 </div>
                             </div>
                         </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="qos_chart" class="qos_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var qos_graph = {{ qos_json | safe }};
+
+                                    Plotly.newPlot('qos_chart', qos_graph.data, qos_graph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_out_of_rr_range'] else 'info' }}">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                Sleep respiratory rates are {{ 'outside of' if resident['check_out_of_rr_range'] else 'within' }} the typical range in the past week
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

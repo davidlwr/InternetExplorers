@@ -40,7 +40,7 @@ def showOverviewResidents():
     residents_raw = resident_DAO.get_list_of_residents()
     residents = []
     date_in_use = datetime.datetime(2018, 4, 19, 23, 34, 12) # TODO: change to current system time once live data is available
-    juvo_date_in_use = datetime.datetime(2018, 8, 12, 18, 18, 18) # TODO: change to current system time once live data is available
+    juvo_date_in_use = datetime.datetime(2018, 8, 12, 22, 34, 12) # TODO: change to current system time once live data is available
     for resident in residents_raw:
         r = {}
         r['name'] = resident['name']
@@ -55,7 +55,7 @@ def showOverviewResidents():
             r['toilet_tooltip'].extend(r['toilet_alerts'])
 
         # settle sleep duration
-        r['sleep_alerts'], __, __, __, __, __ = input_data.get_nightly_sleep_indicator(int(resident['node_id']), date_in_use)
+        r['sleep_alerts'], __, __, __, __, __, __ = input_data.get_nightly_sleep_indicator(int(resident['node_id']), date_in_use)
         r['sleep_tooltip'] = []
         if len(r['sleep_alerts']) == 0:
             r['sleep_tooltip'].append("Normal level of motion during sleep detected")
@@ -88,7 +88,7 @@ def detailedLayerTwoOverviewResidents(node_id):
     resident['para_ratio_threshold'] = input_data.get_para_ratio_threshold()
 
     # sleep alerts
-    resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'], resident['average_longest_uninterrupted_sleep_difference'], resident['qos_mean'] = input_data.get_nightly_sleep_indicator(node_id, date_in_use)
+    resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'], resident['average_longest_uninterrupted_sleep_difference'], resident['qos_mean'], qos_df = input_data.get_nightly_sleep_indicator(node_id, date_in_use)
 
     # toilet alerts
     resident['toilet_alerts'], resident['number_of_night_toilet_usage_in_past_week'] = input_data.get_nightly_toilet_indicator(node_id, date_in_use)
@@ -496,6 +496,8 @@ def detailedLayerTwoOverviewResidents(node_id):
     heartbeat_graph_df['previous_weeks_mean'] = resident['previous_weeks_average_heart']
     heartbeat_graph_df['normal_upper_bound_hb'] = input_data.normal_upper_bound_hb
 
+    # print(heartbeat_graph_df.info())
+    # print(heartbeat_graph_df)
     heartbeat_rates_graph = dict(
             data=[
                 dict(
@@ -580,9 +582,76 @@ def detailedLayerTwoOverviewResidents(node_id):
     resident['check_out_of_rr_range'] = any('respiratory rate from previous week significantly' in s for s in resident['vitals_alerts'])
     resident['check_out_of_hb_range'] = any('Pulse rate during sleep from previous week significantly higher' in s for s in resident['vitals_alerts'])
 
+    # juvo quality of sleep
+    qos_df['past_week_average'] = resident['qos_mean']
+    # strip tzinfo from juvo api
+    qos_df['date_only'] = qos_df['date_timestamp'].apply(lambda x: datetime.datetime.replace(x, tzinfo=None))
+    qos_df.sort_values('date_only', inplace=True)
+    # print(qos_df.info())
+    # print(qos_df)
+
+    qos_graph = dict(
+            data=[
+                dict(
+                    x = qos_df['date_only'],
+                    y = qos_df['qos'],
+                    type = 'scatter',
+                    mode = 'lines',
+                    name = 'last wk nightly sleep quality',
+                    line = dict(
+                        width = 2,
+                        color = 'rgb(55, 128, 191)'
+                    )
+                ),
+                dict(
+                    x = qos_df['date_only'],
+                    y = qos_df['past_week_average'],
+                    type = 'scatter',
+                    mode = 'lines',
+                    name = 'last wk avg sleep quality',
+                    line = dict(
+                        width = 2,
+                        color = 'rgba(55, 128, 191, 0.5)'
+                    )
+                )
+            ],
+            layout = dict(
+                title = 'Quality of sleep in past wk',
+                titlefont = dict(
+                    size = 14
+                ),
+                autosize = True,
+                height = 200,
+                showlegend = False,
+                margin = dict(
+                    l = 25,
+                    r = 20,
+                    b = 25,
+                    t = 30,
+                    pad = 5
+                ),
+                yaxis = dict(
+                    title = '%',
+                    scaleanchor = 'x',
+                    scaleratio = 0.5,
+                    hoverformat = '.2f'
+                ),
+                xaxis = dict(
+                    title = "Day",
+                    tickformat = "%a",
+                    showticklabels = True,
+                    showline = True
+                ),
+                displayModeBar = False
+            )
+    )
+
+    qos_json = json.dumps(qos_graph,
+            cls=plotly.utils.PlotlyJSONEncoder)
+
     return render_template('overview_layer_two.html', resident=resident,
             night_toilet_MA_graph_json=night_toilet_MA_graph_json, sleeping_motion_graph_json=sleeping_motion_graph_json, uninterrupted_sleep_graph_json=uninterrupted_sleep_graph_json,
-            breathing_rates_json=breathing_rates_json, heartbeat_rates_json=heartbeat_rates_json)
+            breathing_rates_json=breathing_rates_json, heartbeat_rates_json=heartbeat_rates_json, qos_json=qos_json)
 
 if __name__ == '__main__':
     detailedLayerTwoOverviewResidents(2005)

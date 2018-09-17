@@ -64,11 +64,11 @@ input_raw_min_date = input_raw_data['recieved_timestamp'].min()
 # In this case daytime refers to the current date's daytime, while nighttime
 # refers to the current date's night till the next date's morning
 daytime_start = datetime.time(6, 30)
-daytime_end = datetime.time(21, 30)
+daytime_end = datetime.time(22, 30)
 # below is redundant
 nighttime_start = daytime_end
 nighttime_end = daytime_start
-default_sleep_start = datetime.time(22, 0)
+default_sleep_start = datetime.time(22, 30)
 default_sleep_end = datetime.time(6, 30)
 para_ratio_threshold_default = 0.3  # changeable: if night usage is higher than this ratio of total usage, alert
                                     # here we use number of toilet visits as a proxy for urinal volume
@@ -499,6 +499,8 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
             and (3) the difference between motion during sleep in the past week versus the previous 3 weeks
             and (4) the average longest uninterrupted sleep for the past week (in seconds)
             and (5) the difference between average longest uninterrupted sleep for the past week versus the previous 3 weeks
+            and (6) the average quality of sleep from juvo
+            and (7) the past week's quality of sleep as df
     '''
     alerts_of_interest = [] # add alerts here, can use in the next layer to priortise things to show also
     if current_sys_time is None: # used in testing - pass in a different time for simulation
@@ -528,6 +530,8 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
 
     # check for quality of sleep from juvo
     target = 0
+    qos_mean = 0
+    qos_df = pd.DataFrame()
     # supposed to get target from DB (when there are multiple juvo sensors deployed)
     if user_id == '2005' or user_id == 2005:
         target = 460
@@ -547,7 +551,7 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
         if qos_mean < qos_threshold:
             alerts_of_interest.append(f"Quality of sleep lower than {qos_threshold}%")
 
-    return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average, difference_longest_sleep, qos_mean
+    return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average, difference_longest_sleep, qos_mean, qos_df
 
 def get_overview_change_values(user_id, current_sys_time=None):
     pass
