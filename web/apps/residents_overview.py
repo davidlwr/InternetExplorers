@@ -72,8 +72,15 @@ def showOverviewResidents():
         # print("DEBUG resident id sleep_alerts", resident['node_id'], r['sleep_alerts'])
         r['alert_highest'] = max(0, len(r['toilet_alerts']), len(r['sleep_alerts']), len(r['vitals_alerts']))
         residents.append(r)
-    # return render_template('overview_residents_updated.html', residents=residents)
-    return render_template('overview_residents.html', residents=residents)
+    # return render_template('overview_residents_amanda.html', residents=residents)
+    information = {}
+    information['num_residents'] = len(resident_DAO.get_list_of_residents(location_filter='STB'))
+    num_good_health = 0
+    for r_dict in residents:
+        if r_dict['alert_highest'] == 0:
+            num_good_health += 1
+    information['health_percentage'] = num_good_health / information['num_residents'] * 100 # in percentage
+    return render_template('overview_residents.html', residents=residents, information=information)
 
 # layer 2 routing
 @server.route("/overview/<int:node_id>", methods=['GET', 'POST'])

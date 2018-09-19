@@ -25,23 +25,25 @@ csspath2 = ''
 csspath3 = ''
 jspath1 = ''
 jspath2 = ''
+csspath4 = ''
 
 with server.test_request_context():
     csspath1 = url_for('static', filename='bootstrap.css')
     csspath2 = url_for('static', filename='sb-admin-2.css')
     csspath3 = url_for('static', filename='metis-menu.min.css')
-    csspath4 = """">
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-125800418-1"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'UA-125800418-1');
-    </script>
-    <"
-    """
+    ### uncomment in deployed app, comment for local 
+    # csspath4 = """">
+    # <!-- Global site tag (gtag.js) - Google Analytics -->
+    # <script async src="https://www.googletagmanager.com/gtag/js?id=UA-125800418-1"></script>
+    # <script>
+    #   window.dataLayer = window.dataLayer || [];
+    #   function gtag(){dataLayer.push(arguments);}
+    #   gtag('js', new Date());
+    #
+    #   gtag('config', 'UA-125800418-1');
+    # </script>
+    # <"
+    # """
     jspath1 = url_for('static', filename='metis-menu.min.js')
     jspath2 = url_for('static', filename='sb-admin-2.js')
     # jspath3 = url_for('static', filename='googleanalytics.js')
