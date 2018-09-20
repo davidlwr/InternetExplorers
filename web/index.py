@@ -24,7 +24,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 # internal imports
 from app import app, server, db
-from apps import input_data,input_shiftlogs, dashboard, reports, residents_overview, shift_log_form, risk_assessment_form, sensors_health
+from apps import input_data, input_shiftlogs, dashboard, reports, residents_overview, shift_log_form, \
+    risk_assessment_form, sensors_health
 from apps.shift_log_form import Resident, ShiftLogForm
 from apps.risk_assessment_form import RiskAssessmentForm
 from Entities.user import User
@@ -76,6 +77,8 @@ class Risk_assessment(db.Model):
     patient_id = db.Column(db.Integer, primary_key=True)
     # resident_object = db.relationship('Resident', backref='risk_assessment', lazy=True, uselist=False, cascade="save-update, delete-orphan")
     weight = db.Column(db.Float)
+    num_falls = db.Column(db.Integer)
+    injury_sustained = db.Column(db.Integer)
     mbs_normal = db.Column(db.Integer)
     mbs_confusion = db.Column(db.Integer)
     mbs_restlessness = db.Column(db.Integer)
@@ -84,6 +87,7 @@ class Risk_assessment(db.Model):
     mbs_hallucination = db.Column(db.Integer)
     mbs_drowsy = db.Column(db.Integer)
     mbs_others = db.Column(db.String(100))
+    mbs_status = db.Column(db.Integer)
     ast_medication = db.Column(db.Integer)
     ast_clothes = db.Column(db.Integer)
     ast_eating = db.Column(db.Integer)
@@ -91,12 +95,16 @@ class Risk_assessment(db.Model):
     ast_walking = db.Column(db.Integer)
     ast_toileting = db.Column(db.Integer)
     ast_others = db.Column(db.String(100))
+    pain_level = db.Column(db.Integer)
+    pain_other = db.Column(db.String(100))
     num_medication = db.Column(db.Integer)
+    num_medicalCondition = db.Column(db.Integer)
     hearing_ability = db.Column(db.Integer)
     vision_ability = db.Column(db.Integer)
     mobility = db.Column(db.Integer)
     dependency = db.Column(db.Integer)
     dependency_comments = db.Column(db.String(100))
+    total_score = db.Column(db.Integer)
 
     @hybrid_property
     def resident_name(self):
@@ -291,15 +299,17 @@ class RiskAssessmentView(ModelView):
     column_display_pk = True
     column_default_sort = ('datetime', True)
     column_list = (
-        'datetime', 'patient_id', 'resident_name', 'weight', 'mbs_normal', 'mbs_confusion', 'mbs_restlessness',
-        'mbs_agitation', 'mbs_uncooperative', 'mbs_hallucination', 'mbs_drowsy', 'mbs_others', 'ast_medication',
-        'ast_clothes', 'ast_eating', 'ast_bathing', 'ast_walking', 'ast_toileting', 'ast_others', 'num_medication',
-        'hearing_ability', 'vision_ability', 'mobility', 'dependency', 'dependency_comments')
+        'datetime', 'patient_id', 'resident_name', 'weight', 'num_falls', 'injury_sustained', 'mbs_normal', 'mbs_confusion',
+        'mbs_restlessness', 'mbs_agitation', 'mbs_uncooperative', 'mbs_hallucination', 'mbs_drowsy', 'mbs_others',
+        'mbs_status', 'ast_medication', 'ast_clothes', 'ast_eating', 'ast_bathing', 'ast_walking', 'ast_toileting',
+        'ast_others', 'pain_level', 'pain_other', 'num_medication', 'num_medicalCondition', 'hearing_ability',
+        'vision_ability', 'mobility', 'dependency', 'dependency_comments', 'total_score')
     column_sortable_list = (
-        'datetime', 'patient_id', 'resident_name', 'weight', 'mbs_normal', 'mbs_confusion', 'mbs_restlessness',
-        'mbs_agitation', 'mbs_uncooperative', 'mbs_hallucination', 'mbs_drowsy', 'mbs_others', 'ast_medication',
-        'ast_clothes', 'ast_eating', 'ast_bathing', 'ast_walking', 'ast_toileting', 'ast_others', 'num_medication',
-        'hearing_ability', 'vision_ability', 'mobility', 'dependency', 'dependency_comments')
+        'datetime', 'patient_id', 'resident_name', 'weight', 'num_falls', 'injury_sustained', 'mbs_normal', 'mbs_confusion',
+        'mbs_restlessness', 'mbs_agitation', 'mbs_uncooperative', 'mbs_hallucination', 'mbs_drowsy', 'mbs_others',
+        'mbs_status', 'ast_medication', 'ast_clothes', 'ast_eating', 'ast_bathing', 'ast_walking', 'ast_toileting',
+        'ast_others', 'pain_level', 'pain_other', 'num_medication', 'num_medicalCondition', 'hearing_ability',
+        'vision_ability', 'mobility', 'dependency', 'dependency_comments', 'total_score')
 
     @expose('/new/', methods=('GET', 'POST'))
     def create_view(self):

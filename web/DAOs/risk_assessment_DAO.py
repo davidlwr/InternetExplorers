@@ -67,7 +67,7 @@ class risk_assessment_DAO(object):
                        %s, %s, %s, %s, %s, %s,
                        %s, %s, %s, %s, %s, %s,
                        %s, %s, %s, %s, %s, %s,
-                       %s, %s, %s, %s, %s);""".format(risk_assessment_DAO.table_name)
+                       %s, %s, %s, %s, %s, %s, %s);""".format(risk_assessment_DAO.table_name)
 
         # Get connection
         factory = connection_manager()

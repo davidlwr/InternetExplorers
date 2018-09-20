@@ -20,11 +20,13 @@ def get_resident_by_id(node_id):
     cursor = connection.cursor()
 
     try:
-        cursor.execute(query, (node_id, ))
+        cursor.execute(query, (node_id,))
         result = cursor.fetchone()
         return result
-    except: raise
-    finally: factory.close_all(cursor=cursor, connection=connection)
+    except:
+        raise
+    finally:
+        factory.close_all(cursor=cursor, connection=connection)
 
 
 def get_resident_by_resident_id(resident_id):
@@ -39,11 +41,13 @@ def get_resident_by_resident_id(resident_id):
     cursor = connection.cursor()
 
     try:
-        cursor.execute(query, (resident_id, ))
+        cursor.execute(query, (resident_id,))
         result = cursor.fetchone()
         return result
-    except: raise
-    finally: factory.close_all(cursor=cursor, connection=connection)
+    except:
+        raise
+    finally:
+        factory.close_all(cursor=cursor, connection=connection)
 
 
 def get_resident_name_by_resident_id(resident_id):
@@ -68,10 +72,10 @@ def get_list_of_residents(filter_active=True, location_filter=None):
         query += " WHERE status = 'Active'"
 
     # if location_filter:
-        # TODO:
-        # NOTE: not implemented yet
-        # pass
-        # query +=
+    # TODO:
+    # NOTE: not implemented yet
+    # pass
+    # query +=
 
     # Get connection
     factory = connection_manager()
@@ -82,17 +86,22 @@ def get_list_of_residents(filter_active=True, location_filter=None):
         cursor.execute(query)
         results = cursor.fetchall()
         # have to try printing this
-        if results: return results
-        else: return None
-    except: raise
-    finally: factory.close_all(cursor=cursor, connection=connection)
+        if results:
+            return results
+        else:
+            return None
+    except:
+        raise
+    finally:
+        factory.close_all(cursor=cursor, connection=connection)
 
 
 def insert_resident(name, node_id, age, fall_risk=None, status="Active", stay_location="STB"):
     '''
     Returns the id of the inserted resident if successful
     '''
-    query = 'INSERT INTO {} (name, node_id, age, fall_risk, status, stay_location) VALUES (%s, %s, %s, %s, %s, %s)'.format(table_name)
+    query = 'INSERT INTO {} (name, node_id, age, fall_risk, status, stay_location) VALUES (%s, %s, %s, %s, %s, %s)'.format(
+        table_name)
     values = (name, node_id, age, fall_risk, status, stay_location)
 
     # Get connection
@@ -103,8 +112,11 @@ def insert_resident(name, node_id, age, fall_risk=None, status="Active", stay_lo
     try:
         cursor.execute(query, values)
         return cursor.lastrowid
-    except: raise
-    finally: factory.close_all(cursor=cursor, connection=connection)
+    except:
+        raise
+    finally:
+        factory.close_all(cursor=cursor, connection=connection)
+
 
 def get_resident_name_by_node_id(node_id):
     '''
@@ -115,3 +127,23 @@ def get_resident_name_by_node_id(node_id):
         return None
 
     return resident['name']
+
+
+def update_resident_fall_risk(resident_id, status):
+    '''
+    Returns a resident (in a dict) based on node_id (in int)
+    '''
+    query = 'UPDATE {} SET `fall_risk` = %s WHERE resident_id = %s'.format(table_name)
+    val = (status, resident_id)
+    # Get connection
+    factory = connection_manager()
+    connection = factory.connection
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(query, val)
+        connection.commit()
+    except:
+        raise
+    finally:
+        factory.close_all(cursor=cursor, connection=connection)
