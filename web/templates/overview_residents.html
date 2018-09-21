@@ -141,27 +141,27 @@ a.deco-none {
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Vital Signs</th>
-                                <th>Night Toilet Usage</th>
-                                <th>Sleep Quality</th>
+                                <th class="not-in-mobile">Vital Signs</th>
+                                <th class="not-in-mobile">Night Toilet Usage</th>
+                                <th class="not-in-mobile">Sleep Quality</th>
                                 <th>Overall Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for resident in residents %}
-                            <tr>
+                            <tr class='clickable-row' data-href='./overview/{{ resident['node_id'] }}'>
                                 <td>{{ resident['name'] }}</td>
-                                <td style="color:{{ getTextColorFromAlertLength(resident['vitals_alerts']|length) }}">{{ getFooterFromAlertLength(resident['vitals_alerts']|length) }}
+                                <td style="color:{{ getTextColorFromAlertLength(resident['vitals_alerts']|length) }}" class="not-in-mobile">{{ getFooterFromAlertLength(resident['vitals_alerts']|length) }}
                                     <span data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['vitals_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
                                         <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
                                     </span>
                                 </td>
-                                <td style="color:{{ getTextColorFromAlertLength(resident['sleep_alerts']|length) }}">{{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}
+                                <td style="color:{{ getTextColorFromAlertLength(resident['sleep_alerts']|length) }}" class="not-in-mobile">{{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}
                                     <span data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['sleep_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
                                         <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
                                     </span>
                                 </td>
-                                <td style="color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}">{{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}
+                                <td style="color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}" class="not-in-mobile">{{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}
                                     <span data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['toilet_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
                                         <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
                                     </span>
@@ -234,6 +234,12 @@ a.deco-none {
 <script>
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
+});
+
+jQuery(document).ready(function($) {
+    $(".clickable-row").click(function() {
+        window.location = $(this).data("href");
+    });
 });
 </script>
 {% endblock%}

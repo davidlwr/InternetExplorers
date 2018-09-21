@@ -2184,6 +2184,11 @@ table th[class*="col-"] {
   min-height: .01%;
   overflow-x: auto;
 }
+@media only screen and (max-width: 767px) {
+    .not-in-mobile{
+        display: none;
+    }
+}
 @media screen and (max-width: 767px) {
   .table-responsive {
     width: 100%;
