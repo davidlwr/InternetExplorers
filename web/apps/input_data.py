@@ -154,7 +154,7 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
         erroroutput = pd.DataFrame()
         erroroutput['event'] = []
         erroroutput['gw_date_only'] = []
-    result_data.fillna(0, inplace=True)
+    # result_data.fillna(0, inplace=True)
 
     # undo set index
     result_data.reset_index(inplace=True)
