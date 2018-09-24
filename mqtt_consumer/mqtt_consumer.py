@@ -85,7 +85,7 @@ def process_msg(topic, message):
             if project_id=="stb" and hub_id=="2100" and dwelling_id in dwelling_to_nodeid:
                 uuid = f"{dwelling_to_nodeid[dwelling_id]}-{sensor_id}"
             else:
-                uuid = hub_id + dwelling_id + sensor_id
+                uuid = f"{hub_id}-{dwelling_id}-{sensor_id}"
 
             # SPLIT INTO SYSMON AND DATA
             if data_type == "data" and (key == "motion" or key == "door"): 

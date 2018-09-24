@@ -149,6 +149,7 @@ class sensor_DAO(object):
     # SENSOR OWNERSHIP HISTORY ==============================================================
     soh_table_name   = "stbern.SENSOR_OWNERSHIP_HIST"
     soh_period_start = "period_start"
+    soh_period_end   = "period_end"
     soh_resident_id  = "resident_id"
     soh_uuid         = "uuid"
     @staticmethod
@@ -160,9 +161,19 @@ class sensor_DAO(object):
         uuid (str)  -- Sensor uuid
         resident_id (int)   
         start_datetime (datetime)
+
+        Raises
+        AssertionError -- There is an open period left on the ownership table, close period before adding new owner
+                       -- see sensor_DAO.close_ownership_hist()
         """
-        query = f"""INSERT INTO {sensor_DAO.soh_table_name} ({sensor_DAO.soh_uuid}, {sensor_DAO.soh_resident_id}, {sensor_DAO.soh_period_start}) 
-                    VALUES (%s, %s, %s)"""
+        # Check for open period / current owner exists
+        rdict = sensor_DAO.get_ownership_hist(uuid=uuid)
+        for ruuid,rvals in rdict.items():
+            if rvals[1] == None: raise AssertionError("There is an open period left on the ownership table, close period before adding new owner")
+
+        # Add ownership history
+        query = f"""INSERT INTO {sensor_DAO.soh_table_name} ({sensor_DAO.soh_uuid}, {sensor_DAO.soh_resident_id}, {sensor_DAO.soh_period_start}, {sensor_DAO.soh_period_end}) 
+                    VALUES (%s, %s, %s, %s)"""
 
         # Get connection
         factory = connection_manager()
@@ -170,25 +181,39 @@ class sensor_DAO(object):
         cursor = connection.cursor()
 
         try:
-            cursor.execute(query, [type])
+            cursor.execute(query, [uuid, resident_id, start_datetime, None])
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
 
     @staticmethod
-    def get_ownership_hist(residentID):
-        """
-        Returns ownership hisotry of sensor: Which resident was using the sensor during a period
+    def close_ownership_hist(uuid, resident_id, end_datetime=None):
+        '''
+        Closes and open period in the ownership table
 
-        Inputs:
-        residentID (int)
+        Inputs
+        uuid (str)  -- Sensor uuid
+        resident_id (int)   
+        end_datetime (datetime) -- default None, closes with datetime.now()
 
-        Return:
-        Dict: {"uuid1": [(startdate, enddate), (datetime, datetime)],
-               "uuid2": [(startdate, enddate)]}
-        * NOTE: (startdate, enddate) are (inclusive, exclusive)
-        """
-        query = f"SELECT * FROM {sensor_DAO.soh_table_name} WHERE `{sensor_DAO.soh_resident_id}` = %s ORDER BY `{sensor_DAO.soh_period_start}` DESC"
+        Raises
+        AssertionError -- No period open for uuid - resident_id pair
+        '''
+        # Check for existing open datetime
+        openPeriod = False
+        rdict = sensor_DAO.get_ownership_hist(uuid=uuid, residentID=resident_id)
+        for ruuid,rvals in rdict:
+            if rvals[1] == None: openPeriod = True
+
+        if openPeriod == False: raise(AssertionError("No open period for uuid, resident_id pair. Unable to close anything"))     
+        
+        # Construct query
+        if end_datetime != None: end_datetime = datetime.datetime.now()
+        query = f"""UPDATE {sensor_DAO.soh_table_name} SET `{sensor_DAO.soh_period_end}` = %s 
+                     WHERE `{sensor_DAO.soh_uuid}` = %s 
+                     AND `{sensor_DAO.soh_resident_id}` = %s 
+                     AND `{sensor_DAO.soh_period_end}` = %s"""
+        feedDict = [end_datetime, uuid, resident_id, None]
 
         # Get connection
         factory = connection_manager()
@@ -196,28 +221,61 @@ class sensor_DAO(object):
         cursor = connection.cursor()
 
         try:
-            cursor.execute(query, [residentID])
+            cursor.execute(query, feedDict) 
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
+    @staticmethod
+    def get_ownership_hist(uuid=None, residentID=None):
+        '''
+        Returns ownership hisotry of sensor: Which resident was using the sensor during a period
+
+        Inputs:
+        uuid (str)       -- Default None 
+        residentID (int) -- Default None
+
+        Return:
+        Dict: {"uuid1": [(startdate, enddate), (datetime, datetime)],
+               "uuid2": [(startdate, enddate)]}
+        * NOTE: Final start and end date pairs will have NO END_DATETIME as this represents an ongoing period
+        * NOTE: (startdate, enddate) are (inclusive, exclusive)
+        '''
+        
+        queryCols = []
+        queryVals = []
+        if residentID != None: 
+            queryCols.append(sensor_DAO.soh_resident_id)
+            queryVals.append(residentID)
+        if uuid != None:
+            queryCols.append(sensor_DAO.soh_uuid)
+            queryVals.append(uuid)
+
+        # Construct query
+        query = f"SELECT * FROM {sensor_DAO.soh_table_name}"
+        for i in range(len(queryVals)):
+            if i == 0: query += f" WHERE `{queryCols[i]}` = %s "
+            else:      query += f" AND   `{queryCols[i]}` = %s" 
+        query += f"ORDER BY `{sensor_DAO.soh_period_start}` DESC"       # Sort by start periods 
+
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        # Read results and return dict
+        try:
+            cursor.execute(query, queryVals)
             result = cursor.fetchall()
 
-            records = []
+            records = defaultdict(list)
             if result != None:
                 for r in result:
-                    records.append((r[sensor_DAO.soh_uuid], r[sensor_DAO.soh_period_start]))
-            
-            # Create and populate dict
-            rdict = defaultdict(list)
-            if len(records) > 1:
-                for i in range(len(records)-1):
-                    uuid, period_start = records[i]
-                    tuuid, period_end  = records[i+1]
+                    uuid   = r[sensor_DAO.soh_uuid]
+                    pStart = r[sensor_DAO.soh_period_start]
+                    pEnd   = r[sensor_DAO.soh_period_end]
+                    records[uuid].append((pStart, pEnd))
 
-                    rdict[uuid].append(period_start, period_end)
-
-                # Convert last record to period of: record ---- curr datetime
-                uuid, period_start = records[-1]
-                rdict[uuid].append(period_start, datetime.datetime.now())
-
-            return rdict
+            return records
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
