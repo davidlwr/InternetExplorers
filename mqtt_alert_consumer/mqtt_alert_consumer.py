@@ -52,6 +52,11 @@ def send_message_with_reply(chat, text, reply_markup):
     response = requests.post(teleurl + 'sendMessage', data=params)
     return response
 
+def delete_message_with_reply(chatid, text):
+    params = {'chat_id' : chatid, 'message_id': text}
+    response = requests.post(teleurl + 'deleteMessage', data=params)
+    return response
+
 # Utility functions ==============================================================================================================
 def log_msg(filename, msg, verbose=True):
     '''
@@ -86,6 +91,14 @@ def action_motion(event):
         text='Sensor 1 Alert: Mr Poh at ' + datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
         alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
+
+        alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
+        keyboardBottom = [[alert['alert_text']] for alert in alerts]
+        reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
+        response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "You still have these incomplete tasks:", reply_markupBottom)
+        print(response.json()['result']['message_id'])
+        message_id = response.json()['result']['message_id']
+        delete_message_with_reply(DUTY_NURSE_CHAT_ID, message_id)
 
 def action_door(event):
     if event == 255:
