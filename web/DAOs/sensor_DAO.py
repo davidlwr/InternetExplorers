@@ -189,7 +189,7 @@ class sensor_DAO(object):
     @staticmethod
     def close_ownership_hist(uuid, resident_id, end_datetime=None):
         '''
-        Closes and open period in the ownership table
+        Closes an open period in the ownership table
 
         Inputs
         uuid (str)  -- Sensor uuid
@@ -202,18 +202,18 @@ class sensor_DAO(object):
         # Check for existing open datetime
         openPeriod = False
         rdict = sensor_DAO.get_ownership_hist(uuid=uuid, residentID=resident_id)
-        for ruuid,rvals in rdict:
-            if rvals[1] == None: openPeriod = True
+        for ruuid,rvals in rdict.items():
+            if rvals[-1][1] == None: openPeriod = True
 
         if openPeriod == False: raise(AssertionError("No open period for uuid, resident_id pair. Unable to close anything"))     
         
         # Construct query
-        if end_datetime != None: end_datetime = datetime.datetime.now()
+        if end_datetime == None: end_datetime = datetime.datetime.now()
         query = f"""UPDATE {sensor_DAO.soh_table_name} SET `{sensor_DAO.soh_period_end}` = %s 
                      WHERE `{sensor_DAO.soh_uuid}` = %s 
                      AND `{sensor_DAO.soh_resident_id}` = %s 
-                     AND `{sensor_DAO.soh_period_end}` = %s"""
-        feedDict = [end_datetime, uuid, resident_id, None]
+                     AND `{sensor_DAO.soh_period_end}` IS NULL"""
+        feedDict = [end_datetime, uuid, resident_id]
 
         # Get connection
         factory = connection_manager()
@@ -252,11 +252,11 @@ class sensor_DAO(object):
             queryVals.append(uuid)
 
         # Construct query
-        query = f"SELECT * FROM {sensor_DAO.soh_table_name}"
+        query = f"SELECT * FROM {sensor_DAO.soh_table_name} "
         for i in range(len(queryVals)):
             if i == 0: query += f" WHERE `{queryCols[i]}` = %s "
-            else:      query += f" AND   `{queryCols[i]}` = %s" 
-        query += f"ORDER BY `{sensor_DAO.soh_period_start}` DESC"       # Sort by start periods 
+            else:      query += f" AND   `{queryCols[i]}` = %s " 
+        query += f" ORDER BY `{sensor_DAO.soh_period_start}` ASC"       # Sort by start periods 
 
         # Get connection
         factory = connection_manager()
@@ -265,7 +265,9 @@ class sensor_DAO(object):
 
         # Read results and return dict
         try:
-            cursor.execute(query, queryVals)
+            if len(queryCols) != 0: cursor.execute(query, queryVals)
+            else: cursor.execute(query)
+
             result = cursor.fetchall()
 
             records = defaultdict(list)
@@ -438,3 +440,42 @@ class sensor_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
+
+# TESTS ====================================================================================================
+if __name__ == '__main__': 
+    # Ownership hists
+    delete = False
+
+    # Test 01: insert
+    try:
+        print(sensor_DAO.insert_ownership_hist(uuid="2006-m-01", resident_id=1, start_datetime=datetime.datetime.now()))
+        delete = True
+        print("success insert 1")
+    except: 
+        print("existing test record")
+        delete = True
+
+    # test 02: get 
+    print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=1))
+    print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=None))
+    print(sensor_DAO.get_ownership_hist(uuid=None, residentID=None))
+
+    # test 03: close 
+    try:
+        sensor_DAO.close_ownership_hist(uuid="2006-m-01", resident_id=1, end_datetime=None)
+        print("success close 1... Checking with get")
+        print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=1))
+
+        sensor_DAO.close_ownership_hist(uuid="2006-m-01", resident_id=1, end_datetime=None)
+        print("fail close 2: should throw exception")
+    except AssertionError as e:
+        print("success close 2", e)
+
+    # end test: delete
+    if delete:
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+        try: cursor.execute(f"DELETE FROM {sensor_DAO.soh_table_name} WHERE `{sensor_DAO.soh_resident_id}` = 1 AND `{sensor_DAO.soh_uuid}` = \"2006-m-01\"")
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)

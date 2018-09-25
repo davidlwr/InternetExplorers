@@ -87,10 +87,11 @@ class sysmon_log_DAO(object):
 
         query = f"SELECT * FROM {sysmon_log_DAO.table_name}"
         if uuid != None: query += f" WHERE `{Sysmon_Log.uuid_tname}` = %s"
-        print(query)
 
         try:
-            cursor.execute(query, [uuid])
+            if uuid == None: cursor.execute(query)
+            else: cursor.execute(query, [uuid])
+            
             results = cursor.fetchall()
             logs = []
             if results != None:
@@ -225,3 +226,9 @@ class sysmon_log_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
+# TESTS ====================================================================================================
+if __name__ == '__main__': 
+    # Test 1: get all logs
+    print(sysmon_log_DAO.get_all_logs()[-5:])
+    print("break")
+    print(sysmon_log_DAO.get_all_logs(uuid="2006-m-01")[-5:])
