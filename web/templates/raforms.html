@@ -33,6 +33,11 @@
             </div>
             <br>
         {{ render_field(form.weight)  }}
+        {{ render_radio_fields(form.num_falls)  }}
+        {{ render_radio_fields(form.injury_sustained)  }}
+        {{ render_radio_fields(form.medical_conditions)  }}
+        {{ render_radio_fields(form.medication_amount)  }}
+
             <br>
             <div class="form-group">
                 <label class="col-md-4 control-label">Mental Behaviour Status</label>
@@ -46,44 +51,52 @@
                         <input type="checkbox" name="hallucination" value="hallucination" >Hallucination<br>
                         <input type="checkbox" name="drowsy" value="drowsy" >Drowsy<br>
                         Others <input type="text" name="otherBehaviours" ><br>
+                        <br>
+                        Verdict
+                        <select name="status">
+                            <option value=0>No Change</option>
+                            <option value=1>Unable to Assess</option>
+                            <option value=2>Occasional</option>
+                            <option value=3>Often/All the Time</option>
+                        </select>
                     </div>
                 </div>
             </div>
             <br>
-            <div class="form-group">
-                <label class="col-md-4 control-label">Elderly needs assistance on daily activities (Tick box if yes)</label>
-                <div class="col-md-4 inputGroupContainer">
-                    <div class="input-group">
-                        <input type="checkbox" name="medicine" value="medicine" >Taking medicine (without reminder)<br>
-                        <input type="checkbox" name="clothes" value="clothes" >Changing own clothes<br>
-                        <input type="checkbox" name="eating" value="eating" >Eating<br>
-                        <input type="checkbox" name="bathing" value="bathing" >Bathing<br>
-                        <input type="checkbox" name="walking" value="walking" >Walking<br>
-                        <input type="checkbox" name="toileting" value="toileting" >Toileting<br>
-                        Others <input type="text" name="otherAssistance" ><br>
-                    </div>
-                </div>
-            </div>
-            <br>
-            <div class="form-group">
-                <label class="col-md-4 control-label">Pain affecting level of function</label>
-                <div class="col-md-4 inputGroupContainer">
-                    <div class="input-group">
-                        <input type="checkbox" name="noPain" value="noPain" checked>No pain<br>
-                        <input type="checkbox" name="general" value="general" >Generalised pain (abdominal, headache, etc.)<br>
-                        <input type="checkbox" name="joint" value="joint" >Musculoskeletal/Joint Pain<br>
-                        <input type="checkbox" name="critical" value="critical" >Critical Pain in other parts<br>
-                        Others <input type="text" name="otherPain" ><br>
-                    </div>
-                </div>
-            </div>
-            <br>
-        {{ render_radio_fields(form.medication_amount)  }}
-        {{ render_radio_fields(form.hearing)  }}
         {{ render_radio_fields(form.vision)  }}
+        {{ render_radio_fields(form.hearing)  }}
         {{ render_radio_fields(form.mobility)  }}
+        {{ render_radio_fields(form.pain)  }}
+            <div class="form-group">
+                <label class="col-md-4 control-label"></label>
+                <div class="col-md-4 inputGroupContainer">
+                    <div class="input-group">
+                        <!--<input type="checkbox" name="noPain" value=0 checked>No pain<br>-->
+                        <!--<input type="checkbox" name="general" value=1 >Generalised pain (abdominal, headache, etc.)<br>-->
+                        <!--<input type="checkbox" name="joint" value=2 >Musculoskeletal/Joint Pain<br>-->
+                        <!--<input type="checkbox" name="critical" value=3 >Critical Pain in other parts<br>-->
+                        Comments <input type="text" name="otherPain" ><br>
+                    </div>
+                </div>
+            </div>
+            <br>
         {{ render_radio_fields(form.dependent)  }}
         {{ render_field(form.dependency)  }}
+            <div class="form-group">
+                <label class="col-md-4 control-label">Elderly needs assistance on daily activities (Tick box if yes)</label>
+                    <div class="col-md-4 inputGroupContainer">
+                        <div class="input-group">
+                            <input type="checkbox" name="medicine" value="medicine" >Taking medicine (without reminder)<br>
+                            <input type="checkbox" name="clothes" value="clothes" >Changing own clothes<br>
+                            <input type="checkbox" name="eating" value="eating" >Eating<br>
+                            <input type="checkbox" name="bathing" value="bathing" >Bathing<br>
+                            <input type="checkbox" name="walking" value="walking" >Walking<br>
+                            <input type="checkbox" name="toileting" value="toileting" >Toileting<br>
+                            Others <input type="text" name="otherAssistance" ><br>
+                        </div>
+                    </div>
+                </div>
+            <br>
         {{ render_field(form.submit) }}
 
         </form>

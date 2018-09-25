@@ -1,7 +1,10 @@
 import datetime, os, sys
+import pandas as pd
 
 if __name__ == '__main__':  sys.path.append("..")
 from DAOs.connection_manager import connection_manager
+
+sys.path.append('../Entities')
 from Entities.shift_log import Shift_log
 
 
@@ -51,8 +54,10 @@ class shift_log_DAO(object):
                 return result['max'], result['min']
             else: return None, None
                 
-        except: raise
-        finally: factory.close_all(cursor=cursor, connection=connection)
+        except:
+            print("error")
+        finally:
+            factory.close_all(cursor=cursor, connection=connection)
 
 
     def insert_shift_log(self, shift_log):
@@ -73,9 +78,23 @@ class shift_log_DAO(object):
 
         try:
             cursor.execute(query, shift_log.var_list)
-        except: raise
-        finally: factory.close_all(cursor=cursor, connection=connection)
+        except:
+            return
+        finally:
+            factory.close_all(cursor=cursor, connection=connection)
 
+    def get_all_logs():
+        """
+        Returns all logs in a dataframe
+        """
+
+        query = "SELECT * FROM {}".format(shift_log_DAO.table_name)
+
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+
+        return pd.read_sql_query(query, connection)
 
 
 # # TEST-1 insert

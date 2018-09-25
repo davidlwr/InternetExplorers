@@ -6,7 +6,7 @@ import pandas as pd
 
 # internal imports
 from app import app
-from apps import input_data
+from apps import input_data, input_shiftlogs
 from DAOs import resident_DAO
 from juvo_api import JuvoAPI
 
@@ -124,6 +124,12 @@ app.layout = html.Div([
                             html.I(className='fa fa-wrench fa-fw'),
                             ' Manage Users/Residents'
                         ], href='/admin/resident')
+                    ]),
+                    html.Li([
+                        html.A([
+                            html.I(className='fa fa-wrench fa-fw'),
+                            ' Sensors Health'
+                        ], href='/sensorsHealth')
                     ])
                 ], className='nav', id='side-menu')
             ], className='sidebar-nav navbar-collapse')
@@ -134,7 +140,7 @@ app.layout = html.Div([
     html.Div([
             html.Div([
                 html.Div([
-                    html.H1('Home Page')
+                    html.H1('Detailed Graphs')
                 ], className='row'),
                 html.Div([
                     html.Div([
@@ -313,6 +319,59 @@ app.layout = html.Div([
                         html.Div(id='visit_duration_output', className='col-md-12')
                     ], className='row')
                 ], id='visit_duration_graph'),
+                html.Div([
+                    html.Div([
+                        html.H3('View resident\'s logs')
+                    ], className='row'),
+                    html.Div([
+                        html.Div([
+                            dcc.Dropdown(
+                                id='resident_input_logs',
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_shiftlogs.get_residents_options()],
+                                placeholder='Select resident(s) to view',
+                                value=[],
+                                multi=True
+                            )
+                        ], className='col-md-4'),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='filter_input_day_night',
+                                options=[{'label': i, 'value': j} for i, j in
+                                         input_data.get_num_visits_filter_options()],
+                                value='None',
+                                clearable=False
+                            )
+                        ], className='col-md-4'),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='filter_input_temp_bp_pulse',
+                                options=[{'label': i, 'value': j} for i, j in
+                                         input_shiftlogs.get_logs_filter_options()],
+                                value='temperature',
+                                clearable=False
+                            )
+                        ], className='col-md-4'),
+                        html.Div([
+                            dcc.DatePickerRange(
+                                id='date_picker_visit_duration',
+                                min_date_allowed=input_shiftlogs.input_raw_min_date,
+                                max_date_allowed=input_shiftlogs.input_raw_max_date,
+                                start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                                                                 microsecond=0),
+                                # need to truncate the dates here
+                                end_date=input_shiftlogs.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0),
+                                # to prevent unconverted data error
+                                start_date_placeholder_text='Select start date',
+                                end_date_placeholder_text='Select end date',
+                                minimum_nights=0
+                            )
+                        ], className='col-md-4')
+                    ], className='row'),
+                    html.Div([
+                        html.Div(id='logs_output', className='col-md-12')
+                    ], className='row')
+                ], id='logs_graph'),
                 html.Div([
                     html.Div([
                         html.H3('View resident\'s sleep vital signs')
@@ -631,6 +690,79 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
         print(e)
         return ''
 
+
+@app.callback(
+    Output(component_id='logs_output', component_property='children'),
+    [Input(component_id='resident_input_logs', component_property='value'),
+     Input('filter_input_day_night', 'value'),
+     Input('filter_input_temp_bp_pulse', 'value'),
+     Input('date_picker_visit_duration', 'start_date'),
+     Input('date_picker_visit_duration', 'end_date')])
+def update_graph_04(input_resident, filter_input, filter_type, start_date, end_date):
+    try:
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        draw_data = []
+        if filter_input == 'None':  # default option
+            for r in input_resident:
+                df = input_shiftlogs.get_logs_by_date(start_date, end_date, r)
+                if filter_type != 'sys_dia':
+                    draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': r})
+                else:
+                    draw_data.append({'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers', 'name': r})
+                    draw_data.append({'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers', 'name': r})
+
+        else:
+
+            if filter_input != 'Night':  # if not night means have to display for 'Day'
+                for r in input_resident:
+                    df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Day')
+                    if filter_type != 'sys_dia':
+                        draw_data.append(
+                            {'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+                    else:
+                        draw_data.append(
+                            {'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+                        draw_data.append(
+                            {'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+
+
+            if filter_input != 'Day':  # if not day means have to display for 'Night'
+                for r in input_resident:
+                    df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Night')
+                    if filter_type != 'sys_dia':
+                        draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers',
+                                          'name': str(r) + ' - Night'})
+                    else:
+                        draw_data.append({'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers',
+                                          'name': str(r) + ' - Night'})
+                        draw_data.append({'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers',
+                                          'name': str(r) + ' - Night'})
+
+        return dcc.Graph(id='logs_plot',
+                         figure={
+                             'data': draw_data,
+                             'layout': {
+                                 'title': 'Shift Logs',
+                                 'xaxis': {
+                                     'title': 'Date'
+                                 },
+                                 'yaxis': {
+                                     'title': filter_type
+                                 }
+                             }
+                         },
+                         config={
+                             'editable': False,
+                             'displaylogo': False,
+                             'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
+                         })
+    except Exception as e:
+        print('ERROR: ', end='')
+        print(e)
+        return ''
+
 @app.callback(
     Output('vital_signs_output', component_property='children'),
     [Input('resident_input_vital_signs', 'value'),
@@ -746,6 +878,13 @@ def set_residents_options_one(selection):
     [Input('resident_input_visit_duration', 'value')])
 def set_residents_options_one(selection):
     return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+
+@app.callback(
+    Output('resident_input_logs', 'options'),
+    [Input('resident_input_logs', 'value')])
+def set_residents_options_one(selection):
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_shiftlogs.get_residents_options()]
+
 
 @app.callback(
     Output('resident_input_vital_signs', 'options'),

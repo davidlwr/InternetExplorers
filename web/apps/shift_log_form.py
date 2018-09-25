@@ -40,8 +40,8 @@ class ShiftLogForm(Form):
     falls = IntegerField('Number of Slips/Falls of Resident', default=0)
     near_falls = IntegerField('Number of Near Falls', default=0)
     consumption = RadioField('Food consumption',
-                             choices=[('insufficient', 'Insufficient'), ('moderate', 'Moderate'),
-                                      ('excessive', 'Excessive')], default='moderate')
+                             choices=[(1, 'Insufficient'), (2, 'Moderate'),
+                                      (3, 'Excessive')], coerce=int, default=2)
     toilet_visits = HiddenField()
     temperature = FloatField('Temperature (°C) ', default=36.9)
     sbp = FloatField('Systolic blood pressure (SBP) mmHg ')
