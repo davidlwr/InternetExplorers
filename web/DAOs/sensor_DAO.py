@@ -24,6 +24,9 @@ class sensor_DAO(object):
         type (str)
         location (str)
         uuid (str)
+
+        Returns
+        list of Entity.sensor
         """
         query = f"SELECT * FROM {sensor_DAO.table_name}"
 
