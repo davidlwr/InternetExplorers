@@ -124,13 +124,13 @@ app.layout = html.Div([
                             html.I(className='fa fa-wrench fa-fw'),
                             ' Manage Users/Residents'
                         ], href='/admin/resident')
-                    ]),
-                    html.Li([
-                        html.A([
-                            html.I(className='fa fa-wrench fa-fw'),
-                            ' Sensors Health'
-                        ], href='/sensorsHealth')
-                    ])
+                    ])#,
+                    # html.Li([
+                    #     html.A([
+                    #         html.I(className='fa fa-wrench fa-fw'),
+                    #         ' Sensors Health'
+                    #     ], href='/sensorsHealth')
+                    # ])
                 ], className='nav', id='side-menu')
             ], className='sidebar-nav navbar-collapse')
         ], className='navbar-default sidebar', role='navigation')
@@ -353,7 +353,7 @@ app.layout = html.Div([
                         ], className='col-md-4'),
                         html.Div([
                             dcc.DatePickerRange(
-                                id='date_picker_visit_duration',
+                                id='date_picker_logs',
                                 min_date_allowed=input_shiftlogs.input_raw_min_date,
                                 max_date_allowed=input_shiftlogs.input_raw_max_date,
                                 start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
@@ -696,8 +696,8 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
     [Input(component_id='resident_input_logs', component_property='value'),
      Input('filter_input_day_night', 'value'),
      Input('filter_input_temp_bp_pulse', 'value'),
-     Input('date_picker_visit_duration', 'start_date'),
-     Input('date_picker_visit_duration', 'end_date')])
+     Input('date_picker_logs', 'start_date'),
+     Input('date_picker_logs', 'end_date')])
 def update_graph_04(input_resident, filter_input, filter_type, start_date, end_date):
     try:
         temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
