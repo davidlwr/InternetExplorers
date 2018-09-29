@@ -5,7 +5,7 @@ import string
 
 from Entities.resident import Resident
 
-table_name = 'stbern.RESIDENT'
+table_name = 'stbern.resident'
 
 
 def get_resident_by_id(node_id):

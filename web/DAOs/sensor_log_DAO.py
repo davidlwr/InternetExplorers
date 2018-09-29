@@ -12,7 +12,7 @@ class sensor_log_DAO(object):
     This class handles the connection between the app and the datebase table
     """
 
-    table_name = "stbern.SENSOR_LOG"
+    table_name = "stbern.sensor_log"
     TIMEPERIOD_DAY = 'Day'
     TIMEPERIOD_NIGHT = 'Night'
 
@@ -33,8 +33,8 @@ class sensor_log_DAO(object):
         (max_datetime, min_datetime) or (None, None) if nothing found
         """
 
-        query = """SELECT MAX({}) as 'max' , 
-                          MIN({}) as 'min' 
+        query = """SELECT MAX({}) as 'max' ,
+                          MIN({}) as 'min'
                           FROM {};""" \
             .format(Sensor_Log.recieved_timestamp_tname, \
                     Sensor_Log.recieved_timestamp_tname, \

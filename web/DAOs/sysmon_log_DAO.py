@@ -10,7 +10,7 @@ class sysmon_log_DAO(object):
     This class handles connection between the app and the database table
     '''
 
-    table_name = "stbern.SYSMON_LOG"
+    table_name = "stbern.sysmon_log"
 
 
     def insert_log(self, log):

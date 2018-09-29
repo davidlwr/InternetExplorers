@@ -13,7 +13,7 @@ class user_DAO(object):
     This class handles connection between app and the database table
     '''
 
-    table_name = "stbern.USER"
+    table_name = "stbern.user"
 
     @staticmethod
     def authenticate(username, password):
@@ -112,7 +112,7 @@ class user_DAO(object):
             cursor.execute(query)
             result = cursor.fetchone()
 
-            if result is None: return None 
+            if result is None: return None
             else:
                 username     = result[User.username_tname]
                 name         = result[User.name_tname]
@@ -123,4 +123,3 @@ class user_DAO(object):
 
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
-

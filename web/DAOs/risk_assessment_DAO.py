@@ -11,7 +11,7 @@ class risk_assessment_DAO(object):
     This class handles connection between app and the database table
     '''
 
-    table_name = "stbern.RISK_ASSESSMENT"
+    table_name = "stbern.risk_assessment"
 
     def __init__(self):
         '''
@@ -27,8 +27,8 @@ class risk_assessment_DAO(object):
         Sets obj vars and returns max_datetime and min_datetime found in the database
         '''
 
-        query = """SELECT MAX({}) as 'max' , 
-                          MIN({}) as 'min' 
+        query = """SELECT MAX({}) as 'max' ,
+                          MIN({}) as 'min'
                           FROM {};"""                         \
                     .format(Risk_assessment.datetime_tname,    \
                             Risk_assessment.datetime_tname,    \
@@ -53,7 +53,7 @@ class risk_assessment_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
-    
+
     def insert_risk_assessment(self, risk_assessment):
         '''
         Inserts an entry into the database table
@@ -62,7 +62,7 @@ class risk_assessment_DAO(object):
         shift_log -- Entities.risk_assessment, class vars used to create a new DB row
         '''
 
-        query = """INSERT INTO {} 
+        query = """INSERT INTO {}
                 VALUES(%s, %s, %s, %s, %s, %s,
                        %s, %s, %s, %s, %s, %s,
                        %s, %s, %s, %s, %s, %s,
@@ -79,7 +79,7 @@ class risk_assessment_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
-    
+
 
 # # TEST-1 insert
 # dao = risk_assesment_DAO()
