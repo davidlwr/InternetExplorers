@@ -90,6 +90,11 @@ def detailedLayerTwoOverviewResidents(node_id):
         date_in_use = datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
         juvo_date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12)
         resident = resident_DAO.get_resident_by_id(node_id)
+        if resident['dob']:
+            today = datetime.date.today()
+            resident['age'] = today.year - resident['dob'].year - ((today.month, today.day) < (resident['dob'].month, resident['dob'].day))
+        resident['dob'] = resident['dob'].strftime("%d %B %Y") if resident['dob'] is not None else ""
+
         if resident is None:
             return 'Resident not found<a href="/overview">Go Back</a>'
         # parameters
@@ -180,7 +185,7 @@ def detailedLayerTwoOverviewResidents(node_id):
                         hoverformat = '.2f'
                     ),
                     xaxis = dict(
-                        title = "Day",
+                        title = "",#"Day",
                         tickformat = "%a",
                         showticklabels = True,
                         showline = True
@@ -260,7 +265,7 @@ def detailedLayerTwoOverviewResidents(node_id):
                         hoverformat = '.2f'
                     ),
                     xaxis = dict(
-                        title = "Day",
+                        title = "",#"Day",
                         tickformat = "%a",
                         showticklabels = True,
                         showline = True
@@ -338,7 +343,7 @@ def detailedLayerTwoOverviewResidents(node_id):
                         hoverformat = '.2f'
                     ),
                     xaxis = dict(
-                        title = "Day",
+                        title = "",#"Day",
                         tickformat = "%a",
                         showticklabels = True,
                         showline = True
@@ -464,7 +469,7 @@ def detailedLayerTwoOverviewResidents(node_id):
                         hoverformat = '.2f'
                     ),
                     xaxis = dict(
-                        title = "Day",
+                        title = "",#"Day",
                         tickformat = "%a",
                         showticklabels = True,
                         showline = True
@@ -574,7 +579,7 @@ def detailedLayerTwoOverviewResidents(node_id):
                         hoverformat = '.2f'
                     ),
                     xaxis = dict(
-                        title = "Day",
+                        title = "",#"Day",
                         tickformat = "%a",
                         showticklabels = True,
                         showline = True
@@ -645,7 +650,7 @@ def detailedLayerTwoOverviewResidents(node_id):
                         hoverformat = '.2f'
                     ),
                     xaxis = dict(
-                        title = "Day",
+                        title = "",#"Day",
                         tickformat = "%a",
                         showticklabels = True,
                         showline = True
@@ -661,7 +666,7 @@ def detailedLayerTwoOverviewResidents(node_id):
                 night_toilet_MA_graph_json=night_toilet_MA_graph_json, sleeping_motion_graph_json=sleeping_motion_graph_json, uninterrupted_sleep_graph_json=uninterrupted_sleep_graph_json,
                 breathing_rates_json=breathing_rates_json, heartbeat_rates_json=heartbeat_rates_json, qos_json=qos_json)
     except Exception as e:
-        print(e)
+        print(sys.exc_info()[0])
         return "An Error Occurred!"
 
 if __name__ == '__main__':

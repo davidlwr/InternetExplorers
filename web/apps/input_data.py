@@ -550,6 +550,9 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
         qos_threshold = 50
         if qos_mean < qos_threshold:
             alerts_of_interest.append(f"Quality of sleep lower than {qos_threshold}%")
+    else:
+        qos_df['qos'] = []
+        qos_df['date_timestamp'] = []
 
     return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average, difference_longest_sleep, qos_mean, qos_df
 
