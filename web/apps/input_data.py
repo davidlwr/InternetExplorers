@@ -4,7 +4,7 @@ import numpy as np
 import datetime
 import os
 import scipy.stats
-import dill
+# import dill
 
 # pandas settings
 pd.options.mode.chained_assignment = None  # default='warn
@@ -698,9 +698,9 @@ def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None)
     japi = JuvoAPI.JuvoAPI()
     # sleeps_json = japi.get_target_sleeps(target, start_date, date_in_use)
     vitals_json = japi.get_target_vitals(target, start_date, date_in_use)
-    with open('sleeps_json.pyobjcache', 'wb') as f:
-        # dill.dump(sleeps_json, f)
-        dill.dump(vitals_json, f)
+    # with open('sleeps_json.pyobjcache', 'wb') as f:
+    #     # dill.dump(sleeps_json, f)
+    #     dill.dump(vitals_json, f)
     ######
 
     # print(sleeps_json)
