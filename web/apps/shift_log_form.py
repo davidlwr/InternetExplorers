@@ -17,7 +17,7 @@ class Resident(db.Model):
     resident_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     node_id = db.Column(db.String(20))
-    age = db.Column(db.Integer)
+    dob = db.Column(db.DateTime)
     fall_risk = db.Column(db.String(45))
     status = db.Column(db.String(45))
     stay_location = db.Column(db.String(45))

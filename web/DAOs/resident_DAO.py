@@ -96,13 +96,14 @@ def get_list_of_residents(filter_active=True, location_filter=None):
         factory.close_all(cursor=cursor, connection=connection)
 
 
-def insert_resident(name, node_id, age, fall_risk=None, status="Active", stay_location="STB"):
+def insert_resident(name, node_id, dob, fall_risk=None, status="Active", stay_location="STB"):
     '''
     Returns the id of the inserted resident if successful
     '''
-    query = 'INSERT INTO {} (name, node_id, age, fall_risk, status, stay_location) VALUES (%s, %s, %s, %s, %s, %s)'.format(
+    dob = dob.strftime('%Y-%m-%d')
+    query = 'INSERT INTO {} (name, node_id, dob, fall_risk, status, stay_location) VALUES (%s, %s, %s, %s, %s, %s)'.format(
         table_name)
-    values = (name, node_id, age, fall_risk, status, stay_location)
+    values = (name, node_id, dob, fall_risk, status, stay_location)
 
     # Get connection
     factory = connection_manager()

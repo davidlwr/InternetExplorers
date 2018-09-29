@@ -32,6 +32,7 @@ from Entities.user import User
 from DAOs.user_DAO import user_DAO
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import select, func, case
+from wtforms.fields.html5 import DateField
 
 login_manager = flask_login.LoginManager()
 login_manager.init_app(server)
@@ -218,10 +219,11 @@ class MyModelView(ModelView):
 class ResidentCreateForm(Form):
     name = StringField('Name')
     node_id = StringField('Node')
-    age = IntegerField('Age')
+    dob = DateField('Date of Birth', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')])
     fall_risk = StringField('Fall Risk')
     status = StringField('Status')
-    stay_location = StringField('Stay Location')
+    stay_location = RadioField('Stay Location',
+                               choices=[('BKT', 'Bukit Timah'), ('ADR', 'Adam Road')])
 
 
 class ResidentView(ModelView):
@@ -235,8 +237,11 @@ class ResidentView(ModelView):
         flash('You do not have the user rights to access this page!')
         return redirect(url_for('show_graphs'))
 
-    # def get_create_form(self):
-    #     return ResidentCreateForm
+    def get_create_form(self):
+        return ResidentCreateForm
+
+    def get_edit_form(self):
+        return ResidentCreateForm
 
     # def validate_form(self, form):
     #     try:
