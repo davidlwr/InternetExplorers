@@ -16,128 +16,128 @@ locationMap = input_data.get_location_options()
 # TODO: can return the bank plotly graph output after the exception so that the graph is still there
 
 app.layout = html.Div([
-    html.Nav([
-        html.Div([
-            html.Button([
-                html.Span('Toggle navigation', className='sr-only'),
-                html.Span(className='icon-bar'),
-                html.Span(className='icon-bar'),
-                html.Span(className='icon-bar')
-            ], type='button', className='navbar-toggle'),
-            html.A('IE Smart Healthcare', className='navbar-brand', href='/overview')
-        ], className='navbar-header'),
-        html.Ul([
-            # html.Li([
-            #     html.A([
-            #         html.I(className='fa fa-envelope fa-fw'),
-            #         html.I(className='fa fa-caret-down')
-            #     ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
-            #     html.Ul([
-            #         html.Li([
-            #             html.A([
-            #                 html.Div([
-            #                     html.Strong('John Smith'),
-            #                     html.Span('Yesterday', className='pull-right text-muted')
-            #                 ]),
-            #                 html.Div('Lorem ipsum dolor sit amet')
-            #             ], href='#')
-            #         ]),
-            #         html.Li(className='divider'),
-            #         html.Li([
-            #             html.A([
-            #                 html.Strong('Read All Messages'),
-            #                 html.I(className='fa fa-angle-right')
-            #             ], className='text-center', href='#')
-            #         ])
-            #     ], className='dropdown-menu dropdown-messages')
-            # ], className='dropdown'),
-            html.Li([
-                html.A([
-                    html.I(className='fa fa-user fa-fw'),
-                    html.I(className='fa fa-caret-down')
-                ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
-                html.Ul([
-                    # html.Li([
-                    #     html.A([
-                    #         html.I(className='fa fa-user fa-fw'),
-                    #         ' User Profile'
-                    #     ], href='#')
-                    # ]),
-                    # html.Li([
-                    #     html.A([
-                    #         html.I(className='fa fa-gear fa-fw'),
-                    #         ' Settings'
-                    #     ], href='#')
-                    # ]),
-                    # html.Li(className='divider'),
-                    html.Li([
-                        html.A([
-                            html.I(className='fa fa-sign-out fa-fw'),
-                            ' Logout'
-                        ], href='/logout')
-                    ])
-                ], className='dropdown-menu dropdown-user')
-            ], className='dropdown')
-        ], className='nav navbar-top-links navbar-right'),
-        html.Div([
-            html.Div([
-                html.Ul([
-                    # html.Li([
-                    #     html.Div([
-                    #         dcc.Input(placeholder='Search...', type='text', className='form-control'),
-                    #         html.Span([
-                    #             html.Button([
-                    #                 html.I(className='fa fa-search')
-                    #             ], className='btn btn-default', type='button')
-                    #         ], className='input-group-btn')
-                    #     ], className='input-group custom-search-form')
-                    # ], className='sidebar-search'),
-                    html.Li([
-                        html.A([
-                            html.I(className='fa fa-dashboard fa-fw'),
-                            ' Residents Overview'
-                        ], href='/overview')
-                    ]),
-                    html.Li([
-                        html.A([
-                            html.I(className='fa fa-chart-o fa-fw'),
-                            ' Detailed Charts'
-                        ], href='/graphs')
-                    ]),
-                    html.Li([
-                        html.A([
-                            html.I(className='fa fa-edit fa-fw'),
-                            ' Forms',
-                            html.Span(className='fa arrow')
-                        ], href='#'),
-                        html.Ul([
-                            html.Li([
-                                html.A('End of Shift Forms', href='/eosforms')
-                            ]),
-                            html.Li([
-                                html.A('Risk Assessment Forms', href='/raforms')
-                            ])
-                        ], className='nav nav-second-level')
-                    ]),
-                    html.Li([
-                        html.A([
-                            html.I(className='fa fa-wrench fa-fw'),
-                            ' Manage Users/Residents'
-                        ], href='/admin/resident')
-                    ])#,
-                    # html.Li([
-                    #     html.A([
-                    #         html.I(className='fa fa-wrench fa-fw'),
-                    #         ' Sensors Health'
-                    #     ], href='/sensorsHealth')
-                    # ])
-                ], className='nav', id='side-menu')
-            ], className='sidebar-nav navbar-collapse')
-        ], className='navbar-default sidebar', role='navigation')
-    ], className='navbar navbar-default navbar-static-top', role='navigation', style={'margin-bottom': 0}),
+    # html.Nav([
+    #     html.Div([
+    #         html.Button([
+    #             html.Span('Toggle navigation', className='sr-only'),
+    #             html.Span(className='icon-bar'),
+    #             html.Span(className='icon-bar'),
+    #             html.Span(className='icon-bar')
+    #         ], type='button', className='navbar-toggle'),
+    #         html.A('IE Smart Healthcare', className='navbar-brand', href='/overview')
+    #     ], className='navbar-header'),
+    #     html.Ul([
+    #         # html.Li([
+    #         #     html.A([
+    #         #         html.I(className='fa fa-envelope fa-fw'),
+    #         #         html.I(className='fa fa-caret-down')
+    #         #     ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
+    #         #     html.Ul([
+    #         #         html.Li([
+    #         #             html.A([
+    #         #                 html.Div([
+    #         #                     html.Strong('John Smith'),
+    #         #                     html.Span('Yesterday', className='pull-right text-muted')
+    #         #                 ]),
+    #         #                 html.Div('Lorem ipsum dolor sit amet')
+    #         #             ], href='#')
+    #         #         ]),
+    #         #         html.Li(className='divider'),
+    #         #         html.Li([
+    #         #             html.A([
+    #         #                 html.Strong('Read All Messages'),
+    #         #                 html.I(className='fa fa-angle-right')
+    #         #             ], className='text-center', href='#')
+    #         #         ])
+    #         #     ], className='dropdown-menu dropdown-messages')
+    #         # ], className='dropdown'),
+    #         html.Li([
+    #             html.A([
+    #                 html.I(className='fa fa-user fa-fw'),
+    #                 html.I(className='fa fa-caret-down')
+    #             ], className='dropdown-toggle', href='#', **{'data-toggle': 'dropdown'}),
+    #             html.Ul([
+    #                 # html.Li([
+    #                 #     html.A([
+    #                 #         html.I(className='fa fa-user fa-fw'),
+    #                 #         ' User Profile'
+    #                 #     ], href='#')
+    #                 # ]),
+    #                 # html.Li([
+    #                 #     html.A([
+    #                 #         html.I(className='fa fa-gear fa-fw'),
+    #                 #         ' Settings'
+    #                 #     ], href='#')
+    #                 # ]),
+    #                 # html.Li(className='divider'),
+    #                 html.Li([
+    #                     html.A([
+    #                         html.I(className='fa fa-sign-out fa-fw'),
+    #                         ' Logout'
+    #                     ], href='/logout')
+    #                 ])
+    #             ], className='dropdown-menu dropdown-user')
+    #         ], className='dropdown')
+    #     ], className='nav navbar-top-links navbar-right'),
+    #     html.Div([
+    #         html.Div([
+    #             html.Ul([
+    #                 # html.Li([
+    #                 #     html.Div([
+    #                 #         dcc.Input(placeholder='Search...', type='text', className='form-control'),
+    #                 #         html.Span([
+    #                 #             html.Button([
+    #                 #                 html.I(className='fa fa-search')
+    #                 #             ], className='btn btn-default', type='button')
+    #                 #         ], className='input-group-btn')
+    #                 #     ], className='input-group custom-search-form')
+    #                 # ], className='sidebar-search'),
+    #                 html.Li([
+    #                     html.A([
+    #                         html.I(className='fa fa-dashboard fa-fw'),
+    #                         ' Residents Overview'
+    #                     ], href='/overview')
+    #                 ]),
+    #                 html.Li([
+    #                     html.A([
+    #                         html.I(className='fa fa-chart-o fa-fw'),
+    #                         ' Detailed Charts'
+    #                     ], href='/graphs')
+    #                 ]),
+    #                 html.Li([
+    #                     html.A([
+    #                         html.I(className='fa fa-edit fa-fw'),
+    #                         ' Forms',
+    #                         html.Span(className='fa arrow')
+    #                     ], href='#'),
+    #                     html.Ul([
+    #                         html.Li([
+    #                             html.A('End of Shift Forms', href='/eosforms')
+    #                         ]),
+    #                         html.Li([
+    #                             html.A('Risk Assessment Forms', href='/raforms')
+    #                         ])
+    #                     ], className='nav nav-second-level')
+    #                 ]),
+    #                 html.Li([
+    #                     html.A([
+    #                         html.I(className='fa fa-wrench fa-fw'),
+    #                         ' Manage Users/Residents'
+    #                     ], href='/admin/resident')
+    #                 ])#,
+    #                 # html.Li([
+    #                 #     html.A([
+    #                 #         html.I(className='fa fa-wrench fa-fw'),
+    #                 #         ' Sensors Health'
+    #                 #     ], href='/sensorsHealth')
+    #                 # ])
+    #             ], className='nav', id='side-menu')
+    #         ], className='sidebar-nav navbar-collapse')
+    #     ], className='navbar-default sidebar', role='navigation')
+    # ], className='navbar navbar-default navbar-static-top', role='navigation', style={'margin-bottom': 0}),
         # sidebar above
         # main body below
-    html.Div([
+    # html.Div([
             html.Div([
                 html.Div([
                     html.H1('Detailed Graphs')
@@ -452,9 +452,9 @@ app.layout = html.Div([
                     ], className='row')
                 ], id='qos_graph')
             ], className='row-fluid')
-        ], id='page-wrapper')
+        # ])
         # this is where the page content goes
-])
+], style={'background-color': '#FFFFFF', 'padding': '15px'})
 
 
 @app.callback(
