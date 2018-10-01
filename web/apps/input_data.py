@@ -541,7 +541,10 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
     if target:
         japi = JuvoAPI.JuvoAPI()
         tuple_list = japi.get_qos_by_day(target, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
-        qos_df = pd.DataFrame(list(tuple_list), columns=['date_timestamp', 'qos'])
+        if tuple_list:
+            qos_df = pd.DataFrame(list(tuple_list), columns=['date_timestamp', 'qos'])
+        else:
+            print('tuple list returned None with non-zero target: ' + str(target))
 
         # exclude 0 for mean calculation
         temp_series = qos_df['qos'].replace(0, np.NaN)
