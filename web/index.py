@@ -30,6 +30,7 @@ from apps.shift_log_form import Resident, ShiftLogForm
 from apps.risk_assessment_form import RiskAssessmentForm
 from Entities.user import User
 from DAOs.user_DAO import user_DAO
+from DAOs import resident_DAO
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import select, func, case
 from wtforms.fields.html5 import DateField
@@ -41,6 +42,12 @@ login_manager.login_view = '/login'
 # Create FlaskLoginAuth object to require login for Dash Apps
 auth = FlaskLoginAuth(app)
 
+### DEFINE global methods for jinja to use
+@server.context_processor
+def custom_jinja_global_variables():
+    def get_list_of_residents_jinja(filter_active=True, location_filter='BKT'):
+        return resident_DAO.get_list_of_residents(filter_active, location_filter)
+    return dict(all_residents=get_list_of_residents_jinja)
 
 class Anonymous(AnonymousUserMixin):
     def __init__(self):
