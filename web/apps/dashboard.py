@@ -144,56 +144,6 @@ app.layout = html.Div([
                 ], className='row'),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s activity')
-                    ], className='row'),
-                    html.Div([
-                        html.Div([
-                            dcc.Dropdown(
-                                id='resident_input',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
-                                placeholder='Select a resident to view'
-                            )
-                        ], className='col-md-4 col-xs-12'),
-                        html.Div([
-                            dcc.Dropdown(
-                                id='location_input',
-                                options=[{'label': i, 'value': locationMap[i]} for i in locationMap],
-                                placeholder='Select a location to view'
-                            )
-                        ], className='col-md-4 col-xs-12'),
-                        html.Div([
-                            dcc.DatePickerRange(
-                                id='date_picker',
-                                min_date_allowed=input_data.input_raw_min_date,
-                                max_date_allowed=input_data.input_raw_max_date,
-                                start_date=input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
-                                # need to truncate the dates here
-                                end_date=input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
-                                                                               microsecond=0),
-                                # to prevent unconverted data error
-                                start_date_placeholder_text='Select start date',
-                                end_date_placeholder_text='Select end date',
-                                minimum_nights=0
-                            )
-                        ], className='col-md-4 col-xs-12')
-                    ], className='row'),
-                    html.Div([
-                        html.Div([
-                            dcc.Checklist(
-                                id='group_checkbox_activity',
-                                options=[
-                                    {'label': 'Group close toilet motion detected as one visit', 'value': 'group'}],
-                                values=[],
-                            )
-                        ], className='col-md-12 text-center')
-                    ], className='row'),
-                    html.Div([
-                        html.Div(id='location_output', className='col-md-12')
-                    ], className='row')
-                ], id='activity_graph'),
-                html.Div([
-                    html.Div([
                         html.H3('View resident\'s toilet usage numbers')
                     ], className='row'),
                     html.Div([
@@ -202,7 +152,7 @@ app.layout = html.Div([
                                 id='resident_input_toilet_numbers',
                                 options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
                                 placeholder='Select resident(s) to view',
-                                value=[],
+                                value=[input_data.get_residents_options()[0] if input_data.get_residents_options() else None],
                                 multi=True
                             )
                         ], className='col-md-4'),
@@ -450,7 +400,57 @@ app.layout = html.Div([
                     html.Div([
                         html.Div(id='qos_output', className='col-md-12')
                     ], className='row')
-                ], id='qos_graph')
+                ], id='qos_graph'),
+                html.Div([
+                    html.Div([
+                        html.H3('View resident\'s activity')
+                    ], className='row'),
+                    html.Div([
+                        html.Div([
+                            dcc.Dropdown(
+                                id='resident_input',
+                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
+                                placeholder='Select a resident to view'
+                            )
+                        ], className='col-md-4 col-xs-12'),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='location_input',
+                                options=[{'label': i, 'value': locationMap[i]} for i in locationMap],
+                                placeholder='Select a location to view'
+                            )
+                        ], className='col-md-4 col-xs-12'),
+                        html.Div([
+                            dcc.DatePickerRange(
+                                id='date_picker',
+                                min_date_allowed=input_data.input_raw_min_date,
+                                max_date_allowed=input_data.input_raw_max_date,
+                                start_date=input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                                                                 microsecond=0),
+                                # need to truncate the dates here
+                                end_date=input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0),
+                                # to prevent unconverted data error
+                                start_date_placeholder_text='Select start date',
+                                end_date_placeholder_text='Select end date',
+                                minimum_nights=0
+                            )
+                        ], className='col-md-4 col-xs-12')
+                    ], className='row'),
+                    html.Div([
+                        html.Div([
+                            dcc.Checklist(
+                                id='group_checkbox_activity',
+                                options=[
+                                    {'label': 'Group close toilet motion detected as one visit', 'value': 'group'}],
+                                values=[],
+                            )
+                        ], className='col-md-12 text-center')
+                    ], className='row'),
+                    html.Div([
+                        html.Div(id='location_output', className='col-md-12')
+                    ], className='row')
+                ], id='activity_graph')
             ], className='row-fluid')
         # ])
         # this is where the page content goes
