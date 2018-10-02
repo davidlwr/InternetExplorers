@@ -39,8 +39,8 @@ def showOverviewResidents():
     '''
     residents_raw = resident_DAO.get_list_of_residents()
     residents = []
-    date_in_use = datetime.datetime(2018, 4, 19, 23, 34, 12) # TODO: change to current system time once live data is available
-    juvo_date_in_use = datetime.datetime(2018, 8, 12, 22, 34, 12) # TODO: change to current system time once live data is available
+    date_in_use = datetime.datetime.now() # datetime.datetime(2018, 4, 19, 23, 34, 12) # TODO: change to current system time once live data is available
+    juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 22, 34, 12) # TODO: change to current system time once live data is available
     for resident in residents_raw:
         r = {}
         r['name'] = resident['name']
@@ -87,8 +87,8 @@ def showOverviewResidents():
 @flask_login.login_required
 def detailedLayerTwoOverviewResidents(node_id):
     try:
-        date_in_use = datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
-        juvo_date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12)
+        date_in_use = datetime.datetime.now() # datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
+        juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
         resident = resident_DAO.get_resident_by_id(node_id)
         if resident['dob']:
             today = datetime.date.today()
