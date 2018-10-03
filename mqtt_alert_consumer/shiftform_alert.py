@@ -29,8 +29,6 @@ def check_shift_form(shifttime):
 
 
 while 1:
-	currentTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-	send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + currentTime)
 	current_time=datetime.datetime.now()
 	hour = current_time.hour
 	minute = current_time.minute
