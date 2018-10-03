@@ -52,7 +52,6 @@ class Sensor_mgmt(object):
         isMotion = True if type == "motion" else False
         isBed    = True if type == "bed sensor" else False
 
-
         #LEGACY -- "disconnected" only exists in master students' data set. As this was thrown by gateway
         last_sysmons = sysmon_log_DAO.get_last_sysmon(uuid)
         if len(last_sysmons) > 0:
@@ -67,12 +66,11 @@ class Sensor_mgmt(object):
 
             # Check2: Battery level
             last_batt = sysmon_log_DAO.get_last_battery_level(uuid=uuid)
-            if last_batt.event < cls.batt_thresh: ret_codes.append(cls.LOW_BATT)
+            if last_batt != None and last_batt.event < cls.batt_thresh: ret_codes.append(cls.LOW_BATT)
 
 
         elif isMotion:  # MOTION SENSOR
             last_batt = sysmon_log_DAO.get_last_battery_level(uuid=uuid)
-            print("\t last batt: ", last_batt)
             if last_batt != None:
                 batt_update_period = (curr_time - last_batt.recieved_timestamp).total_seconds()
 
@@ -100,23 +98,103 @@ class Sensor_mgmt(object):
         
         return ret_codes
 
+    @classmethod
+    def get_all_sensor_status(cls):
+        '''
+        Returns 'up' | 'down' status of ALL sensors. 
+
+        Return:
+            list of sensors and status codes: 
+            
+            [ [Sensor.Entity, [Status, Codes]],
+              [Sensor.Entity, [Status, Codes]]...
+            ]
+        
+            See list of status codes 
+        '''
+        # Ret list in form: [[uuid, [status codes], [uuid, [status codes]]]]
+        sensor_status = []
+
+        # List of all Sensors
+        sensors = sensor_DAO.get_sensors()
+        
+        # Iterate all sensors and get statuss
+        for sensor in sensors:
+            uuid   = sensor.uuid
+            status = cls.get_sensor_status(uuid=uuid)
+            sensor_status.append([uuid, status]) 
+
+        return sensor_status
+
 
 # TESTS ======================================================================================
 if __name__ == '__main__': 
+
+    # # Room 1
+    # print("================ ROOM 1 ================")
+    # uuid = "2005-m-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+
+    # uuid = "2005-m-02"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+
+    # uuid = "2005-d-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+
+    # uuid = "2005-d-02"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+
+    # uuid = "2005-j-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+
+    # # Room 2
+    # print("================ ROOM 1 ================")
+    # uuid = "2006-m-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+
+    # uuid = "2006-m-02"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+
+    # uuid = "2006-d-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+
+    # uuid = "2006-d-02"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+
+    # uuid = "2006-j-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
     
-    uuid = "2005-m-01"
-    print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+    # # Room 3
+    # print("================ ROOM 3 ================")
+    # uuid = "2100-room 3-m-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
 
-    uuid = "2005-m-02"
-    print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+    # uuid = "2100-room 3-m-02"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
 
-    uuid = "2005-d-01"
-    print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+    # uuid = "2100-room 3-d-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
 
-    uuid = "2005-d-02"
-    print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+    # uuid = "2100-room 3-j-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+    
+    # # Room 4
+    # print("================ ROOM 4 ================")
+    # uuid = "2100-room 4-m-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
 
-    uuid = "2005-j-01"
-    print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
+    # uuid = "2100-room 4-m-02"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
 
+    # uuid = "2100-room 4-d-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
 
+    # # ADAM
+    # print("================ ADAM ROAD ================")
+    # uuid = "2100-room 4-m-01"
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}") 
+
+    # All
+    print("=============== ALL SENSORS ==============")
+    for ss in Sensor_mgmt.get_all_sensor_status():
+        print(ss)

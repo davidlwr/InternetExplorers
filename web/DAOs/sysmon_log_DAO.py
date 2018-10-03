@@ -10,7 +10,7 @@ class sysmon_log_DAO(object):
     This class handles connection between the app and the database table
     '''
 
-    table_name = "stbern.SYSMON_LOG"
+    table_name = "stbern.sysmon_log"
 
 
     def insert_log(self, log):
@@ -156,7 +156,7 @@ class sysmon_log_DAO(object):
         limit (int) -- default 1
 
         Return
-        Entity.Sysmon_log
+        Entity.Sysmon_log or None
         '''
         query = f"""SELECT * FROM {sysmon_log_DAO.table_name} 
                     WHERE `{Sysmon_Log.uuid_tname}` = "{uuid}" 

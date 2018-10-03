@@ -13,7 +13,7 @@ class shift_log_DAO(object):
     This class handles connection between app and the database table
     '''
 
-    table_name = "stbern.SHIFT_LOG"
+    table_name = "stbern.shift_log"
 
     def __init__(self):
         '''

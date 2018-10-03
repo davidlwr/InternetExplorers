@@ -12,7 +12,7 @@ class sensor_log_DAO(object):
     This class handles the connection between the app and the datebase table
     """
 
-    table_name = "stbern.SENSOR_LOG"
+    table_name = "stbern.sensor_log"
     TIMEPERIOD_DAY   = 'Day'
     TIMEPERIOD_NIGHT = 'Night'
 

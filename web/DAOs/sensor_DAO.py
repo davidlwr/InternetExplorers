@@ -12,7 +12,7 @@ class sensor_DAO(object):
     """
     This class handles the connection between the app and the datebase table
     """
-    table_name          = "stbern.SENSOR"
+    table_name          = "stbern.sensor"
 
 
     @staticmethod

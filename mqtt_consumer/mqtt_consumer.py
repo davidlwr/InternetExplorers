@@ -223,7 +223,11 @@ def on_message(client, userdata, message):
     
     # Log 
     log_msg(LOGGING_FILE, string)
-    log_msg(CSV_FILE, f', \"{message.topic}\", \"{payload}\"')
+    
+    # Log to csv
+    csv_topic = message.topic.replace("\"","\"\"")
+    csv_payload = payload.replace("\"", "\"\"")
+    log_msg(CSV_FILE, f', \"{csv_topic}\", \"{csv_payload}\"')
 
     # Process / Send to DB
     process_msg(topic=message.topic, message=payload)

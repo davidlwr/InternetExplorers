@@ -12,7 +12,7 @@ class risk_assessment_DAO(object):
     This class handles connection between app and the database table
     '''
 
-    table_name = "stbern.RISK_ASSESSMENT"
+    table_name = "stbern.risk_assessment"
 
     def __init__(self):
         '''

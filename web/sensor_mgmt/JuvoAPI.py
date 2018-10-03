@@ -99,6 +99,8 @@ class JuvoAPI(object):
         if r.status_code != 200: return False
         
         r_dict = r.json()
+        print("in singin...")
+        print(r_dict)
         cls.ACCESS_TOKEN  = r_dict['data']['access_token']
         cls.REFRESH_TOKEN = r_dict['data']['refresh_token']
         date              = cls.sudo_utc_datetime(r_dict['date'])
@@ -109,6 +111,7 @@ class JuvoAPI(object):
         
         # Set expiry datetime, date + BT_OFFSET + expiry_time
         cls.EXPIRY_DATETIME = date + timedelta(seconds=cls.BT_TIME_OFFSET) + timedelta(seconds=expiry_time)
+        print("signin: ", cls.EXPIRY_DATETIME)
         return True
 
     
@@ -154,6 +157,8 @@ class JuvoAPI(object):
     
         # Check if ACCESS_TOKEN is not expired
         now = cls.sudo_utc_datetime(datetime.now())
+        # print("in precheck...")
+        # print(now, cls.EXPIRY_DATETIME)
         if now <= cls.EXPIRY_DATETIME: return cls.refresh_token()
         
         
@@ -596,21 +601,21 @@ if __name__ == "__main__":
 
     sleep_period = JuvoAPI.get_sleep_period_by_day(target=target, start_date=start_date, end_date=end_date)
     sleep_period = [(s.strftime("%Y-%m-%d %H:%M:%S"), e.strftime("%Y-%m-%d %H:%M:%S")) for s,e in sleep_period]
-    print('sleep_period: '.ljust(30), sleep_period)
+    # print('sleep_period: '.ljust(30), sleep_period)
 
     qos = JuvoAPI.get_qos_by_day(target=target, start_date=start_date, end_date=end_date)
     qos = [(d.strftime("%Y-%m-%d %H:%M:%S"),q) for d,q in qos]
-    print('QOS: '.ljust(30), qos)
+    # print('QOS: '.ljust(30), qos)
 
     total_sleep = JuvoAPI.get_total_sleep_by_day(target=target, start_date=start_date, end_date=end_date)
     total_sleep = [(d.strftime("%Y-%m-%d %H:%M:%S"),s) for d,s in total_sleep]
-    print('total_sleep:'.ljust(30), total_sleep)
+    # print('total_sleep:'.ljust(30), total_sleep)
 
     # Somehow total sleep from 'sleep summary' API does not match total time between 'sleep period' API so...
 
     periods, states = JuvoAPI.get_sleep_series_by_day(target=target, date=start_date)
     periods = [(s.strftime("%Y-%m-%d %H:%M:%S"), e.strftime("%Y-%m-%d %H:%M:%S")) for s,e in periods]
-    print(f'series {len(periods)}: '.ljust(30), periods)
-    print(f'states {len(states)}: '.ljust(30), states)
+    # print(f'series {len(periods)}: '.ljust(30), periods)
+    # print(f'states {len(states)}: '.ljust(30), states)
 
 
