@@ -5,6 +5,9 @@ import shift_log_DAO
 import resident_DAO
 from sensor_mgmt.sensor_mgmt import sensor_mgmt
 
+# if __name__ == '__main__':  sys.path.append("..")
+# from web.JuvoAPI import JuvoAPI
+
 token = '687512562:AAGEoEH8wpDU3PK5TU0X3lar40FIfDetAHY'
 teleurl = 'https://api.telegram.org/bot' + token + '/'
 
