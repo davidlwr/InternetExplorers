@@ -45,7 +45,7 @@ DOOR_OPEN  = 225
 token = '687512562:AAGEoEH8wpDU3PK5TU0X3lar40FIfDetAHY'
 teleurl = 'https://api.telegram.org/bot' + token + '/'
 
-DUTY_NURSE_CHAT_ID = 260905740
+DUTY_NURSE_CHAT_ID = -251433967
 
 def send_message_with_reply(chat, text, reply_markup):
     params = {'chat_id' : chat, 'text': text, 'reply_markup': json.dumps(reply_markup)}
@@ -86,9 +86,9 @@ def action_motion(event):
     if event == 255:
         
         print("called action motion")
-        ts = time.time()
+        # ts = time.time()
         reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
-        text='Sensor 1 Alert: Mr Poh at ' + datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+        text='Sensor 1 Alert: Mr Poh at ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
         alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
 
@@ -98,14 +98,14 @@ def action_motion(event):
         response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "You still have these incomplete tasks:", reply_markupBottom)
         print(response.json()['result']['message_id'])
         message_id = response.json()['result']['message_id']
-        delete_message_with_reply(DUTY_NURSE_CHAT_ID, message_id)
+        # delete_message_with_reply(DUTY_NURSE_CHAT_ID, message_id)
 
 def action_door(event):
     if event == 255:
         print("called action_door motion")
-        ts = time.time()
+        # ts = time.time()
         reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
-        text='Sensor 1 Alert: Mr Poh at ' + datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+        text='Sensor 1 Alert: Mr Poh at ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
         alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
 

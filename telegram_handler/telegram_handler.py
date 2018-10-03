@@ -6,7 +6,7 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageH
 import alert_DAO
 
 
-DUTY_NURSE_CHAT_ID = 260905740
+DUTY_NURSE_CHAT_ID = -251433967
 
 def button(bot, update):
 

@@ -7,7 +7,7 @@ import resident_DAO
 token = '687512562:AAGEoEH8wpDU3PK5TU0X3lar40FIfDetAHY'
 teleurl = 'https://api.telegram.org/bot' + token + '/'
 
-DUTY_NURSE_CHAT_ID = 260905740
+DUTY_NURSE_CHAT_ID = -251433967
 
 def send_message_with_reply(chat, text):
 
@@ -29,12 +29,14 @@ def check_shift_form(shifttime):
 
 
 while 1:
+	currentTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + currentTime)
 	current_time=datetime.datetime.now()
 	hour = current_time.hour
 	minute = current_time.minute
 	second = current_time.second
 	microsecond = current_time.microsecond
-	if((hour ==8) and (minute==0) and (second == 0)):
+	if((hour ==7) and (minute==0) and (second == 0)):
 		date = datetime.date.today()
 		time = datetime.datetime.strptime('1200','%H%M').time()
 		shifttime = datetime.datetime.combine(date, time)
@@ -50,7 +52,7 @@ while 1:
 		
 		if(len(nameList) > 0):
 			text = "\n".join(nameList)
-			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift form logs for the following residents:\n" + text)
+			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text)
 			
 	elif((hour ==21) and (minute==0) and (second == 0)):
 		date = datetime.date.today()
@@ -68,4 +70,4 @@ while 1:
 		
 		if(len(nameList) > 0):
 			text = "\n".join(nameList)
-			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift form logs for the following residents:\n" + text)
+			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text)

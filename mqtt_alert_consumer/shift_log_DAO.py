@@ -5,93 +5,7 @@ from connection_manager import connection_manager
 # from shift_log import Shift_log
 
 table_name = 'stbern.shift_log'
-# class shift_log_DAO(object):
-	# '''
-	# This class handles connection between app and the database table
-	# '''
 
-	# table_name = "stbern.shift_log"
-
-	# def __init__(self):
-		# '''
-		# Constructor
-		# '''
-		# self.min_datetime = None
-		# self.max_datetime = None
-		# self.set_min_max_datetime()
-
-
-	# def set_min_max_datetime(self):
-		# '''
-		# Sets obj vars and returns max_datetime and min_datetime found in the database
-
-		# Returns:
-		# (max_datetime, min_datetime) or (None, None) if nothing found
-		# '''
-		# query = """SELECT MAX({}) as 'max' ,
-						  # MIN({}) as 'min'
-						  # FROM {};"""                    \
-					# .format(Shift_log.datetime_tname,    \
-							# Shift_log.datetime_tname,    \
-							# shift_log_DAO.table_name)
-
-		# Get connection
-		# factory = connection_manager()
-		# connection = factory.connection
-		# cursor = connection.cursor()
-
-		# try:
-			# cursor.execute(query)
-			# result = cursor.fetchone()
-
-			# set class vars
-			# if result != None:
-				# self.max_datetime = result['max']
-				# self.min_datetime = result['min']
-				# return result['max'], result['min']
-			# else: return None, None
-
-		# except:
-			# print("error")
-		# finally:
-			# factory.close_all(cursor=cursor, connection=connection)
-
-
-	# def insert_shift_log(self, shift_log):
-		# '''
-		# Inserts an entry into the database table
-
-		# Keyword arguments:
-		# shift_log -- Entities.shift_log, class vars used to create a new DB row
-		# '''
-		# query = """INSERT INTO {} VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""" \
-					# .format(shift_log_DAO.table_name)
-
-		 # Get connection
-		# factory = connection_manager()
-		# connection = factory.connection
-		# cursor = connection.cursor()
-
-
-		# try:
-			# cursor.execute(query, shift_log.var_list)
-		# except:
-			# return
-		# finally:
-			# factory.close_all(cursor=cursor, connection=connection)
-
-	# def get_all_logs():
-		# """
-		# Returns all logs in a dataframe
-		# """
-
-		# query = "SELECT * FROM {}".format(shift_log_DAO.table_name)
-
-		# Get connection
-		# factory = connection_manager()
-		# connection = factory.connection
-
-		# return pd.read_sql_query(query, connection)
 	
 def retrieveCountPerShift(shifttime):
 	query = "SELECT patient_id FROM {} WHERE datetime = %s".format(table_name)
@@ -104,8 +18,8 @@ def retrieveCountPerShift(shifttime):
 		# cursor.execute(query, (chat_id, ))
 		cursor.execute(query, (shifttime, ))
 		results = cursor.fetchall()
-		if results: return results
-		else: return None
+		return results
+
 	except: raise
 	finally: factory.close_all(cursor=cursor, connection=connection)
 
