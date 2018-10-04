@@ -21,22 +21,31 @@ class Sensor_mgmt(object):
 
 
     @classmethod
-    def get_sensor_status(cls, uuid):
+    def get_sensor_status(cls, uuid, retBatteryLevel=False):
         '''
         Returns 'up' | 'down' status of sensors. 
         For new sensors, Im assuming that at least a single record is sent and thus will trigger true.
         
         Inputs:
         uuid (str)
+        retBatteryLevel (boolean)
 
         Return:
-        See list of status codes 
+        1. A List of status codes: See class variables
+        2. A list of Battery level
+            - None if Juvo 
+            - Empty if no records found. e.g. Door sensors only send battery level logs when on low battery
+            - Single value in %
+        i.e. ([1,3], [75])    
+        i.e. ([1]  , [])        // Battery or newly installed sensor
+        i.e. ([0]  , [None]])   // Juvo
         '''
         # AREAS OF IMPROVEMENT
         # 1. Juvo Bed sensor: Warning triggered if no sleep in the past sleep period 9pm-9am. What about if sleep = 1sec? May also be a problem with elderly
         #   - Maybe look at the breakdown period would be better >> light, deep, awake that kind of thing
         # 2. What if sensor partially breaks, sysmon sends, but no sensor logs? Dont think this can be detected also
         ret_codes = []
+        batt_lvl  = None
 
         curr_time = datetime.datetime.now()
         curr_time_m1d = curr_time - datetime.timedelta(days=1)
@@ -64,10 +73,6 @@ class Sensor_mgmt(object):
             if len(past24hrs_data) > 0: ret_codes.append(cls.CHECK_WARN)
             else: ret_codes.append(cls.OK)
 
-            # Check2: Battery level
-            last_batt = sysmon_log_DAO.get_last_battery_level(uuid=uuid)
-            if last_batt != None and last_batt.event < cls.batt_thresh: ret_codes.append(cls.LOW_BATT)
-
 
         elif isMotion:  # MOTION SENSOR
             last_batt = sysmon_log_DAO.get_last_battery_level(uuid=uuid)
@@ -78,9 +83,6 @@ class Sensor_mgmt(object):
                 # This may just be Boon Thais' configs
                 if batt_update_period > (60 * 60 * 1.2): ret_codes.append(cls.CHECK_WARN)
                 else: ret_codes.append(cls.OK)
-
-                # Check 2: Low battery 
-                if last_batt.event < cls.batt_thresh: ret_codes.append(cls.LOW_BATT)
 
 
         elif isBed:     # BED SENSOR (JUVO)
@@ -95,19 +97,35 @@ class Sensor_mgmt(object):
 
         else: 
            ret_codes.append(cls.INVALID_SENSOR)
-        
-        return ret_codes
+
+        # Check2: Battery level 
+        if isMotion or isDoor:
+            last_batt = sysmon_log_DAO.get_last_battery_level(uuid=uuid)
+            if last_batt != None:       # Sysmon batt event found
+                batt_lvl = last_batt.event
+                if batt_lvl < cls.batt_thresh: 
+                    ret_codes.append(cls.LOW_BATT)
+            else:                       # No Sysmon batt event found, door sensor high batt, or newly installed sensor
+                batt_lvl = []
+
+        # Return Values
+        if retBatteryLevel: return ret_codes, batt_lvl
+        else: return ret_codes
 
     @classmethod
-    def get_all_sensor_status(cls):
+    def get_all_sensor_status(cls, retBatteryLevel=False):
         '''
         Returns 'up' | 'down' status of ALL sensors. 
 
+        Inputs:
+        retBatteryLevel -- True, return battery level if exists. Default false
+
         Return:
-            list of sensors and status codes: 
-            
-            [ [Sensor.Entity, [Status, Codes]],
-              [Sensor.Entity, [Status, Codes]]...
+            list of sensors, status codes, and optionally battery levels: 
+            NOTE: Battery level can be 'None' if no records are found
+
+            [ [Sensor.Entity, [Status, Codes, battLVL]],
+              [Sensor.Entity, [Status, Codes, None]]...
             ]
         
             See list of status codes 
@@ -121,8 +139,10 @@ class Sensor_mgmt(object):
         # Iterate all sensors and get statuss
         for sensor in sensors:
             uuid   = sensor.uuid
-            status = cls.get_sensor_status(uuid=uuid)
-            sensor_status.append([uuid, status]) 
+            print(uuid)
+            status = cls.get_sensor_status(uuid=uuid, retBatteryLevel=retBatteryLevel)
+            if retBatteryLevel: sensor_status.append([uuid, status[0], status[1]])
+            else: sensor_status.append([uuid, status]) 
 
         return sensor_status
 
@@ -195,6 +215,9 @@ if __name__ == '__main__':
     # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}") 
 
     # All
-    print("=============== ALL SENSORS ==============")
-    for ss in Sensor_mgmt.get_all_sensor_status():
-        print(ss)
+    # print("=============== ALL SENSORS ==============")
+    # for ss in Sensor_mgmt.get_all_sensor_status(retBatteryLevel=True):
+    #     print(ss)
+
+    # for ss in Sensor_mgmt.get_all_sensor_status(retBatteryLevel=False):
+    #     print(ss)
