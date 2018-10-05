@@ -1,0 +1,22 @@
+{% extends 'new_base.html' %}
+{% block title %}Detailed Charts{% endblock %}
+{% block additional_stylesheets %}
+<style>
+.dash-iframe {
+    width:95vw;
+}
+@media (min-width: 768px) {
+  .dash-iframe {
+    position: inherit;
+    width: 80vw;
+  }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="row">
+        <div class="dash-iframe">
+            <iframe class="dash-iframe" style="height: 100vh;position: relative;" src="/insertsomeotherrandomstringhere" frameborder="0" allowfullscreen></iframe>
+        </div>
+</div>
+{% endblock %}

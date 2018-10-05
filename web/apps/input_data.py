@@ -4,18 +4,21 @@ import numpy as np
 import datetime
 import os
 import scipy.stats
+# import dill
 
 # pandas settings
 pd.options.mode.chained_assignment = None  # default='warn
 
 if __name__ == '__main__':  # we want to import from same directory if using this
     # module as-is (for debugging mainly, or for loading data in the future)
-    import input_sysmon
     sys.path.append(".")
+    import input_sysmon
     from DAOs.sensor_log_DAO import sensor_log_DAO
+    from juvo_api import JuvoAPI
 else:  # if called from index.py
     from apps import input_sysmon
     from DAOs.sensor_log_DAO import sensor_log_DAO
+    from juvo_api import JuvoAPI
 
 # specify file parameters
 file_folder = '../stbern-20180302-20180523-csv/'
@@ -61,17 +64,20 @@ input_raw_min_date = input_raw_data['recieved_timestamp'].min()
 # In this case daytime refers to the current date's daytime, while nighttime
 # refers to the current date's night till the next date's morning
 daytime_start = datetime.time(6, 30)
-daytime_end = datetime.time(21, 30)
+daytime_end = datetime.time(22, 30)
 # below is redundant
 nighttime_start = daytime_end
 nighttime_end = daytime_start
-default_sleep_start = datetime.time(22, 0)
+default_sleep_start = datetime.time(22, 30)
 default_sleep_end = datetime.time(6, 30)
 para_ratio_threshold_default = 0.3  # changeable: if night usage is higher than this ratio of total usage, alert
                                     # here we use number of toilet visits as a proxy for urinal volume
                                     # nocturnal bladder capacity is usually higher than in the day, so if the amount
                                     #+is really that high, nocturia index is much likely to be that high
                                     # can be customised based on different patients and estimated nocturnal bladder capacity
+
+def updateInputData():
+    input_raw_data = sensor_log_DAO.get_all_logs()
 
 def get_para_ratio_threshold():
     return para_ratio_threshold_default
@@ -148,7 +154,7 @@ def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max
         erroroutput = pd.DataFrame()
         erroroutput['event'] = []
         erroroutput['gw_date_only'] = []
-    result_data.fillna(0, inplace=True)
+    # result_data.fillna(0, inplace=True)
 
     # undo set index
     result_data.reset_index(inplace=True)
@@ -493,10 +499,14 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
             and (3) the difference between motion during sleep in the past week versus the previous 3 weeks
             and (4) the average longest uninterrupted sleep for the past week (in seconds)
             and (5) the difference between average longest uninterrupted sleep for the past week versus the previous 3 weeks
+            and (6) the average quality of sleep from juvo
+            and (7) the past week's quality of sleep as df
     '''
     alerts_of_interest = [] # add alerts here, can use in the next layer to priortise things to show also
     if current_sys_time is None: # used in testing - pass in a different time for simulation
         current_sys_time = datetime.datetime.now()
+
+    juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
 
     current_sys_date = current_sys_time.date()
     three_weeks_ago = current_sys_date + datetime.timedelta(days=-21)
@@ -518,11 +528,39 @@ def get_nightly_sleep_indicator(user_id, current_sys_time=None):
     if difference_longest_sleep < -.75 * old_three_longest_sleep_average: # NOTE: changeable here
         alerts_of_interest.append("Longest interval of uninterrupted sleep decreased significantly")
 
-    return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average, difference_longest_sleep
+    # check for quality of sleep from juvo
+    target = 0
+    qos_mean = 0
+    qos_df = pd.DataFrame()
+    # supposed to get target from DB (when there are multiple juvo sensors deployed)
+    if user_id == '2005' or user_id == 2005:
+        target = 460
+    else:
+        print('resident has no vital signs info from juvo')
+
+    if target:
+        japi = JuvoAPI.JuvoAPI()
+        tuple_list = japi.get_qos_by_day(target, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
+        if tuple_list:
+            qos_df = pd.DataFrame(list(tuple_list), columns=['date_timestamp', 'qos'])
+        else:
+            print('tuple list returned None with non-zero target: ' + str(target))
+
+        # exclude 0 for mean calculation
+        temp_series = qos_df['qos'].replace(0, np.NaN)
+        qos_mean = temp_series.mean()
+        # print(qos_mean)
+        qos_threshold = 50
+        if qos_mean < qos_threshold:
+            alerts_of_interest.append(f"Quality of sleep lower than {qos_threshold}%")
+    else:
+        qos_df['qos'] = []
+        qos_df['date_timestamp'] = []
+
+    return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average, difference_longest_sleep, qos_mean, qos_df
 
 def get_overview_change_values(user_id, current_sys_time=None):
     pass
-
 
 def get_nightly_toilet_indicator(user_id, current_sys_time=None):
     '''
@@ -627,6 +665,277 @@ def get_percentage_of_night_toilet_usage(user_id, current_sys_time=None):
 
     return ratio_series.mean(), ratio_series.std()
 
+# handle the information retrieval for vital signs
+def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None):
+    '''
+    Returns a dict of respiratory rate information from juvo API for the resident corresponding
+    with the node_id input as parameter for this function
+    '''
+    # print(type(start_date))
+    if end_date is None:
+        date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12) # datetime.datetime.now()
+    else:
+        date_in_use = end_date
+    # Retrieve relevant juvo API id from node_id first
+    target = 0
+    # supposed to get target from DB (when there are multiple juvo sensors deployed)
+    if node_id == '2005' or node_id == 2005:
+        target = 460
+    else:
+        print('resident has no vital signs info from juvo')
+        return ''
+    # Get all the relevant data from the past week
+    one_week_ago = date_in_use + datetime.timedelta(days=-7)
+    if start_date is None:
+        one_month_ago = date_in_use + datetime.timedelta(days=-30)
+        start_date = one_month_ago
+
+    ###### Either this (only for development)
+    # with open('sleeps_json.pyobjcache', 'rb') as f:
+    #     # NOTE: THIS IS FOR DEV USE ONLY
+    #     #+To prevent unnecessary high volume of API calls, the test json is dumped
+    #     #+to a local file for testing purposes while in development
+    #     # sleeps_json = dill.load(f)
+    #     vitals_json = dill.load(f)
+    ###### Or this
+    japi = JuvoAPI.JuvoAPI()
+    # sleeps_json = japi.get_target_sleeps(target, start_date, date_in_use)
+    vitals_json = japi.get_target_vitals(target, start_date, date_in_use)
+    # with open('sleeps_json.pyobjcache', 'wb') as f:
+    #     # dill.dump(sleeps_json, f)
+    #     dill.dump(vitals_json, f)
+    ######
+
+    # print(sleeps_json)
+    # sleeps_dict = sleeps_json['data']['sleeps']
+    # print(type(sleeps_dict))
+
+    # sleeps_juvo_df = pd.DataFrame(sleeps_dict)
+    # print(sleeps_juvo_df)
+
+    # Get first instance of sleep at night as start of sleep
+
+    # Get first instance of no detection in the morning as end of sleep
+
+    # Below for vitals
+    # print(vitals_json)
+    vitals_dict = vitals_json['data']['epoch_metrics']
+    vitals_juvo_df = pd.DataFrame(vitals_dict)
+    if vitals_juvo_df.empty:
+        print("empty data returned from juvo")
+        return pd.DataFrame()
+    # print(vitals_juvo_df.info())
+
+    # Get daily breathing and heartbeat rates
+    # Remove rows where values are 0 first
+    breathing_rate_df = vitals_juvo_df[['vital_id', 'sensor_status', 'breathing_rate', 'high_movement_rejection_breathing', 'local_start_time', 'local_end_time']]
+    breathing_rate_df = breathing_rate_df[breathing_rate_df['breathing_rate'] > 0]
+    breathing_rate_df.reset_index(drop=True, inplace=True)
+    # print(breathing_rate_df)
+
+    # remove outliers (> 3 s.d. away)
+    breathing_sd = breathing_rate_df[['breathing_rate']].std().values[0]
+    breathing_mean = breathing_rate_df[['breathing_rate']].mean().values[0]
+
+    # print((breathing_mean + 3 * breathing_sd).values[0])
+    breathing_rate_filtered_df = breathing_rate_df[(breathing_rate_df['breathing_rate'] < (breathing_mean + 3 * breathing_sd))
+            & (breathing_rate_df['breathing_rate'] > (breathing_mean - 3 * breathing_sd))]
+    # breathing_rate_filtered_df = breathing_rate_filtered_df[breathing_rate_filtered_df['breathing_rate'] > (breathing_mean - 3 * breathing_sd)]
+    breathing_rate_filtered_df.sort_values('local_start_time', inplace=True)
+    breathing_rate_filtered_df.reset_index(drop=True, inplace=True)
+    # print(breathing_rate_filtered_df)
+    # group average by date
+    return breathing_rate_filtered_df
+
+def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
+    '''
+    Returns a dict of pulse rate information from juvo API for the resident corresponding
+    with the node_id input as parameter for this function
+    '''
+    if end_date is None:
+        date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12) # datetime.datetime.now()
+    else:
+        date_in_use = end_date
+    # Retrieve relevant juvo API id from node_id first
+    target = 0
+    # supposed to get target from DB (when there are multiple juvo sensors deployed)
+    if node_id == '2005' or node_id == 2005:
+        target = 460
+    else:
+        print('resident has no vital signs info from juvo')
+        return ''
+    # Get all the relevant data from the past week
+    one_week_ago = date_in_use + datetime.timedelta(days=-7)
+    if start_date is None:
+        one_month_ago = date_in_use + datetime.timedelta(days=-30)
+        start_date = one_month_ago
+
+    ###### Either this (only for development)
+    # with open('sleeps_json.pyobjcache', 'rb') as f:
+    #     # NOTE: THIS IS FOR DEV USE ONLY
+    #     #+To prevent unnecessary high volume of API calls, the test json is dumped
+    #     #+to a local file for testing purposes while in development
+    #     # sleeps_json = dill.load(f)
+    #     vitals_json = dill.load(f)
+    ###### Or this
+    japi = JuvoAPI.JuvoAPI()
+    # sleeps_json = japi.get_target_sleeps(target, start_date, date_in_use)
+    vitals_json = japi.get_target_vitals(target, start_date, date_in_use)
+    # with open('sleeps_json.pyobjcache', 'wb') as f:
+    #     dill.dump(sleeps_json, f)
+    #     dill.dump(vitals_json, f)
+    ######
+
+    vitals_dict = vitals_json['data']['epoch_metrics']
+    vitals_juvo_df = pd.DataFrame(vitals_dict)
+    # print(vitals_juvo_df.info())
+
+    if vitals_juvo_df.empty:
+        print("empty data returned from juvo")
+        return pd.DataFrame()
+
+    heart_rate_df = vitals_juvo_df[['vital_id', 'sensor_status', 'heart_rate', 'high_movement_rejection_heartbeat', 'local_start_time', 'local_end_time']]
+    heart_rate_df = heart_rate_df[heart_rate_df['heart_rate'] > 0]
+    heart_rate_df.reset_index(drop=True, inplace=True)
+    # print(heart_rate_df)
+
+    heartbeat_sd = heart_rate_df[['heart_rate']].std().values[0]
+    heartbeat_mean = heart_rate_df[['heart_rate']].mean().values[0]
+
+    print(f"DEBUG: heartbeat mean and sd is {heartbeat_mean} and {heartbeat_sd}")
+
+    heart_rate_filtered_df = heart_rate_df[(heart_rate_df['heart_rate'] < (heartbeat_mean + 3 * heartbeat_sd))
+            & (heart_rate_df['heart_rate'] > (heartbeat_mean - 3 * heartbeat_sd))]
+    # heart_rate_filtered_df = heart_rate_filtered_df[heart_rate_filtered_df['heart_rate'] > (heartbeat_mean - 3 * heartbeat_sd)]
+    heart_rate_filtered_df.sort_values('local_start_time', inplace=True)
+    heart_rate_filtered_df.reset_index(drop=True, inplace=True)
+    # print(heart_rate_filtered_df)
+
+    return heart_rate_filtered_df
+
+normal_lower_bound_rr = 16
+normal_upper_bound_rr = 25
+normal_upper_bound_hb = 65
+
+def get_vital_signs_indicator(user_id, current_sys_time=None):
+    '''
+    Returns tuple of (1) list of vital signs alerts (2) past week respiratory rate average
+    (3) previous three weeks respiratory rate average
+
+    NOTE: for (2) and (3) they are calculated after grouping by day while for (1) the alerts
+    are generated before grouping by day and the averages are aggregated by all readings in a week
+    '''
+    alerts_of_interest = []
+    confidence = 0.90
+    if current_sys_time is None:
+        current_sys_time = datetime.datetime.now()
+    # get one week's worth of readings
+    one_week_ago = current_sys_time + datetime.timedelta(days=-7)
+    four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
+
+    ### below aggregated by day first
+    past_week_average_breathing = 0
+    previous_weeks_average_breathing = 0
+    past_week_average_heart = 0
+    previous_weeks_average_heart = 0
+    ###
+
+    past_week_breathing_df = retrieve_breathing_rate_info(user_id, one_week_ago, current_sys_time)
+    if isinstance(past_week_breathing_df, str) or past_week_breathing_df.empty:
+        # print("empty data received")
+        pass
+        # possibly flash an error message
+    else:
+        breathings = past_week_breathing_df.breathing_rate
+        breathing_n = len(breathings)
+        breathing_mean = np.mean(breathings)
+        breathing_se = scipy.stats.sem(breathings)
+        breathing_h = breathing_se * scipy.stats.t.pdf((1 + confidence) / 2., breathing_n-1)
+        if (breathing_mean + breathing_h) < normal_lower_bound_rr:
+            alerts_of_interest.append(f"Night respiratory rate from previous week significantly lower than normal (<{normal_lower_bound_rr})")
+        elif (breathing_mean - breathing_h) > normal_upper_bound_rr:
+            alerts_of_interest.append(f"Night respiratory rate from previous week significantly higher than normal (>{normal_upper_bound_rr})")
+        past_week_breathing_df['reading_timestamp'] = pd.to_datetime(past_week_breathing_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+        past_week_breathing_df['date_only'] = past_week_breathing_df['reading_timestamp'].apply(date_only)
+
+        breathing_graph_df = past_week_breathing_df.groupby(['date_only'], as_index=False)['breathing_rate'].mean()
+        past_week_average_breathing = breathing_graph_df.breathing_rate.mean()
+
+    # get average respiratory rate of previous 3 weeks (comparing personal baselines)
+    previous_weeks_breathing_df = retrieve_breathing_rate_info(user_id, four_weeks_ago, one_week_ago)
+    if isinstance(previous_weeks_breathing_df, str) or past_week_breathing_df.empty:
+        # print("empty data received")
+        pass
+        # possibly flash an error message
+    else:
+        prev_breathings = previous_weeks_breathing_df.breathing_rate
+        if not (isinstance(past_week_breathing_df, str) or past_week_breathing_df.empty):
+            breathings = past_week_breathing_df.breathing_rate
+            breathing_n = len(breathings)
+            breathing_mean = np.mean(breathings)
+            prev_breathings_mean = np.mean(prev_breathings)
+            breathing_se = scipy.stats.sem(breathings)
+            breathing_h = breathing_se * scipy.stats.t.pdf((1 + confidence) / 2., breathing_n-1)
+            if (breathing_mean - breathing_h) > prev_breathings_mean:
+                alerts_of_interest.append(f"Significant increase of respiratory rate in the past month")
+            elif (breathing_mean + breathing_h) < prev_breathings_mean:
+                alerts_of_interest.append(f"Significant decrease of respiratory rate in the past month")
+
+            previous_weeks_breathing_df['reading_timestamp'] = pd.to_datetime(previous_weeks_breathing_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+            previous_weeks_breathing_df['date_only'] = previous_weeks_breathing_df['reading_timestamp'].apply(date_only)
+
+            previous_weeks_breathing_result_df = previous_weeks_breathing_df.groupby(['date_only'], as_index=False)['breathing_rate'].mean()
+            previous_weeks_average_breathing = previous_weeks_breathing_result_df.breathing_rate.mean()
+
+    ### below for heartbeat
+    past_week_heartbeat_df = retrieve_heart_rate_info(user_id, one_week_ago, current_sys_time)
+    if isinstance(past_week_heartbeat_df, str) or past_week_heartbeat_df.empty:
+        # print("empty data received")
+        pass
+        # possibly flash an error message
+    else:
+        heartbeats = past_week_heartbeat_df.heart_rate
+        heart_n = len(heartbeats)
+        heart_mean = np.mean(heartbeats)
+        heart_se = scipy.stats.sem(heartbeats)
+        heart_h = heart_se * scipy.stats.t.pdf((1 + confidence) / 2., heart_n-1)
+        print(f"DEBUG: heart_h {heart_h}")
+        print(f"DEBUG: heart statistic for comparison {heart_mean - heart_h}")
+        if (heart_mean - heart_h) > normal_upper_bound_hb:
+            alerts_of_interest.append(f"Pulse rate during sleep from previous week significantly higher than normal (>{normal_upper_bound_hb})")
+
+        past_week_heartbeat_df['reading_timestamp'] = pd.to_datetime(past_week_heartbeat_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+        past_week_heartbeat_df['date_only'] = past_week_heartbeat_df['reading_timestamp'].apply(date_only)
+
+        past_week_heartbeat_result_df = past_week_heartbeat_df.groupby(['date_only'], as_index=False)['heart_rate'].mean()
+        past_week_average_heart = past_week_heartbeat_result_df.heart_rate.mean()
+
+    # get average pulse rate of previous 3 weeks (comparing personal baselines)
+    previous_weeks_heartbeat_df = retrieve_heart_rate_info(user_id, four_weeks_ago, one_week_ago)
+    if isinstance(previous_weeks_heartbeat_df, str) or previous_weeks_heartbeat_df.empty:
+        # print("empty data received")
+        pass
+    else:
+        prev_heartbeat = previous_weeks_heartbeat_df.heart_rate
+        if not (isinstance(past_week_heartbeat_df, str) or past_week_heartbeat_df.empty):
+            heartbeats = past_week_heartbeat_df.heart_rate
+            heart_n = len(heartbeats)
+            heart_mean = np.mean(heartbeats)
+            prev_heartbeats_mean = np.mean(prev_heartbeat)
+            heart_se = scipy.stats.sem(heartbeats)
+            heart_h = heart_se * scipy.stats.t.pdf((1 + confidence) / 2., heart_n-1)
+            if (heart_mean - heart_h) > prev_heartbeats_mean:
+                alerts_of_interest.append(f"Significant increase of pulse rate in the past month")
+            elif (heart_mean + heart_h) < prev_heartbeats_mean:
+                alerts_of_interest.append(f"Significant decrease of pulse rate in the past month")
+            previous_weeks_heartbeat_df['reading_timestamp'] = pd.to_datetime(previous_weeks_heartbeat_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
+            previous_weeks_heartbeat_df['date_only'] = previous_weeks_heartbeat_df['reading_timestamp'].apply(date_only)
+
+            previous_weeks_heartbeat_result_df = previous_weeks_heartbeat_df.groupby(['date_only'], as_index=False)['heart_rate'].mean()
+            previous_weeks_average_heart = previous_weeks_heartbeat_result_df.heart_rate.mean()
+
+    return alerts_of_interest, past_week_average_breathing, previous_weeks_average_breathing, past_week_average_heart, previous_weeks_average_heart
+
 # below for testing only
 if __name__ == '__main__':
     # testing_data = get_relevant_data('toilet_bathroom', input_raw_min_date, input_raw_max_date)
@@ -652,7 +961,13 @@ if __name__ == '__main__':
     # result = get_nightly_toilet_indicator(2006, input_raw_max_date + datetime.timedelta(days=-10))
     # print ("result", result)
 
+    result = get_nightly_sleep_indicator(2005)
+    print ("result", result)
+
     # test night toilet ratios
     # get_percentage_of_night_toilet_usage(2005, input_raw_max_date + datetime.timedelta(days=-10))
     # get_percentage_of_night_toilet_usage(2006, input_raw_max_date + datetime.timedelta(days=-10))
+    # print(retrieve_breathing_rate_info())
+    # print(retrieve_heart_rate_info())
+    # print(get_vital_signs_indicator('2005', datetime.datetime(2018, 8, 12, 23, 34, 12)))
     pass # prevents error when no debug tests are being done

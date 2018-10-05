@@ -26,3 +26,11 @@
 {%+ if _length == 2 -%}High Risk{%+ endif -%}
 {%+ if _length == 3 -%}High Risk{%+ endif -%}
 {% endmacro %}
+
+{% macro getTextColorFromAlertLength(_length) %}
+{# the + and - signs are used to remove whitespaces #}
+{%+ if _length == 0 -%}#66cdaa{%+ endif -%}
+{%+ if _length == 1 -%}#f1ae4c{%+ endif -%}
+{%+ if _length == 2 -%}#da5450{%+ endif -%}
+{%+ if _length == 3 -%}#da5450{%+ endif -%}
+{% endmacro %}

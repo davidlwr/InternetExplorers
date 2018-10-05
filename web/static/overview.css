@@ -2184,6 +2184,11 @@ table th[class*="col-"] {
   min-height: .01%;
   overflow-x: auto;
 }
+@media only screen and (max-width: 767px) {
+    .not-in-mobile{
+        display: none;
+    }
+}
 @media screen and (max-width: 767px) {
   .table-responsive {
     width: 100%;
@@ -4685,6 +4690,9 @@ button.list-group-item-danger.active:focus {
   background-color: #337ab7;
   border-color: #337ab7;
 }
+.panel-primary > a {
+  color: #337ab7;
+}
 .panel-primary > .panel-heading + .panel-collapse > .panel-body {
   border-top-color: #337ab7;
 }
@@ -5762,7 +5770,7 @@ button.close {
   color: #df8a13;
 }
 .semihuge{
-    font-size:28px
+    font-size:24px
 }
 table.dataTable thead .sorting:after{content:"\f0dc";float:right;font-family:fontawesome;color:rgba(50,50,50,.5)}
 .btn-circle{width:30px;height:30px;padding:6px 0;border-radius:15px;text-align:center;font-size:12px;line-height:1.428571429}

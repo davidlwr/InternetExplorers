@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!-- Uncomment below for deployed app to track -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-125800418-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-125800418-1');
+    </script>
+    -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -66,6 +78,30 @@
                         </li>
                         <li>
                             <a href="/graphs"><i class="fa fa-bar-chart-o fa-fw"></i> Detailed Charts</a>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fa fa-edit fa-fw"></i> Detailed Resident View<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a href="#">Bukit Timah <span class="fa arrow"></span></a>
+                                    <ul class="nav nav-third-level">
+                                        {% for r in all_residents(location_filter='bkttm') %}
+                                        <li>
+                                            <a href="/overview/{{ r['node_id'] }}">{{ r['name'] }}</a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <!-- /.nav-third-level -->
+                                </li>
+                                <li>
+                                    <a href="#">Adam Road <span class="fa arrow"></span></a>
+                                    <ul class="nav nav-third-level">
+
+                                    </ul>
+                                    <!-- /.nav-third-level -->
+                                </li>
+                            </ul>
+                            <!-- /.nav-second-level -->
                         </li>
                         <li>
                             <a href="#"><i class="fa fa-edit fa-fw"></i> Forms<span class="fa arrow"></span></a>

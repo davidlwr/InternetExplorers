@@ -13,7 +13,7 @@ class sensor_log_DAO(object):
     """
 
     table_name = "stbern.sensor_log"
-    TIMEPERIOD_DAY   = 'Day'
+    TIMEPERIOD_DAY = 'Day'
     TIMEPERIOD_NIGHT = 'Night'
 
     def __init__(self):
@@ -33,8 +33,8 @@ class sensor_log_DAO(object):
         (max_datetime, min_datetime) or (None, None) if nothing found
         """
 
-        query = """SELECT MAX({}) as 'max' , 
-                          MIN({}) as 'min' 
+        query = """SELECT MAX({}) as 'max' ,
+                          MIN({}) as 'min'
                           FROM {};""" \
             .format(Sensor_Log.recieved_timestamp_tname, \
                     Sensor_Log.recieved_timestamp_tname, \
@@ -198,7 +198,7 @@ class sensor_log_DAO(object):
         query = f"""
                 SELECT * FROM {sensor_log_DAO.table_name}
                 WHERE {Sensor_Log.uuid_tname} = "{uuid}"
-                ORDER BY `{Sensor_Log.recieved_timestamp_tname}` 
+                ORDER BY `{Sensor_Log.recieved_timestamp_tname}`
                 DESC LIMIT {limit}
                 """
 
@@ -254,8 +254,8 @@ class sensor_log_DAO(object):
 
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
-            
+
 
 # TESTS ======================================================================================
-if __name__ == '__main__': 
+if __name__ == '__main__':
     print(sensor_log_DAO.get_all_uuids())
