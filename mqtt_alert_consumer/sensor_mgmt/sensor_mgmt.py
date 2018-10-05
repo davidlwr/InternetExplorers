@@ -1,5 +1,5 @@
 import datetime, os, sys
-from JuvoAPI import JuvoAPI
+from sensor_mgmt.JuvoAPI import JuvoAPI
 
 if __name__ == '__main__':  sys.path.append("..")
 from DAOs.connection_manager import connection_manager
