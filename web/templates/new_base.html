@@ -80,6 +80,30 @@
                             <a href="/graphs"><i class="fa fa-bar-chart-o fa-fw"></i> Detailed Charts</a>
                         </li>
                         <li>
+                            <a href="#"><i class="fa fa-edit fa-fw"></i> Detailed Resident View<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a href="#">Bukit Timah <span class="fa arrow"></span></a>
+                                    <ul class="nav nav-third-level">
+                                        {% for r in all_residents(location_filter='bkttm') %}
+                                        <li>
+                                            <a href="/overview/{{ r['node_id'] }}">{{ r['name'] }}</a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <!-- /.nav-third-level -->
+                                </li>
+                                <li>
+                                    <a href="#">Adam Road <span class="fa arrow"></span></a>
+                                    <ul class="nav nav-third-level">
+
+                                    </ul>
+                                    <!-- /.nav-third-level -->
+                                </li>
+                            </ul>
+                            <!-- /.nav-second-level -->
+                        </li>
+                        <li>
                             <a href="#"><i class="fa fa-edit fa-fw"></i> Forms<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>

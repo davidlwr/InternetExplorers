@@ -83,7 +83,8 @@ class sensor_log_DAO(object):
         finally: factory.close_all(cursor=cursor, connection=connection)
 
 
-    def get_logs(self, uuid, start_datetime, end_datetime):
+    @staticmethod
+    def get_logs(uuid, start_datetime, end_datetime):
         """
         Returns a list of logs found in the database according to the parameters given
 
@@ -98,8 +99,10 @@ class sensor_log_DAO(object):
                 WHERE '{}' = %s
                 AND `{}` > %s
                 AND `{}` < %s
+                ORDER BY `{}`
+                DESC
                 """.format(sensor_log_DAO.table_name, Sensor_Log.uuid_tname, Sensor_Log.recieved_timestamp_tname,
-                           Sensor_Log.recieved_timestamp_tname)
+                           Sensor_Log.recieved_timestamp_tname, Sensor_Log.recieved_timestamp_tname)
 
         # Get connection
         factory = connection_manager()
@@ -128,7 +131,8 @@ class sensor_log_DAO(object):
         finally: factory.close_all(cursor=cursor, connection=connection)
 
 
-    def get_activities_per_period(self, uuid, start_datetime, end_datetime, time_period=None, min_secs=3):
+    @staticmethod
+    def get_activities_per_period(uuid, start_datetime, end_datetime, time_period=None, min_secs=3):
         """
         Returns list of Entities.activity objects extrapolated fom sesnsor_logs found in the database queried according to the params given
         i.e. Activities that can be extrapolated from the sensor log database
@@ -142,7 +146,7 @@ class sensor_log_DAO(object):
         """
 
         # Get all logs
-        logs = self.get_logs(uuid=uuid, start_datetime=start_datetime, end_datetime=end_datetime)
+        logs = sensor_log_DAO.get_logs(uuid=uuid, start_datetime=start_datetime, end_datetime=end_datetime)
 
         # Extrpolate actities
         activities = []
@@ -181,20 +185,77 @@ class sensor_log_DAO(object):
         return pd.read_sql_query(query, connection)
 
 
-# Tests
-# dao = sensor_log_DAO()
-# print(dao.max_datetime, dao.min_datetime, dao.gateway_options)
-# dao.load_csv("C:\\Users\\David\\Desktop\\Anomaly Detection Tests\\data\\stbern-20180302-20180523-csv")
-# print(dao.max_datetime, dao.min_datetime, dao.gateway_options)
+    @staticmethod
+    def get_last_logs(uuid, limit=1):
+        """
+        Returns a list of logs found in the database according to the parameters given
 
-# Insert log
-# log = Sensor_Log(sensor_id="1993", sensor_location="bukit timah", gateway_id="1994", gateway_timestamp=datetime.datetime.now(), key="7", reading_type="fun", server_timestamp=datetime.datetime.now(), value=9000)
-# dao.insert_log(log)
+        Inputs:
+        uuid (str) -- Sensor identifier
+        limit (int) -- default=1
+        """
 
-# Get log
-# log = dao.get_logs(sensor_location="2005-d-01", start_datetime="2018-01-02 14:55:04", end_datetime="2018-04-02 14:55:04", gateway_id=2005)
-# print(log)
+        query = f"""
+                SELECT * FROM {sensor_log_DAO.table_name}
+                WHERE {Sensor_Log.uuid_tname} = "{uuid}"
+                ORDER BY `{Sensor_Log.recieved_timestamp_tname}`
+                DESC LIMIT {limit}
+                """
 
-# Get activities per period
-# activities = dao.get_activities_per_period(sensor_location="2005-m-01", start_datetime=dao.min_datetime, end_datetime=dao.max_datetime, gateway_id=2005)
-# print(activities)
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query)
+            result = cursor.fetchall()
+
+            logs = []
+            if result != None:
+                for d in result:
+                    uuid               = d[Sensor_Log.uuid_tname]
+                    node_id            = d[Sensor_Log.node_id_tname]
+                    event              = d[Sensor_Log.event_tname]
+                    recieved_timestamp = d[Sensor_Log.recieved_timestamp_tname]
+
+                    row_log_obj = Sensor_Log(uuid=uuid, node_id=node_id, event=event, recieved_timestamp=recieved_timestamp)
+                    logs.append(row_log_obj)
+            return logs
+
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
+
+    @staticmethod
+    def get_all_uuids():
+        """
+        Returns all distinct sensor UUIDs found in the table
+
+        Returns
+        list of str: ["uuid1",... "uuid10"]
+        """
+        query = f"SELECT DISTINCT(`uuid`) FROM {sensor_log_DAO.table_name}"
+
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query)
+            result = cursor.fetchall()
+
+            uuids = []
+            if result != None:
+                for r in result:
+                    uuids.append(r[Sensor_Log.uuid_tname])
+            return uuids
+
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
+
+# TESTS ======================================================================================
+if __name__ == '__main__':
+    print(sensor_log_DAO.get_all_uuids())
