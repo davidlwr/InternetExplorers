@@ -14,11 +14,11 @@ if __name__ == '__main__':  # we want to import from same directory if using thi
     sys.path.append(".")
     import input_sysmon
     from DAOs.sensor_log_DAO import sensor_log_DAO
-    from juvo_api import JuvoAPI
+    from sensor_mgmt import JuvoAPI
 else:  # if called from index.py
     from apps import input_sysmon
     from DAOs.sensor_log_DAO import sensor_log_DAO
-    from juvo_api import JuvoAPI
+    from sensor_mgmt import JuvoAPI
 
 # specify file parameters
 file_folder = '../stbern-20180302-20180523-csv/'

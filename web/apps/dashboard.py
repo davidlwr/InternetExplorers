@@ -8,7 +8,7 @@ import pandas as pd
 from app import app
 from apps import input_data, input_shiftlogs
 from DAOs import resident_DAO
-from juvo_api import JuvoAPI
+from sensor_mgmt import JuvoAPI
 
 locationMap = input_data.get_location_options()
 
