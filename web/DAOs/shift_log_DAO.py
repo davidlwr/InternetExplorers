@@ -75,7 +75,6 @@ class shift_log_DAO(object):
         connection = factory.connection
         cursor = connection.cursor()
 
-
         try:
             cursor.execute(query, shift_log.var_list)
         except:
@@ -83,7 +82,7 @@ class shift_log_DAO(object):
         finally:
             factory.close_all(cursor=cursor, connection=connection)
 
-    def get_all_logs():
+    def get_all_logs(self):
         """
         Returns all logs in a dataframe
         """

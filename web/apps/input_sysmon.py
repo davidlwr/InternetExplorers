@@ -3,7 +3,7 @@ import datetime
 import os
 import sys
 
-# internal imports 
+# internal imports
 if __name__ == '__main__':
     sys.path.append(".")
     from DAOs.sysmon_log_DAO import sysmon_log_DAO
@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
 # initialize empty df
 # sysmon_data = pd.DataFrame()
-sysmon_data = sysmon_log_DAO.get_all_logs()
+sysmon_data = sysmon_log_DAO.get_all_logs(format='pd')
 # sysmon_data = pd.DataFrame(sysmon_data_sql)
 # print(sysmon_data)
 

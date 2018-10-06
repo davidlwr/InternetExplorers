@@ -14,7 +14,8 @@ else:  # if called from index.py
     from DAOs.shift_log_DAO import shift_log_DAO
 
 # input_raw_data = pd.DataFrame()
-input_raw_data = shift_log_DAO.get_all_logs()
+sldao = shift_log_DAO()
+input_raw_data = sldao.get_all_logs()
 input_raw_data['datetime'] = pd.to_datetime(input_raw_data['datetime'], format='%Y-%m-%dT%H:%M:%S')
 input_raw_data['food_consumption'] = pd.to_numeric(input_raw_data['food_consumption'])
 input_raw_data['pulse_pressure'] = input_raw_data['systolic_bp'] - input_raw_data['diastolic_bp']
