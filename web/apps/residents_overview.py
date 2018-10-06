@@ -44,10 +44,10 @@ def showOverviewResidents():
     for resident in residents_raw:
         r = {}
         r['name'] = resident['name']
-        r['node_id'] = resident['node_id']
+        r['resident_id'] = resident['resident_id']
 
         # settle night toilet usage
-        r['toilet_alerts'], __ = input_data.input_data.get_nightly_toilet_indicator(int(resident['node_id']), date_in_use)
+        r['toilet_alerts'], __ = input_data.input_data.get_nightly_toilet_indicator(int(resident['resident_id']), date_in_use)
         r['toilet_tooltip'] = []
         if len(r['toilet_alerts']) == 0:
             r['toilet_tooltip'].append("Night toilet visit numbers appear normal")
@@ -55,21 +55,21 @@ def showOverviewResidents():
             r['toilet_tooltip'].extend(r['toilet_alerts'])
 
         # settle sleep duration
-        r['sleep_alerts'], __, __, __, __, __, __ = input_data.input_data.get_nightly_sleep_indicator(int(resident['node_id']), date_in_use)
+        r['sleep_alerts'], __, __, __, __, __, __ = input_data.input_data.get_nightly_sleep_indicator(int(resident['resident_id']), date_in_use)
         r['sleep_tooltip'] = []
         if len(r['sleep_alerts']) == 0:
             r['sleep_tooltip'].append("Normal level of motion during sleep detected")
         else: # NOTE: for future changes
             r['sleep_tooltip'].extend(r['sleep_alerts'])
 
-        r['vitals_alerts'], __, __, __, __ = input_data.input_data.get_vital_signs_indicator(resident['node_id'], juvo_date_in_use)
+        r['vitals_alerts'], __, __, __, __ = input_data.input_data.get_vital_signs_indicator(resident['resident_id'], juvo_date_in_use)
         r['vitals_tooltip'] = []
         if len(r['vitals_alerts']) == 0:
             r['vitals_tooltip'].append("Vital signs from previous week appear to be normal")
         else:
             r['vitals_tooltip'].extend(r['vitals_alerts'])
 
-        # print("DEBUG resident id sleep_alerts", resident['node_id'], r['sleep_alerts'])
+        # print("DEBUG resident id sleep_alerts", resident['resident_id'], r['sleep_alerts'])
         r['alert_highest'] = max(0, len(r['toilet_alerts']), len(r['sleep_alerts']), len(r['vitals_alerts']))
         residents.append(r)
     # return render_template('overview_residents_amanda.html', residents=residents)
@@ -83,13 +83,13 @@ def showOverviewResidents():
     return render_template('overview_residents.html', residents=residents, information=information)
 
 # layer 2 routing
-@server.route("/overview/<int:node_id>", methods=['GET', 'POST'])
+@server.route("/overview/<int:resident_id>", methods=['GET', 'POST'])
 @flask_login.login_required
-def detailedLayerTwoOverviewResidents(node_id):
+def detailedLayerTwoOverviewResidents(resident_id):
     try:
         date_in_use = datetime.datetime.now() # datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
         juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
-        resident = resident_DAO.get_resident_by_id(node_id)
+        resident = resident_DAO.get_resident_by_resident_id(resident_id)
         if resident['dob']:
             today = datetime.date.today()
             resident['age'] = today.year - resident['dob'].year - ((today.month, today.day) < (resident['dob'].month, resident['dob'].day))
@@ -101,11 +101,11 @@ def detailedLayerTwoOverviewResidents(node_id):
         resident['para_ratio_threshold'] = input_data.input_data.get_para_ratio_threshold()
 
         # sleep alerts
-        resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'], resident['average_longest_uninterrupted_sleep_difference'], resident['qos_mean'], qos_df = input_data.input_data.get_nightly_sleep_indicator(node_id, date_in_use)
+        resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'], resident['average_longest_uninterrupted_sleep_difference'], resident['qos_mean'], qos_df = input_data.input_data.get_nightly_sleep_indicator(resident_id, date_in_use)
 
         # toilet alerts
-        resident['toilet_alerts'], resident['number_of_night_toilet_usage_in_past_week'] = input_data.input_data.get_nightly_toilet_indicator(node_id, date_in_use)
-        resident['toilet_night_to_both_ratio'], resident['toilet_night_to_both_std'] = input_data.input_data.get_percentage_of_night_toilet_usage(node_id, date_in_use)
+        resident['toilet_alerts'], resident['number_of_night_toilet_usage_in_past_week'] = input_data.input_data.get_nightly_toilet_indicator(resident_id, date_in_use)
+        resident['toilet_night_to_both_ratio'], resident['toilet_night_to_both_std'] = input_data.input_data.get_percentage_of_night_toilet_usage(resident_id, date_in_use)
 
         # set indicators  {# NOTE: change identifying text below, if input_data function changes #}
         resident['check_indicator_night_toilet_ratio'] = any('of total daily usage in the past month' in s for s in resident['toilet_alerts'])
@@ -113,7 +113,7 @@ def detailedLayerTwoOverviewResidents(node_id):
         resident['check_indicator_sleep_movements'] = any('movements during sleeping hours' in s for s in resident['sleep_alerts'])
         resident['check_indicator_uninterrupted_sleep'] = any('interval of uninterrupted sleep decreased' in s for s in resident['sleep_alerts'])
         # get required information here and pass to the template
-        night_toilet_MA_graph_df = input_data.input_data.get_num_visits_by_date(date_in_use + datetime.timedelta(days=-28), date_in_use + datetime.timedelta(days=1), 'm-02', node_id, time_period='Night', offset=True, grouped=True)
+        night_toilet_MA_graph_df = input_data.input_data.get_num_visits_by_date(date_in_use + datetime.timedelta(days=-28), date_in_use + datetime.timedelta(days=1), 'm-02', resident_id, time_period='Night', offset=True, grouped=True)
 
         # get 3 weeks stacked average series in a day
         night_toilet_MA_graph_df_past_three = night_toilet_MA_graph_df.head(21)
@@ -201,7 +201,7 @@ def detailedLayerTwoOverviewResidents(node_id):
         sleeping_motion_df = pd.DataFrame()
         sleeping_motion_df['gw_date_only'] = night_toilet_MA_graph_df_last_week['gw_date_only']
         sleeping_motion_df['values'] = sleeping_motion_df.apply(lambda row: (input_data.input_data.motion_duration_during_sleep(
-                node_id, row['gw_date_only'], row['gw_date_only'] + datetime.timedelta(days=1))) / 60, axis=1)
+                resident_id, row['gw_date_only'], row['gw_date_only'] + datetime.timedelta(days=1))) / 60, axis=1)
 
         # print(sleeping_motion_df)
 
@@ -281,7 +281,7 @@ def detailedLayerTwoOverviewResidents(node_id):
         uninterrupted_sleep_df = pd.DataFrame()
         uninterrupted_sleep_df['gw_date_only'] = night_toilet_MA_graph_df_last_week['gw_date_only']
         uninterrupted_sleep_df['values'] = uninterrupted_sleep_df.apply(lambda row: (input_data.input_data.get_average_longest_sleep(
-                node_id, row['gw_date_only'], row['gw_date_only'] + datetime.timedelta(days=1))) / 3600, axis=1)
+                resident_id, row['gw_date_only'], row['gw_date_only'] + datetime.timedelta(days=1))) / 3600, axis=1)
 
         uninterrupted_sleep_df['latest_mean'] = resident['average_longest_uninterrupted_sleep'] / 3600
         uninterrupted_sleep_df['past_mean'] = (resident['average_longest_uninterrupted_sleep'] - resident['average_longest_uninterrupted_sleep_difference']) / 3600
@@ -356,8 +356,8 @@ def detailedLayerTwoOverviewResidents(node_id):
                 cls=plotly.utils.PlotlyJSONEncoder)
 
         ### below for vital signs
-        resident['vitals_alerts'], resident['past_week_average_breathing'], resident['previous_weeks_average_breathing'], resident['past_week_average_heart'], resident['previous_weeks_average_heart'] = input_data.input_data.get_vital_signs_indicator(node_id, juvo_date_in_use)
-        past_week_breathing_df = input_data.input_data.retrieve_breathing_rate_info(node_id, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
+        resident['vitals_alerts'], resident['past_week_average_breathing'], resident['previous_weeks_average_breathing'], resident['past_week_average_heart'], resident['previous_weeks_average_heart'] = input_data.input_data.get_vital_signs_indicator(resident_id, juvo_date_in_use)
+        past_week_breathing_df = input_data.input_data.retrieve_breathing_rate_info(resident_id, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
         # CHECK FOR EMPTY DF
         if isinstance(past_week_breathing_df, str) or past_week_breathing_df.empty:
             print("empty data received")
@@ -481,7 +481,7 @@ def detailedLayerTwoOverviewResidents(node_id):
         breathing_rates_json = json.dumps(breathing_rates_graph,
                 cls=plotly.utils.PlotlyJSONEncoder)
 
-        past_week_heartbeat_df = input_data.input_data.retrieve_heart_rate_info(node_id, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
+        past_week_heartbeat_df = input_data.input_data.retrieve_heart_rate_info(resident_id, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
 
         # CHECK FOR EMPTY DF
         if isinstance(past_week_heartbeat_df, str) or past_week_heartbeat_df.empty:

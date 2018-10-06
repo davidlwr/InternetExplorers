@@ -59,6 +59,7 @@ class input_data(object):
                         & (input_data.input_raw_data['recieved_timestamp'] > p[1])
                         & (p[2] == None or input_data.input_raw_data['recieved_timestamp'] < p[2])] = p[0]
         ###
+        input_data.input_raw_data = input_data.input_raw_data[input_data.input_raw_data['resident_id'] != 0]
         input_sysmon.update_input_sysmon()
 
     # initialize empty df
@@ -89,9 +90,11 @@ class input_data(object):
             input_raw_data['resident_id'].loc[(input_raw_data['uuid'] == u)
                     & (input_raw_data['recieved_timestamp'] > p[1])
                     & (p[2] == None or input_raw_data['recieved_timestamp'] < p[2])] = p[0]
+
+    input_raw_data = input_raw_data[input_raw_data['resident_id'] != 0]
     ###
     # print(input_raw_data.head())
-    # print(input_raw_data.info())
+    # print(input_raw_data.loc[input_raw_data['resident_id'] == int()])
 
     # combine and read all data
     # for filename in os.listdir(file_folder):
@@ -143,7 +146,7 @@ class input_data(object):
     # first mark all 'activation points', index dependent on raw data input
     @staticmethod
     def get_num_visits_by_date(start_date=input_raw_min_date, end_date=input_raw_max_date,
-                               input_location='m-02', node_id=2005, time_period=None, offset=True,
+                               input_location='m-02', resident_id=1, time_period=None, offset=True,
                                ignore_short_durations=False, min_duration=3, grouped=False):
         """
         Function returns dates and aggregated number of times the sensor was activated
@@ -153,11 +156,11 @@ class input_data(object):
         """
 
         # NOTE: last day of the returned output is not accurate if offset is used because the next day's data is needed to get the current night's data
-        current_data = input_data.get_relevant_data(input_location, start_date, end_date, node_id, grouped)
+        current_data = input_data.get_relevant_data(input_location, start_date, end_date, resident_id, grouped)
         # print(current_data)
 
         if ignore_short_durations:
-            duration_data = input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, node_id)
+            duration_data = input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, resident_id)
             current_data = pd.merge(current_data, duration_data, on=['recieved_timestamp', 'event'])
             current_data.rename(columns={'event_x': 'event'})
             # print(current_data)
@@ -211,7 +214,7 @@ class input_data(object):
 
     # method to get the relevant columns of data
     @staticmethod
-    def get_relevant_data(input_location, start_date, end_date, node_id=2005, grouped=False):
+    def get_relevant_data(input_location, start_date, end_date, resident_id=1, grouped=False):
         '''
         Retrieve sensor data based on location, start and end dates, and the device
         grouped=True to get grouped data for toilet visits
@@ -220,8 +223,7 @@ class input_data(object):
         relevant_data = input_data.input_raw_data.loc[(input_data.input_raw_data['uuid'].str.endswith(input_location))
                                            & (input_data.input_raw_data['recieved_timestamp'] < end_date)
                                            & (input_data.input_raw_data['recieved_timestamp'] > start_date)
-                                           & (input_data.input_raw_data['node_id'] == node_id), ['uuid', 'node_id',
-                                                                                      'recieved_timestamp', 'event']]
+                                           & (input_data.input_raw_data['resident_id'] == resident_id)]
 
 
         # TODO: for sensors that are still active at the end of the query period, make it inactive at the end date
@@ -264,12 +266,12 @@ class input_data(object):
     # generate a table of acitivity durations indexed by the start time
     @staticmethod
     def get_visit_duration_and_start_time(start_date=input_raw_min_date, end_date=input_raw_max_date,
-                                          input_location='m-02', node_id=2005, grouped=False):
+                                          input_location='m-02', resident_id=1, grouped=False):
         '''
         Function returns a table of start times and the duration of activity detected at the specified location
         NOTE: If intending to group data, should call get_grouped_data first before calling this function
         '''
-        current_data = input_data.get_relevant_data(input_location, start_date, end_date, node_id, grouped)
+        current_data = input_data.get_relevant_data(input_location, start_date, end_date, resident_id, grouped)
         current_data['visit_duration'] = 0  # create new duration (in seconds) column
 
         # match the start and end timing of a sensor
@@ -334,7 +336,7 @@ class input_data(object):
 
     # separate method for moving averages so that moving average will always take advantage of the full range of data available
     @staticmethod
-    def get_visit_numbers_moving_average(node_id, input_location='m-02', time_period=None,
+    def get_visit_numbers_moving_average(resident_id, input_location='m-02', time_period=None,
                                          offset=True, ignore_short_durations=False, min_duration=3, grouped=False, days=7,
                                          result_data=None):
         '''
@@ -346,7 +348,7 @@ class input_data(object):
         Returns data with moving_average column
         '''
         if result_data is None:
-            result_data = input_data.get_num_visits_by_date(node_id=node_id, input_location=input_location,
+            result_data = input_data.get_num_visits_by_date(resident_id=resident_id, input_location=input_location,
                                                  time_period=time_period,
                                                  offset=offset, ignore_short_durations=ignore_short_durations,
                                                  min_duration=min_duration, grouped=grouped)
@@ -359,20 +361,20 @@ class input_data(object):
         return output_data
 
     @staticmethod
-    def get_door_pivots(node_id, input_location='d-01'):
+    def get_door_pivots(resident_id, input_location='d-01'):
         '''
         Returns door timings with matched opening and closing
         NOTE: not implemented yet
         '''
         raw_door_inputs = input_data.get_relevant_data(input_location=input_location, start_date=input_raw_min_date,
-                                            end_date=input_raw_max_date, node_id=node_id)
+                                            end_date=input_raw_max_date, resident_id=resident_id)
         # pivot raw door inputs
 
         # after that loop through every door row and concat
         # +valid motion readings (based on each time the door is closed) together
 
     @staticmethod
-    def get_average_longest_sleep(node_id, start_date, end_date, use_door=False):
+    def get_average_longest_sleep(resident_id, start_date, end_date, use_door=False):
         '''
         Get the average longest uninterrupted sleep duration (in seconds) per night as a measure of sleep quality
         NOTE: Intended usage is to be called weekly (called for each week, possibly excluding weekend nights) to analyse changes in sleep quality across weeks
@@ -391,7 +393,7 @@ class input_data(object):
         total_days = 0
         total_longest = 0  # in seconds
 
-        current_data = input_data.get_relevant_data('m-01', start_date, end_date + datetime.timedelta(days=1), node_id,
+        current_data = input_data.get_relevant_data('m-01', start_date, end_date + datetime.timedelta(days=1), resident_id,
                                          True)
         # group true so that motion close together is considered more significant, resulting in lower sleep quality (e.g. tossing in bed)
         # +NOTE: not implemented yet
@@ -466,7 +468,7 @@ class input_data(object):
     # +otherwise should ignore
 
     @staticmethod
-    def motion_duration_during_sleep(node_id, start_date, end_date, use_door=False):
+    def motion_duration_during_sleep(resident_id, start_date, end_date, use_door=False):
         '''
         Get the average total motion duration detected (in seconds) during sleep as a measure of sleep quality
         NOTE: Intended to be used weekly (called for each week, possibly excluding weekend nights) to analyse changes in sleep quality across weeks
@@ -483,7 +485,7 @@ class input_data(object):
         # start_date = start_date.date()
         # end_date = end_date.date()
 
-        current_data = input_data.get_relevant_data('m-01', start_date, end_date + datetime.timedelta(days=1), node_id, True)
+        current_data = input_data.get_relevant_data('m-01', start_date, end_date + datetime.timedelta(days=1), resident_id, True)
         # group true so that motion close together is considered more significant, resulting in lower sleep quality (e.g. tossing in bed)
         # +NOTE: not implemented yet
 
@@ -647,14 +649,14 @@ class input_data(object):
         # 1st check
         para_SD_threshold = 0.66 # changeable: if difference in moving averages is higher than this multiplied by the std, alert
         # get standard deviation for the past 3 weeks first
-        std_calc_data = input_data.get_num_visits_by_date(start_date=three_weeks_ago, end_date=calculation_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+        std_calc_data = input_data.get_num_visits_by_date(start_date=three_weeks_ago, end_date=calculation_sys_time, resident_id=user_id, time_period='Night', offset=True, grouped=True)
         # print(std_calc_data)
         three_week_std = std_calc_data['event'].std()
         # print("3 week std", three_week_std)
 
         # get calculation data
         calculation_data = input_data.get_num_visits_by_date(start_date=max(three_weeks_ago + datetime.timedelta(days=-29),
-                input_data.input_raw_min_date), end_date=calculation_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+                input_data.input_raw_min_date), end_date=calculation_sys_time, resident_id=user_id, time_period='Night', offset=True, grouped=True)
 
         # print(calculation_data)
         # compare difference in MA with 0.66 * SD (for ~75% confidence)
@@ -683,10 +685,10 @@ class input_data(object):
         # NOTE: we use 4 weeks approx. equal to a month and ~30 (28) for good sample size
         para_ratio_threshold = input_data.get_para_ratio_threshold()
         # get night usage
-        past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+        past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=user_id, time_period='Night', offset=True, grouped=True)
         # print("past_month_data_night", past_month_data_night)
         # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
-        past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, offset=True, grouped=True)
+        past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=user_id, offset=True, grouped=True)
         try:
             past_month_data_both['threshold_cmp_value'] = past_month_data_both.apply(lambda row: row['event'] * para_ratio_threshold, axis=1)
             # print("past_month_data_both", past_month_data_both)
@@ -713,10 +715,10 @@ class input_data(object):
             current_sys_time = datetime.datetime.now()
         four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
         # get night usage
-        past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, time_period='Night', offset=True, grouped=True)
+        past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=user_id, time_period='Night', offset=True, grouped=True)
         # print("past_month_data_night", past_month_data_night)
         # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
-        past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, node_id=user_id, offset=True, grouped=True)
+        past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=user_id, offset=True, grouped=True)
 
         # calculate percentage for each night
         ratio_series = past_month_data_night['event'] / past_month_data_both['event']
@@ -726,10 +728,10 @@ class input_data(object):
 
     # handle the information retrieval for vital signs
     @staticmethod
-    def retrieve_breathing_rate_info(node_id='2005', start_date=None, end_date=None):
+    def retrieve_breathing_rate_info(resident_id='1', start_date=None, end_date=None):
         '''
         Returns a dict of respiratory rate information from juvo API for the resident corresponding
-        with the node_id input as parameter for this function
+        with the resident id input as parameter for this function
         '''
         # print(type(start_date))
         if end_date is None:
@@ -739,7 +741,7 @@ class input_data(object):
         # Retrieve relevant juvo API id from node_id first
         target = 0
         # supposed to get target from DB (when there are multiple juvo sensors deployed)
-        if node_id == '2005' or node_id == 2005:
+        if resident_id == '1' or resident_id == 1:
             target = 460
         else:
             print('resident has no vital signs info from juvo')
@@ -808,10 +810,10 @@ class input_data(object):
         return breathing_rate_filtered_df
 
     @staticmethod
-    def retrieve_heart_rate_info(node_id='2005', start_date=None, end_date=None):
+    def retrieve_heart_rate_info(resident_id='1', start_date=None, end_date=None):
         '''
         Returns a dict of pulse rate information from juvo API for the resident corresponding
-        with the node_id input as parameter for this function
+        with the resident id input as parameter for this function
         '''
         if end_date is None:
             date_in_use = datetime.datetime(2018, 8, 12, 23, 34, 12) # datetime.datetime.now()
@@ -820,7 +822,7 @@ class input_data(object):
         # Retrieve relevant juvo API id from node_id first
         target = 0
         # supposed to get target from DB (when there are multiple juvo sensors deployed)
-        if node_id == '2005' or node_id == 2005:
+        if resident_id == '1' or resident_id == 1:
             target = 460
         else:
             print('resident has no vital signs info from juvo')

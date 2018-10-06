@@ -150,7 +150,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input_toilet_numbers',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
                                 placeholder='Select resident(s) to view',
                                 value=[input_data.input_data.get_residents_options()[0] if input_data.input_data.get_residents_options() else None],
                                 multi=True
@@ -235,7 +235,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input_visit_duration',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
                                 placeholder='Select resident(s) to view',
                                 value=[],
                                 multi=True
@@ -330,7 +330,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input_vital_signs',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
                                 placeholder='Select resident(s) to view',
                                 value=[],
                                 multi=True
@@ -374,7 +374,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input_qos',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
                                 placeholder='Select resident(s) to view',
                                 value=[],
                                 multi=True
@@ -409,7 +409,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
                                 placeholder='Select a resident to view'
                             )
                         ], className='col-md-4 col-xs-12'),
@@ -865,19 +865,19 @@ def update_graph_06(input_residents, start_date, end_date):
     Output('resident_input', 'options'),
     [Input('resident_input', 'value')])
 def set_residents_options_one(selection):
-    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
 
 @app.callback(
     Output('resident_input_toilet_numbers', 'options'),
     [Input('resident_input_toilet_numbers', 'value')])
 def set_residents_options_one(selection):
-    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
 
 @app.callback(
     Output('resident_input_visit_duration', 'options'),
     [Input('resident_input_visit_duration', 'value')])
 def set_residents_options_one(selection):
-    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
 
 @app.callback(
     Output('resident_input_logs', 'options'),
@@ -890,10 +890,10 @@ def set_residents_options_one(selection):
     Output('resident_input_vital_signs', 'options'),
     [Input('resident_input_vital_signs', 'value')])
 def set_residents_options_one(selection):
-    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
 
 @app.callback(
     Output('resident_input_qos', 'options'),
     [Input('resident_input_qos', 'value')])
 def set_residents_options_one(selection):
-    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
