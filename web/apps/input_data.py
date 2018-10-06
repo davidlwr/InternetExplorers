@@ -78,6 +78,7 @@ para_ratio_threshold_default = 0.3  # changeable: if night usage is higher than 
 
 def updateInputData():
     input_raw_data = sensor_log_DAO.get_all_logs()
+    input_sysmon.update_input_sysmon()
 
 def get_para_ratio_threshold():
     return para_ratio_threshold_default
