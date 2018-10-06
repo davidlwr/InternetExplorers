@@ -551,7 +551,7 @@ class input_data(object):
         # TODO: can replace this to be as a percentage of sleeping hours
 
     @staticmethod
-    def get_nightly_sleep_indicator(user_id, current_sys_time=None):
+    def get_nightly_sleep_indicator(resident_id, current_sys_time=None):
         '''
         Returns (1) the list of alerts of interest, (2) the past week's average duration of motion during sleep
                 and (3) the difference between motion during sleep in the past week versus the previous 3 weeks
@@ -573,15 +573,15 @@ class input_data(object):
 
         # 1st check
         # get previous 3 weeks average motion first, then take the past week's
-        old_three_average = input_data.motion_duration_during_sleep(user_id, four_weeks_ago, one_week_ago)
-        past_week_average = input_data.motion_duration_during_sleep(user_id, one_week_ago, current_sys_time)
+        old_three_average = input_data.motion_duration_during_sleep(resident_id, four_weeks_ago, one_week_ago)
+        past_week_average = input_data.motion_duration_during_sleep(resident_id, one_week_ago, current_sys_time)
         difference = past_week_average - old_three_average
         if difference > old_three_average * 0.5: # NOTE: changeable here
             alerts_of_interest.append("Increased movements during sleeping hours, likely having more segmented sleep")
 
         # 2nd check
-        old_three_longest_sleep_average = input_data.get_average_longest_sleep(user_id, four_weeks_ago, one_week_ago)
-        past_week_longest_sleep_average = input_data.get_average_longest_sleep(user_id, one_week_ago, current_sys_time)
+        old_three_longest_sleep_average = input_data.get_average_longest_sleep(resident_id, four_weeks_ago, one_week_ago)
+        past_week_longest_sleep_average = input_data.get_average_longest_sleep(resident_id, one_week_ago, current_sys_time)
         difference_longest_sleep = past_week_longest_sleep_average - old_three_longest_sleep_average
         if difference_longest_sleep < -.75 * old_three_longest_sleep_average: # NOTE: changeable here
             alerts_of_interest.append("Longest interval of uninterrupted sleep decreased significantly")
@@ -591,10 +591,7 @@ class input_data(object):
         qos_mean = 0
         qos_df = pd.DataFrame()
         # supposed to get target from DB (when there are multiple juvo sensors deployed)
-        if user_id == '2005' or user_id == 2005:
-            target = 460
-        else:
-            print('resident has no vital signs info from juvo')
+        target = sensor_DAO.get_juvo_target_from_resident_id(resident_id)
 
         if target:
             japi = JuvoAPI.JuvoAPI()
@@ -612,17 +609,18 @@ class input_data(object):
             if qos_mean < qos_threshold:
                 alerts_of_interest.append(f"Quality of sleep lower than {qos_threshold}%")
         else:
+            print('resident has no vital signs info from juvo')
             qos_df['qos'] = []
             qos_df['date_timestamp'] = []
 
         return alerts_of_interest, past_week_average, difference, past_week_longest_sleep_average, difference_longest_sleep, qos_mean, qos_df
 
     @staticmethod
-    def get_overview_change_values(user_id, current_sys_time=None):
+    def get_overview_change_values(resident_id, current_sys_time=None):
         pass
 
     @staticmethod
-    def get_nightly_toilet_indicator(user_id, current_sys_time=None):
+    def get_nightly_toilet_indicator(resident_id, current_sys_time=None):
         '''
         Returns list of night toilet usage alerts so as to determine what the colour
                 of the toilet status indicator should be for a particular elderly
@@ -649,20 +647,20 @@ class input_data(object):
         # 1st check
         para_SD_threshold = 0.66 # changeable: if difference in moving averages is higher than this multiplied by the std, alert
         # get standard deviation for the past 3 weeks first
-        std_calc_data = input_data.get_num_visits_by_date(start_date=three_weeks_ago, end_date=calculation_sys_time, resident_id=user_id, time_period='Night', offset=True, grouped=True)
+        std_calc_data = input_data.get_num_visits_by_date(start_date=three_weeks_ago, end_date=calculation_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
         # print(std_calc_data)
         three_week_std = std_calc_data['event'].std()
         # print("3 week std", three_week_std)
 
         # get calculation data
         calculation_data = input_data.get_num_visits_by_date(start_date=max(three_weeks_ago + datetime.timedelta(days=-29),
-                input_data.input_raw_min_date), end_date=calculation_sys_time, resident_id=user_id, time_period='Night', offset=True, grouped=True)
+                input_data.input_raw_min_date), end_date=calculation_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
 
         # print(calculation_data)
         # compare difference in MA with 0.66 * SD (for ~75% confidence)
-        three_week_MA = input_data.get_visit_numbers_moving_average(user_id, time_period='Night',
+        three_week_MA = input_data.get_visit_numbers_moving_average(resident_id, time_period='Night',
                 offset=True, grouped=True, days=28, result_data=calculation_data)
-        one_week_MA = input_data.get_visit_numbers_moving_average(user_id, time_period='Night',
+        one_week_MA = input_data.get_visit_numbers_moving_average(resident_id, time_period='Night',
                 offset=True, grouped=True, days=7, result_data=calculation_data)
         # print(one_week_MA)
         # print(three_week_MA)
@@ -685,10 +683,10 @@ class input_data(object):
         # NOTE: we use 4 weeks approx. equal to a month and ~30 (28) for good sample size
         para_ratio_threshold = input_data.get_para_ratio_threshold()
         # get night usage
-        past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=user_id, time_period='Night', offset=True, grouped=True)
+        past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
         # print("past_month_data_night", past_month_data_night)
         # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
-        past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=user_id, offset=True, grouped=True)
+        past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=resident_id, offset=True, grouped=True)
         try:
             past_month_data_both['threshold_cmp_value'] = past_month_data_both.apply(lambda row: row['event'] * para_ratio_threshold, axis=1)
             # print("past_month_data_both", past_month_data_both)
@@ -706,7 +704,7 @@ class input_data(object):
         return alerts_of_interest, current_MA
 
     @staticmethod
-    def get_percentage_of_night_toilet_usage(user_id, current_sys_time=None):
+    def get_percentage_of_night_toilet_usage(resident_id, current_sys_time=None):
         '''
         Returns the percentage of night toilet usage divided by total usage in a day, averaged over a month (as first value in tuple)
         Also returns standard deviation (as the second value in the tuple)
@@ -715,10 +713,10 @@ class input_data(object):
             current_sys_time = datetime.datetime.now()
         four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
         # get night usage
-        past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=user_id, time_period='Night', offset=True, grouped=True)
+        past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
         # print("past_month_data_night", past_month_data_night)
         # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
-        past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=user_id, offset=True, grouped=True)
+        past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=resident_id, offset=True, grouped=True)
 
         # calculate percentage for each night
         ratio_series = past_month_data_night['event'] / past_month_data_both['event']
@@ -741,9 +739,9 @@ class input_data(object):
         # Retrieve relevant juvo API id from node_id first
         target = 0
         # supposed to get target from DB (when there are multiple juvo sensors deployed)
-        if resident_id == '1' or resident_id == 1:
-            target = 460
-        else:
+        target = sensor_DAO.get_juvo_target_from_resident_id(resident_id)
+
+        if not target:
             print('resident has no vital signs info from juvo')
             return ''
         # Get all the relevant data from the past week
@@ -822,9 +820,9 @@ class input_data(object):
         # Retrieve relevant juvo API id from node_id first
         target = 0
         # supposed to get target from DB (when there are multiple juvo sensors deployed)
-        if resident_id == '1' or resident_id == 1:
-            target = 460
-        else:
+        target = sensor_DAO.get_juvo_target_from_resident_id(resident_id)
+
+        if not target:
             print('resident has no vital signs info from juvo')
             return ''
         # Get all the relevant data from the past week
@@ -881,7 +879,7 @@ class input_data(object):
     normal_upper_bound_hb = 65
 
     @staticmethod
-    def get_vital_signs_indicator(user_id, current_sys_time=None):
+    def get_vital_signs_indicator(resident_id, current_sys_time=None):
         '''
         Returns tuple of (1) list of vital signs alerts (2) past week respiratory rate average
         (3) previous three weeks respiratory rate average
@@ -904,7 +902,7 @@ class input_data(object):
         previous_weeks_average_heart = 0
         ###
 
-        past_week_breathing_df = input_data.retrieve_breathing_rate_info(user_id, one_week_ago, current_sys_time)
+        past_week_breathing_df = input_data.retrieve_breathing_rate_info(resident_id, one_week_ago, current_sys_time)
         if isinstance(past_week_breathing_df, str) or past_week_breathing_df.empty:
             # print("empty data received")
             pass
@@ -926,7 +924,7 @@ class input_data(object):
             past_week_average_breathing = breathing_graph_df.breathing_rate.mean()
 
         # get average respiratory rate of previous 3 weeks (comparing personal baselines)
-        previous_weeks_breathing_df = input_data.retrieve_breathing_rate_info(user_id, four_weeks_ago, one_week_ago)
+        previous_weeks_breathing_df = input_data.retrieve_breathing_rate_info(resident_id, four_weeks_ago, one_week_ago)
         if isinstance(previous_weeks_breathing_df, str) or past_week_breathing_df.empty:
             # print("empty data received")
             pass
@@ -952,7 +950,7 @@ class input_data(object):
                 previous_weeks_average_breathing = previous_weeks_breathing_result_df.breathing_rate.mean()
 
         ### below for heartbeat
-        past_week_heartbeat_df = input_data.retrieve_heart_rate_info(user_id, one_week_ago, current_sys_time)
+        past_week_heartbeat_df = input_data.retrieve_heart_rate_info(resident_id, one_week_ago, current_sys_time)
         if isinstance(past_week_heartbeat_df, str) or past_week_heartbeat_df.empty:
             # print("empty data received")
             pass
@@ -975,7 +973,7 @@ class input_data(object):
             past_week_average_heart = past_week_heartbeat_result_df.heart_rate.mean()
 
         # get average pulse rate of previous 3 weeks (comparing personal baselines)
-        previous_weeks_heartbeat_df = input_data.retrieve_heart_rate_info(user_id, four_weeks_ago, one_week_ago)
+        previous_weeks_heartbeat_df = input_data.retrieve_heart_rate_info(resident_id, four_weeks_ago, one_week_ago)
         if isinstance(previous_weeks_heartbeat_df, str) or previous_weeks_heartbeat_df.empty:
             # print("empty data received")
             pass
