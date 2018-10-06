@@ -47,7 +47,7 @@ def showOverviewResidents():
         r['node_id'] = resident['node_id']
 
         # settle night toilet usage
-        r['toilet_alerts'], __ = input_data.get_nightly_toilet_indicator(int(resident['node_id']), date_in_use)
+        r['toilet_alerts'], __ = input_data.input_data.get_nightly_toilet_indicator(int(resident['node_id']), date_in_use)
         r['toilet_tooltip'] = []
         if len(r['toilet_alerts']) == 0:
             r['toilet_tooltip'].append("Night toilet visit numbers appear normal")
@@ -55,14 +55,14 @@ def showOverviewResidents():
             r['toilet_tooltip'].extend(r['toilet_alerts'])
 
         # settle sleep duration
-        r['sleep_alerts'], __, __, __, __, __, __ = input_data.get_nightly_sleep_indicator(int(resident['node_id']), date_in_use)
+        r['sleep_alerts'], __, __, __, __, __, __ = input_data.input_data.get_nightly_sleep_indicator(int(resident['node_id']), date_in_use)
         r['sleep_tooltip'] = []
         if len(r['sleep_alerts']) == 0:
             r['sleep_tooltip'].append("Normal level of motion during sleep detected")
         else: # NOTE: for future changes
             r['sleep_tooltip'].extend(r['sleep_alerts'])
 
-        r['vitals_alerts'], __, __, __, __ = input_data.get_vital_signs_indicator(resident['node_id'], juvo_date_in_use)
+        r['vitals_alerts'], __, __, __, __ = input_data.input_data.get_vital_signs_indicator(resident['node_id'], juvo_date_in_use)
         r['vitals_tooltip'] = []
         if len(r['vitals_alerts']) == 0:
             r['vitals_tooltip'].append("Vital signs from previous week appear to be normal")
@@ -98,14 +98,14 @@ def detailedLayerTwoOverviewResidents(node_id):
         if resident is None:
             return 'Resident not found<a href="/overview">Go Back</a>'
         # parameters
-        resident['para_ratio_threshold'] = input_data.get_para_ratio_threshold()
+        resident['para_ratio_threshold'] = input_data.input_data.get_para_ratio_threshold()
 
         # sleep alerts
-        resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'], resident['average_longest_uninterrupted_sleep_difference'], resident['qos_mean'], qos_df = input_data.get_nightly_sleep_indicator(node_id, date_in_use)
+        resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'], resident['average_longest_uninterrupted_sleep_difference'], resident['qos_mean'], qos_df = input_data.input_data.get_nightly_sleep_indicator(node_id, date_in_use)
 
         # toilet alerts
-        resident['toilet_alerts'], resident['number_of_night_toilet_usage_in_past_week'] = input_data.get_nightly_toilet_indicator(node_id, date_in_use)
-        resident['toilet_night_to_both_ratio'], resident['toilet_night_to_both_std'] = input_data.get_percentage_of_night_toilet_usage(node_id, date_in_use)
+        resident['toilet_alerts'], resident['number_of_night_toilet_usage_in_past_week'] = input_data.input_data.get_nightly_toilet_indicator(node_id, date_in_use)
+        resident['toilet_night_to_both_ratio'], resident['toilet_night_to_both_std'] = input_data.input_data.get_percentage_of_night_toilet_usage(node_id, date_in_use)
 
         # set indicators  {# NOTE: change identifying text below, if input_data function changes #}
         resident['check_indicator_night_toilet_ratio'] = any('of total daily usage in the past month' in s for s in resident['toilet_alerts'])
@@ -113,7 +113,7 @@ def detailedLayerTwoOverviewResidents(node_id):
         resident['check_indicator_sleep_movements'] = any('movements during sleeping hours' in s for s in resident['sleep_alerts'])
         resident['check_indicator_uninterrupted_sleep'] = any('interval of uninterrupted sleep decreased' in s for s in resident['sleep_alerts'])
         # get required information here and pass to the template
-        night_toilet_MA_graph_df = input_data.get_num_visits_by_date(date_in_use + datetime.timedelta(days=-28), date_in_use + datetime.timedelta(days=1), 'm-02', node_id, time_period='Night', offset=True, grouped=True)
+        night_toilet_MA_graph_df = input_data.input_data.get_num_visits_by_date(date_in_use + datetime.timedelta(days=-28), date_in_use + datetime.timedelta(days=1), 'm-02', node_id, time_period='Night', offset=True, grouped=True)
 
         # get 3 weeks stacked average series in a day
         night_toilet_MA_graph_df_past_three = night_toilet_MA_graph_df.head(21)
@@ -200,7 +200,7 @@ def detailedLayerTwoOverviewResidents(node_id):
         # get the 7 days
         sleeping_motion_df = pd.DataFrame()
         sleeping_motion_df['gw_date_only'] = night_toilet_MA_graph_df_last_week['gw_date_only']
-        sleeping_motion_df['values'] = sleeping_motion_df.apply(lambda row: (input_data.motion_duration_during_sleep(
+        sleeping_motion_df['values'] = sleeping_motion_df.apply(lambda row: (input_data.input_data.motion_duration_during_sleep(
                 node_id, row['gw_date_only'], row['gw_date_only'] + datetime.timedelta(days=1))) / 60, axis=1)
 
         # print(sleeping_motion_df)
@@ -280,7 +280,7 @@ def detailedLayerTwoOverviewResidents(node_id):
         # another graph for longest uninterrupted sleep duration
         uninterrupted_sleep_df = pd.DataFrame()
         uninterrupted_sleep_df['gw_date_only'] = night_toilet_MA_graph_df_last_week['gw_date_only']
-        uninterrupted_sleep_df['values'] = uninterrupted_sleep_df.apply(lambda row: (input_data.get_average_longest_sleep(
+        uninterrupted_sleep_df['values'] = uninterrupted_sleep_df.apply(lambda row: (input_data.input_data.get_average_longest_sleep(
                 node_id, row['gw_date_only'], row['gw_date_only'] + datetime.timedelta(days=1))) / 3600, axis=1)
 
         uninterrupted_sleep_df['latest_mean'] = resident['average_longest_uninterrupted_sleep'] / 3600
@@ -356,8 +356,8 @@ def detailedLayerTwoOverviewResidents(node_id):
                 cls=plotly.utils.PlotlyJSONEncoder)
 
         ### below for vital signs
-        resident['vitals_alerts'], resident['past_week_average_breathing'], resident['previous_weeks_average_breathing'], resident['past_week_average_heart'], resident['previous_weeks_average_heart'] = input_data.get_vital_signs_indicator(node_id, juvo_date_in_use)
-        past_week_breathing_df = input_data.retrieve_breathing_rate_info(node_id, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
+        resident['vitals_alerts'], resident['past_week_average_breathing'], resident['previous_weeks_average_breathing'], resident['past_week_average_heart'], resident['previous_weeks_average_heart'] = input_data.input_data.get_vital_signs_indicator(node_id, juvo_date_in_use)
+        past_week_breathing_df = input_data.input_data.retrieve_breathing_rate_info(node_id, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
         # CHECK FOR EMPTY DF
         if isinstance(past_week_breathing_df, str) or past_week_breathing_df.empty:
             print("empty data received")
@@ -368,7 +368,7 @@ def detailedLayerTwoOverviewResidents(node_id):
         # print("DEBUG: ", past_week_breath_rates)
 
         past_week_breathing_df['reading_timestamp'] = pd.to_datetime(past_week_breathing_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
-        past_week_breathing_df['date_only'] = past_week_breathing_df['reading_timestamp'].apply(input_data.date_only)
+        past_week_breathing_df['date_only'] = past_week_breathing_df['reading_timestamp'].apply(input_data.input_data.date_only)
 
         breathing_graph_df = past_week_breathing_df.groupby(['date_only'], as_index=False)['breathing_rate'].mean()
         past_week_day_range = pd.date_range(juvo_date_in_use.date() + datetime.timedelta(days=-6), juvo_date_in_use.date(), freq='D')
@@ -386,8 +386,8 @@ def detailedLayerTwoOverviewResidents(node_id):
         breathing_graph_df.rename(columns={'index':'date_only'}, inplace=True)
         breathing_graph_df['past_week_mean'] = resident['past_week_average_breathing']
         breathing_graph_df['previous_weeks_mean'] = resident['previous_weeks_average_breathing']
-        breathing_graph_df['normal_lower_bound_rr'] = input_data.normal_lower_bound_rr
-        breathing_graph_df['normal_upper_bound_rr'] = input_data.normal_upper_bound_rr
+        breathing_graph_df['normal_lower_bound_rr'] = input_data.input_data.normal_lower_bound_rr
+        breathing_graph_df['normal_upper_bound_rr'] = input_data.input_data.normal_upper_bound_rr
         # print(breathing_graph_df)
 
         breathing_rates_graph = dict(
@@ -481,7 +481,7 @@ def detailedLayerTwoOverviewResidents(node_id):
         breathing_rates_json = json.dumps(breathing_rates_graph,
                 cls=plotly.utils.PlotlyJSONEncoder)
 
-        past_week_heartbeat_df = input_data.retrieve_heart_rate_info(node_id, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
+        past_week_heartbeat_df = input_data.input_data.retrieve_heart_rate_info(node_id, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
 
         # CHECK FOR EMPTY DF
         if isinstance(past_week_heartbeat_df, str) or past_week_heartbeat_df.empty:
@@ -492,7 +492,7 @@ def detailedLayerTwoOverviewResidents(node_id):
             past_week_heartbeat_df['heart_rate'] = [0]
 
         past_week_heartbeat_df['reading_timestamp'] = pd.to_datetime(past_week_heartbeat_df['local_start_time'], format='%Y-%m-%dT%H:%M:%SZ')
-        past_week_heartbeat_df['date_only'] = past_week_heartbeat_df['reading_timestamp'].apply(input_data.date_only)
+        past_week_heartbeat_df['date_only'] = past_week_heartbeat_df['reading_timestamp'].apply(input_data.input_data.date_only)
 
         heartbeat_graph_df = past_week_heartbeat_df.groupby(['date_only'], as_index=False)['heart_rate'].mean()
         heartbeat_graph_df.set_index('date_only', inplace=True)
@@ -507,7 +507,7 @@ def detailedLayerTwoOverviewResidents(node_id):
         heartbeat_graph_df.rename(columns={'index':'date_only'}, inplace=True)
         heartbeat_graph_df['past_week_mean'] = resident['past_week_average_heart']
         heartbeat_graph_df['previous_weeks_mean'] = resident['previous_weeks_average_heart']
-        heartbeat_graph_df['normal_upper_bound_hb'] = input_data.normal_upper_bound_hb
+        heartbeat_graph_df['normal_upper_bound_hb'] = input_data.input_data.normal_upper_bound_hb
 
         # print(heartbeat_graph_df.info())
         # print(heartbeat_graph_df)
