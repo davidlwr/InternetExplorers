@@ -15,10 +15,12 @@ if __name__ == '__main__':  # we want to import from same directory if using thi
     import input_sysmon
     from DAOs.sensor_log_DAO import sensor_log_DAO
     from sensor_mgmt import JuvoAPI
+    from DAOs.sensor_DAO import sensor_DAO
 else:  # if called from index.py
     from apps import input_sysmon
     from DAOs.sensor_log_DAO import sensor_log_DAO
     from sensor_mgmt import JuvoAPI
+    from DAOs.sensor_DAO import sensor_DAO
 
 # specify file parameters
 file_folder = '../stbern-20180302-20180523-csv/'
@@ -35,7 +37,7 @@ class input_data(object):
         #convert datetime format
         input_data.input_raw_data['recieved_timestamp'] = pd.to_datetime(input_data.input_raw_data['recieved_timestamp'], format='%Y-%m-%dT%H:%M:%S')
         input_data.input_raw_data.loc[(input_data.input_raw_data.event == 0)
-        & (input_raw_data.uuid.str.contains("-m-")), 'recieved_timestamp'] += datetime.timedelta(minutes=-MOTION_TIMEOUT_MINS)
+        & (input_data.input_raw_data.uuid.str.contains("-m-")), 'recieved_timestamp'] += datetime.timedelta(minutes=-MOTION_TIMEOUT_MINS)
         # print(input_raw_data.head())
 
         # convert events to 1 and 0 instead of 255
@@ -44,9 +46,19 @@ class input_data(object):
         # common variables
         input_data.input_raw_max_date = input_data.input_raw_data['recieved_timestamp'].max()
         input_data.input_raw_min_date = input_data.input_raw_data['recieved_timestamp'].min()
-        # print(input_raw_data.head())
-        # print(input_raw_data.info())
-        # print(input_raw_data.index.values)
+        ### Assign resident IDs to the sensor readings
+        ownership_history = sensor_DAO.get_ownership_hist()
+        input_data.input_raw_data['resident_id'] = int()
+
+        uuid_list = input_data.input_raw_data['uuid'].unique().tolist()
+        for u in uuid_list:
+            ownership_periods = ownership_history[u]
+            for p in ownership_periods: # (resident_id, start_date, end_date)
+                # filter DataFrame
+                input_data.input_raw_data['resident_id'].loc[(input_data.input_raw_data['uuid'] == u)
+                        & (input_data.input_raw_data['recieved_timestamp'] > p[1])
+                        & (p[2] == None or input_data.input_raw_data['recieved_timestamp'] < p[2])] = p[0]
+        ###
         input_sysmon.update_input_sysmon()
 
     # initialize empty df
@@ -63,9 +75,23 @@ class input_data(object):
     # common variables
     input_raw_max_date = input_raw_data['recieved_timestamp'].max()
     input_raw_min_date = input_raw_data['recieved_timestamp'].min()
+    # print(input_raw_data.index.values)
+
+    ### Assign resident IDs to the sensor readings
+    ownership_history = sensor_DAO.get_ownership_hist()
+    input_raw_data['resident_id'] = int()
+
+    uuid_list = input_raw_data['uuid'].unique().tolist()
+    for u in uuid_list:
+        ownership_periods = ownership_history[u]
+        for p in ownership_periods: # (resident_id, start_date, end_date)
+            # filter DataFrame
+            input_raw_data['resident_id'].loc[(input_raw_data['uuid'] == u)
+                    & (input_raw_data['recieved_timestamp'] > p[1])
+                    & (p[2] == None or input_raw_data['recieved_timestamp'] < p[2])] = p[0]
+    ###
     # print(input_raw_data.head())
     # print(input_raw_data.info())
-    # print(input_raw_data.index.values)
 
     # combine and read all data
     # for filename in os.listdir(file_folder):
@@ -232,7 +258,7 @@ class input_data(object):
         '''
         Returns a list of integers which are the resident ids of residents with sensor data
         '''
-        return input_data.input_raw_data['node_id'].unique().tolist()
+        return input_data.input_raw_data['resident_id'].unique().tolist()
 
 
     # generate a table of acitivity durations indexed by the start time
