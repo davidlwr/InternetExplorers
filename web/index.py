@@ -210,7 +210,7 @@ class MyModelView(ModelView):
                 flash('The username is already in use')
                 return
 
-            if form.validate_on_submit() and encrypted_passworda:
+            if form.validate_on_submit() and encrypted_password:
                 alphabet = string.ascii_letters + string.digits
                 encrypted_password_token = ''.join(secrets.choice(alphabet) for i in range(20))
                 encrypted_password = (encrypted_password_token + encrypted_password).encode('utf-8')
