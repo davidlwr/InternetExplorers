@@ -837,8 +837,8 @@ def update_graph_06(input_residents, start_date, end_date):
         draw_data = []
         for r in input_residents:
             # first get the target (using API for future refactor)
-            curr_target = 460 if r == 1 else 0 # TODO: to change to proper target id
-            r_name = r_name = resident_DAO.get_resident_name_by_resident_id(r)
+            curr_target = sensor_DAO.get_juvo_target_from_resident_id(r)
+            r_name = resident_DAO.get_resident_name_by_resident_id(r)
             tuple_list = japi.get_qos_by_day(curr_target, start_date, end_date)
             try:
                 qos_df = pd.DataFrame(list(tuple_list), columns=['date_timestamp', 'qos'])
