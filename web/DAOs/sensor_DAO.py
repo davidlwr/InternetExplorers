@@ -150,7 +150,7 @@ class sensor_DAO(object):
 
 
     # SENSOR OWNERSHIP HISTORY ==============================================================
-    soh_table_name   = "stbern.SENSOR_OWNERSHIP_HIST"
+    soh_table_name   = "stbern.sensor_ownership_hist"
     soh_period_start = "period_start"
     soh_period_end   = "period_end"
     soh_resident_id  = "resident_id"
@@ -239,9 +239,9 @@ class sensor_DAO(object):
         residentID (int) -- Default None
 
         Return:
-        Dict: {"uuid1": [(startdate, enddate), (datetime, datetime)],
-               "uuid2": [(startdate, enddate)]}
-        * NOTE: Final start and end date pairs will have NO END_DATETIME as this represents an ongoing period
+        Dict: {"uuid1": [(residentID, startdate, enddate), (residentID, datetime, datetime)],
+               "uuid2": [(residentID, startdate, None)]}
+        * NOTE: Final start and end date pairs will have 'None' END_DATETIME as this represents an ongoing period
         * NOTE: (startdate, enddate) are (inclusive, exclusive)
         '''
         
@@ -276,18 +276,43 @@ class sensor_DAO(object):
             records = defaultdict(list)
             if result != None:
                 for r in result:
+                    rid    = r[sensor_DAO.soh_resident_id]
                     uuid   = r[sensor_DAO.soh_uuid]
                     pStart = r[sensor_DAO.soh_period_start]
                     pEnd   = r[sensor_DAO.soh_period_end]
-                    records[uuid].append((pStart, pEnd))
-
+                    records[uuid].append((rid, pStart, pEnd))
             return records
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
+    @staticmethod
+    def get_current_owner(uuid):
+        '''
+        Get current owner of the sensor, returns a resident id
+
+        Inputs:
+        uuid (str)
+
+        Returns:
+        A (int) residentID or None if no current owner found
+        '''
+
+        r_dict = sensor_DAO.get_ownership_hist(uuid=uuid)
+        l_hist = r_dict[uuid]
+
+        # Check if any ownership records exist
+        if len(l_hist) == 0: return None
+
+        # Check if any open period exists       
+        last_ownership = l_hist[-1]         # (residentID, startDt, endDt)
+        rid = last_ownership[0]
+        edt = last_ownership[2]
+        if edt == None: return rid          # Empty end datetime found, this is an ongoing period
+        else: return None                   # Existing end datetime found, this is a closed period
+
 
     # TYPES =================================================================================
-    type_table_name     = "stbern.SENSOR_TYPE"
+    type_table_name     = "stbern.sensor_type"
     type_col_name       = "type"
     @staticmethod
     def get_types():
@@ -337,7 +362,7 @@ class sensor_DAO(object):
 
 
     # LOCATIONS ==============================================================================
-    location_table_name = "stbern.SENSOR_LOCATION"
+    location_table_name = "stbern.sensor_location"
     location_col_name   = "location"
     @staticmethod
     def get_locations():
@@ -387,7 +412,7 @@ class sensor_DAO(object):
 
 
     # FACILITYS ==============================================================================
-    facility_table_name     = "stbern.FACILITY"
+    facility_table_name     = "stbern.facility"
     facility_abrv_cname     = "abrv"
     facility_fullname_cname = "fullname"
     facility_desc_cname     = "description"
@@ -445,40 +470,40 @@ class sensor_DAO(object):
 
 
 # TESTS ====================================================================================================
-if __name__ == '__main__': 
-    # Ownership hists
-    delete = False
+# if __name__ == '__main__': 
+    # # Ownership hists
+    # delete = True
 
-    # Test 01: insert
-    try:
-        print(sensor_DAO.insert_ownership_hist(uuid="2006-m-01", resident_id=1, start_datetime=datetime.datetime.now()))
-        delete = True
-        print("success insert 1")
-    except: 
-        print("existing test record")
-        delete = True
+    # # Test 01: insert
+    # try:
+    #     print(sensor_DAO.insert_ownership_hist(uuid="2006-m-01", resident_id=1, start_datetime=datetime.datetime.now()))
+    #     delete = True
+    #     print("success insert 1")
+    # except: 
+    #     print("existing test record")
+    #     delete = True
 
-    # test 02: get 
-    print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=1))
-    print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=None))
-    print(sensor_DAO.get_ownership_hist(uuid=None, residentID=None))
+    # # test 02: get 
+    # print(sensor_DAO.get_ownership_hist(uuid="2006-m-01"))
+    # print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=None))
+    # print(sensor_DAO.get_ownership_hist(uuid=None, residentID=None))
 
-    # test 03: close 
-    try:
-        sensor_DAO.close_ownership_hist(uuid="2006-m-01", resident_id=1, end_datetime=None)
-        print("success close 1... Checking with get")
-        print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=1))
+    # # test 03: close 
+    # try:
+    #     sensor_DAO.close_ownership_hist(uuid="2006-m-01", resident_id=1, end_datetime=None)
+    #     print("success close 1... Checking with get")
+    #     print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=1))
 
-        sensor_DAO.close_ownership_hist(uuid="2006-m-01", resident_id=1, end_datetime=None)
-        print("fail close 2: should throw exception")
-    except AssertionError as e:
-        print("success close 2", e)
+    #     sensor_DAO.close_ownership_hist(uuid="2006-m-01", resident_id=1, end_datetime=None)
+    #     print("fail close 2: should throw exception")
+    # except AssertionError as e:
+    #     print("success close 2", e)
 
-    # end test: delete
-    if delete:
-        factory = connection_manager()
-        connection = factory.connection
-        cursor = connection.cursor()
-        try: cursor.execute(f"DELETE FROM {sensor_DAO.soh_table_name} WHERE `{sensor_DAO.soh_resident_id}` = 1 AND `{sensor_DAO.soh_uuid}` = \"2006-m-01\"")
-        except: raise
-        finally: factory.close_all(cursor=cursor, connection=connection)
+    # # end test: delete
+    # if delete:
+    #     factory = connection_manager()
+    #     connection = factory.connection
+    #     cursor = connection.cursor()
+    #     try: cursor.execute(f"DELETE FROM {sensor_DAO.soh_table_name} WHERE `{sensor_DAO.soh_resident_id}` = 1 AND `{sensor_DAO.soh_uuid}` = \"2006-m-01\"")
+    #     except: raise
+    #     finally: factory.close_all(cursor=cursor, connection=connection)
