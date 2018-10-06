@@ -285,6 +285,7 @@ class sensor_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
+
     @staticmethod
     def get_current_owner(uuid):
         '''

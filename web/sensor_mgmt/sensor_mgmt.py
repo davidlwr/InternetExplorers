@@ -1,7 +1,10 @@
 import datetime, os, sys
-from JuvoAPI import JuvoAPI
+from datetime import timedelta
 
 if __name__ == '__main__':  sys.path.append("..")
+from JuvoAPI import JuvoAPI
+from Entities.sysmon_log import Sysmon_Log
+from Entities.sensor_log import Sensor_Log
 from DAOs.connection_manager import connection_manager
 from DAOs.sensor_DAO import sensor_DAO
 from DAOs.sysmon_log_DAO import sysmon_log_DAO
@@ -147,6 +150,105 @@ class Sensor_mgmt(object):
         return sensor_status
 
 
+    @classmethod
+    def check_trust_motion(cls, uuid, start_dt, end_dt):
+        '''
+        Checks if readings during `start_dt` to `end_dt` can be trusted. i.e. 
+        If we can confirm sensor is ON during the period
+
+        INPUTS
+        uuid (str)
+        start_dt (datetime)
+        end_dt (datetime)
+
+        RETURNS:
+        list of periods where sensor CANNOT be trusted: [(start_dt, end_dt), ...]
+        if empty, period can be trusted
+        '''
+        # Expand period by 2 hours, 1 before start_dt and 1 hour after end_dt
+        # This is to gather the sysmon battery updates
+        start_dt_buff = start_dt - timedelta(hours=1.2)
+        end_dt_buff   = end_dt   + timedelta(hours=1.2)
+
+        # get all sysmon battery readings within start_dt and end_dt
+        records = sysmon_log_DAO.get_logs(uuid=uuid, key=Sysmon_Log.key_battery, start_dt=start_dt_buff, end_dt=end_dt_buff, descDT=False, limit=0)
+        # CHECK 1: If no records found, sensor is confirmed down during the period, but just 
+        if records == None: return [(start_dt, end_dt)]
+
+        # CHECK 2: sysmon battery updates >> hourly sysmon battery updates are ASSURED
+        down_periods = []
+
+        #   >> Corner case, when period given is current. and only 1 batt sysmon can be found before
+        #   >> Return true if diff has been less than 1 hour. Assume still up
+        if len(records) == 1: 
+            curr_ts = records[0][Sysmon_Log.recieved_timestamp_tname]
+            if curr_ts < start_dt and (start_dt-curr_ts) < timedelta(hours=1.2): return []
+
+        prev_ts      = None
+        for i in range(0, len(records)):     # Greedy
+            
+            # Initial assignment
+            curr_ts = records[i][Sysmon_Log.recieved_timestamp_tname]
+            if prev_ts == None: 
+                prev_ts = curr_ts
+                continue
+
+            # Nothing wrong >> update was within 1 hour + buffer
+            if (curr_ts - prev_ts) / timedelta(minutes=1) <= (60 * 1.2): 
+                prev_ts = curr_ts
+                continue
+
+            # Something wrong >> update was > 1 hour + buffer. There is a missing battery update
+            pred_missing = prev_ts + timedelta(hours=1)
+
+            #       >> Assumption here is that there will never be a period where sensor revives and sends a reading without a sysmon battery update
+            #           >> Therefore if sensor is brought back up, it sends a sysmon battery update soon after
+            enc_logs     = Sensor_mgmt.get_enclosing_logs(start_dt=prev_ts, end_dt=curr_ts, target_dt=pred_missing)     
+            # ^ last before and first atfer reading (sensor and sysmon) from where the next missing battery update is 
+            
+            if len(enc_logs) == 0: down_periods.append([prev_ts, curr_ts])
+            if len(enc_logs) == 2: down_periods.append([enc_logs[0], enc_logs[1]])
+            if len(enc_logs) == 1: 
+                if enc_logs[0] < pred_missing: down_periods.append([enc_logs[0], curr_ts])
+                if enc_logs[0] > pred_missing: down_periods.append([prev_ts, enc_logs[0]])
+
+            # shift down 1 
+            prev_ts = curr_ts
+        
+        return down_periods
+
+
+    @classmethod
+    def get_enclosing_logs(cls, start_dt, end_dt, target_dt):
+        '''
+        Given a target datetime, returns...
+        Last record (sysmon or sensor reading) before the target and first record after the target 
+
+        Inputs:
+        start_dt (datetime)
+        end_dt (datetime)
+        target_dt (datetime)
+
+        Returns:
+        [before_dt, after_dt]
+        NOTE: dts can be None, meaning no records during that period
+        '''
+        enc_sensor = sensor_log_DAO.get_enclosing_logs(start_dt=start_dt, end_dt=end_dt, target_dt=target_dt)     # Sensor readings: 1st before target, 1st after target
+        enc_sysmon = sysmon_log_DAO.get_enclosing_logs(start_dt=start_dt, end_dt=end_dt, target_dt=target_dt)     # Sysmon readings: 1st before target, 1st after target
+
+        enc_logs = [None, None]
+        if   enc_sensor[0] == None and enc_sysmon[0] != None: enc_logs[0] = enc_sysmon[0]
+        elif enc_sensor[0] != None and enc_sysmon[0] == None: enc_logs[0] = enc_sensor[0]
+        elif enc_sensor[0] < enc_sysmon[0]: enc_logs[0] = enc_sysmon[0]
+        else: enc_logs[0] = enc_sensor[0] 
+
+        if   enc_sensor[1] == None and enc_sysmon[1] != None: enc_logs[1] = enc_sysmon[1]
+        elif enc_sensor[1] != None and enc_sysmon[1] == None: enc_logs[1] = enc_sensor[1]
+        elif enc_sensor[1] < enc_sysmon[1]: enc_logs[1] = enc_sensor[1]
+        else: enc_logs[1] = enc_sysmon[1] 
+
+        return enc_logs
+
 # TESTS ======================================================================================
 if __name__ == '__main__': 
 
@@ -221,3 +323,15 @@ if __name__ == '__main__':
 
     # for ss in Sensor_mgmt.get_all_sensor_status(retBatteryLevel=False):
     #     print(ss)
+
+
+    # Checking check_trust_motion
+    uuid = "2005-m-01"
+    edt = sdt = datetime.datetime.now()
+    # down_periods = Sensor_mgmt.check_trust_motion(uuid=uuid, start_dt=sdt, end_dt=edt)
+    # print(down_periods)
+
+    fucked_sdt = datetime.datetime(year=2018, month=8, day=15)      # 2018-08-15 03:46:49
+    fucked_edt = datetime.datetime(year=2018, month=10, day=5, )    # 2018-10-04 around 3pm
+    down_periods = Sensor_mgmt.check_trust_motion(uuid=uuid, start_dt=fucked_sdt, end_dt=fucked_edt)
+    for p in down_periods: print(p)
