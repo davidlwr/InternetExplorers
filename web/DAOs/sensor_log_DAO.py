@@ -184,6 +184,58 @@ class sensor_log_DAO(object):
 
         return pd.read_sql_query(query, connection)
 
+    @staticmethod
+    def get_enclosing_logs(start_dt, end_dt, target_dt):
+        '''
+        Given a target datetime, returns...
+        Last record before the target and first record after the target 
+        
+        Inputs:
+        start_dt  (datetime)
+        end_dt    (datetime)
+        target_dt (datetime)
+
+        Returns:
+        records as returned by pymysql
+        NOTE: Can have 0, 1, or 2 records. Sorted in ascending datetime
+        '''
+        feed_dict = [target_dt, start_dt, end_dt, target_dt, start_dt, end_dt]
+        query = f"""SELECT * FROM 
+                        (SELECT * FROM {sensor_log_DAO.table_name}) 
+                        WHERE {Sensor_Log.recieved_timestamp_tname} < %s
+                        AND {Sensor_Log.recieved_timestamp_tname} > %s
+                        AND {Sensor_Log.recieved_timestamp_tname} < %s
+                        ORDER BY {Sensor_Log.recieved_timestamp_tname} ASC
+                        LIMIT 1) as a
+                        union
+                        (SELECT * FROM {sensor_log_DAO.table_name}) 
+                        WHERE {Sensor_Log.recieved_timestamp_tname} < %s
+                        AND {Sensor_Log.recieved_timestamp_tname} > %s
+                        AND {Sensor_Log.recieved_timestamp_tname} < %s
+                        ORDER BY {Sensor_Log.recieved_timestamp_tname} DESC
+                        LIMIT 1) as a
+                    ORDER BY {Sensor_Log.recieved_timestamp_tname} ASC; 
+                """
+        
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query, feed_dict)
+            result = cursor.fetchall()
+
+            enclosing_logs = [None, None]
+            if result != None: 
+                for r in result:
+                    r_ts = r[Sensor_Log.recieved_timestamp_tname]
+                    if r_ts < target_dt: enclosing_logs[0] = r_ts
+                    else: enclosing_logs[0] = r_ts
+            return enclosing_logs
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
 
     @staticmethod
     def get_last_logs(uuid, limit=1):
