@@ -8,7 +8,8 @@ from flask_sqlalchemy import SQLAlchemy
 from wtforms.validators import InputRequired
 from apps.shift_log_form import resident_query
 import flask_login
-from datetime import datetime
+from datetime import datetime, date
+from dateutil.relativedelta import relativedelta
 
 from app import app, server, db
 from DAOs.risk_assessment_DAO import risk_assessment_DAO
@@ -134,7 +135,21 @@ def showRiskForm():
             #                                  submitted_mobility, submitted_dependent,
             #                                  submitted_dependency)
 
-            total_score = submitted_num_falls + submitted_injury_sustained + submitted_medical_conditions + submitted_medication_amount + submitted_status + submitted_vision + submitted_hearing + submitted_pain + submitted_mobility + submitted_dependent
+            submitted_dob = form.name.data.dob
+            # submitted_dob = datetime.strptime(submitted_dob, '%Y-%m-%d')
+            today = date.today()
+
+            difference_in_years = relativedelta(today, submitted_dob).years
+            if difference_in_years < 60:
+                age_score = 0
+            elif difference_in_years < 70:
+                age_score = 1
+            elif difference_in_years < 81:
+                age_score = 2
+            else:
+                age_score = 3
+
+            total_score = age_score + submitted_num_falls + submitted_injury_sustained + submitted_medical_conditions + submitted_medication_amount + submitted_status + submitted_vision + submitted_hearing + submitted_pain + submitted_mobility + submitted_dependent
 
             riskAssessment = Risk_assessment(submitted_date, submitted_name, submitted_weight, submitted_num_falls,
                                              submitted_injury_sustained, submitted_normal,

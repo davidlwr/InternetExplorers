@@ -11,6 +11,7 @@ from wtforms import StringField, PasswordField, SubmitField, RadioField, FloatFi
 from flask_login import UserMixin, current_user, LoginManager, AnonymousUserMixin
 from flask_admin import Admin, AdminIndexView, helpers, expose
 from flask_admin.contrib.sqla import ModelView
+from flask_admin.model import typefmt
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, TextField
 from wtforms.validators import InputRequired, Email, Length, ValidationError
@@ -18,7 +19,7 @@ from flask import render_template, Flask, request, flash, redirect, url_for, abo
 from flask_sqlalchemy import SQLAlchemy
 from urllib.parse import urlparse, urljoin
 from dash_flask_login import FlaskLoginAuth
-from datetime import datetime
+from datetime import datetime, date
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -203,7 +204,7 @@ class MyModelView(ModelView):
                 flash('The username is already in use')
                 return
 
-            if form.validate_on_submit() and encrypted_passworda:
+            if form.validate_on_submit() and encrypted_password:
                 alphabet = string.ascii_letters + string.digits
                 encrypted_password_token = ''.join(secrets.choice(alphabet) for i in range(20))
                 encrypted_password = (encrypted_password_token + encrypted_password).encode('utf-8')
@@ -223,11 +224,21 @@ class ResidentCreateForm(Form):
     fall_risk = StringField('Fall Risk')
     status = StringField('Status')
     stay_location = RadioField('Stay Location',
-                               choices=[('BKT', 'Bukit Timah'), ('ADR', 'Adam Road')])
+                               choices=[('bkttm', 'Bukit Timah'), ('adm', 'Adam Road')])
 
+
+def date_format(view, value):
+    return value.strftime('%Y-%m-%d')
+
+
+MY_DEFAULT_FORMATTERS = dict(typefmt.BASE_FORMATTERS)
+MY_DEFAULT_FORMATTERS.update({
+    date: date_format
+})
 
 class ResidentView(ModelView):
     # column_list = ('name', 'node_id', 'age', 'fall_risk', 'status', 'stay_location')
+    column_type_formatters = MY_DEFAULT_FORMATTERS
 
     def is_accessible(self):
         if current_user.staff_type == 'Admin' or current_user.staff_type == 'Staff':
