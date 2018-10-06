@@ -3,28 +3,28 @@
 {%+ if _length == 0 -%}green{%+ endif -%}
 {%+ if _length == 1 -%}yellow{%+ endif -%}
 {%+ if _length == 2 -%}red{%+ endif -%}
-{%+ if _length == 3 -%}red{%+ endif -%}
+{%+ if _length >= 3 -%}red{%+ endif -%}
 {% endmacro %}
 
 {% macro getSWDFromAlertLength(_length) %}
 {%+ if _length == 0 -%}success{%+ endif -%}
 {%+ if _length == 1 -%}warning{%+ endif -%}
 {%+ if _length == 2 -%}danger{%+ endif -%}
-{%+ if _length == 3 -%}danger{%+ endif -%}
+{%+ if _length >= 3 -%}danger{%+ endif -%}
 {% endmacro %}
 
 {% macro getGMHFromAlertLength(_length) %}
 {%+ if _length == 0 -%}Healthy{%+ endif -%}
 {%+ if _length == 1 -%}To Observe{%+ endif -%}
 {%+ if _length == 2 -%}High Risk{%+ endif -%}
-{%+ if _length == 3 -%}High Risk{%+ endif -%}
+{%+ if _length >= 3 -%}High Risk{%+ endif -%}
 {% endmacro %}
 
 {% macro getFooterFromAlertLength(_length) %}
 {%+ if _length == 0 -%}Healthy{%+ endif -%}
 {%+ if _length == 1 -%}To Observe{%+ endif -%}
 {%+ if _length == 2 -%}High Risk{%+ endif -%}
-{%+ if _length == 3 -%}High Risk{%+ endif -%}
+{%+ if _length >= 3 -%}High Risk{%+ endif -%}
 {% endmacro %}
 
 {% macro getTextColorFromAlertLength(_length) %}
@@ -32,5 +32,5 @@
 {%+ if _length == 0 -%}#66cdaa{%+ endif -%}
 {%+ if _length == 1 -%}#f1ae4c{%+ endif -%}
 {%+ if _length == 2 -%}#da5450{%+ endif -%}
-{%+ if _length == 3 -%}#da5450{%+ endif -%}
+{%+ if _length >= 3 -%}#da5450{%+ endif -%}
 {% endmacro %}

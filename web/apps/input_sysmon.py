@@ -47,6 +47,8 @@ sysmon_disconnected_data['recieved_timestamp'] = pd.to_datetime(sysmon_disconnec
 #     ['device_id', 'device_loc', 'gw_device', 'recieved_timestamp', 'key', 'reading_type'], inplace=True)
 # sysmon_disconnected_data.reset_index(drop=True)
 
+def update_input_sysmon():
+    sysmon_data = sysmon_log_DAO.get_all_logs(format='pd')
 
 # get inactive period within time
 def remove_disconnected_periods(current_data):

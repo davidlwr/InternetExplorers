@@ -142,14 +142,14 @@ a.deco-none {
                             <tr>
                                 <th>Name</th>
                                 <th class="not-in-mobile">Vital Signs</th>
-                                <th class="not-in-mobile">Night Toilet Usage</th>
                                 <th class="not-in-mobile">Sleep Quality</th>
+                                <th class="not-in-mobile">Night Toilet Usage</th>
                                 <th>Overall Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for resident in residents %}
-                            <tr class='clickable-row' data-href='./overview/{{ resident['node_id'] }}'>
+                            <tr class='clickable-row' data-href='./overview/{{ resident['resident_id'] }}'>
                                 <td>{{ resident['name'] }}</td>
                                 <td style="color:{{ getTextColorFromAlertLength(resident['vitals_alerts']|length) }}" class="not-in-mobile">{{ getFooterFromAlertLength(resident['vitals_alerts']|length) }}
                                     <span data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['vitals_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
@@ -179,7 +179,7 @@ a.deco-none {
     </div>
     <!-- {% for resident in residents %}
     <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-        <a href="./overview/{{ resident['node_id'] }}" class="deco-none">
+        <a href="./overview/{{ resident['resident_id'] }}" class="deco-none">
             <div class="panel panel-{{ getPanelColorFromAlertLength(resident['alert_highest']) }}">
                 <div class="panel-heading">
                     <div class="semihuge">{{ resident['name'] }}</div>

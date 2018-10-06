@@ -8,9 +8,10 @@ import pandas as pd
 from app import app
 from apps import input_data, input_shiftlogs
 from DAOs import resident_DAO
+from DAOs.sensor_DAO import sensor_DAO
 from sensor_mgmt import JuvoAPI
 
-locationMap = input_data.get_location_options()
+locationMap = input_data.input_data.get_location_options()
 
 # define page layout
 # TODO: can return the bank plotly graph output after the exception so that the graph is still there
@@ -150,9 +151,9 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input_toilet_numbers',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
                                 placeholder='Select resident(s) to view',
-                                value=[input_data.get_residents_options()[0] if input_data.get_residents_options() else None],
+                                value=[input_data.input_data.get_residents_options()[0] if input_data.input_data.get_residents_options() else None],
                                 multi=True
                             )
                         ], className='col-md-4'),
@@ -160,7 +161,7 @@ app.layout = html.Div([
                             dcc.Dropdown(
                                 id='filter_input_toilet_numbers',
                                 options=[{'label': i, 'value': j} for i, j in
-                                         input_data.get_num_visits_filter_options()],
+                                         input_data.input_data.get_num_visits_filter_options()],
                                 value='None',
                                 clearable=False
                             )
@@ -168,12 +169,12 @@ app.layout = html.Div([
                         html.Div([
                             dcc.DatePickerRange(
                                 id='date_picker_toilet_numbers',
-                                min_date_allowed=input_data.input_raw_min_date,
-                                max_date_allowed=input_data.input_raw_max_date,
-                                start_date=input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                min_date_allowed=input_data.input_data.input_raw_min_date,
+                                max_date_allowed=input_data.input_data.input_raw_max_date,
+                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
                                                                                  microsecond=0),
                                 # need to truncate the dates here
-                                end_date=input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
                                 # to prevent unconverted data error
                                 start_date_placeholder_text='Select start date',
@@ -211,14 +212,14 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Checklist(
                                 id='seven_checkbox_toilet_numbers',
-                                options=[{'label': 'Include 7 day moving average', 'value': 'seven'}],
+                                options=[{'label': 'Include 7 day moving average (7D MA)', 'value': 'seven'}],
                                 values=['seven'],
                             )
                         ], className='col-md-6 text-center'),
                         html.Div([
                             dcc.Checklist(
                                 id='twentyone_checkbox_toilet_numbers',
-                                options=[{'label': 'Include 21 day moving average', 'value': 'twentyone'}],
+                                options=[{'label': 'Include 21 day moving average (21D MA)', 'value': 'twentyone'}],
                                 values=['twentyone'],
                             )
                         ], className='col-md-6 text-center')
@@ -235,7 +236,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input_visit_duration',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
                                 placeholder='Select resident(s) to view',
                                 value=[],
                                 multi=True
@@ -251,12 +252,12 @@ app.layout = html.Div([
                         html.Div([
                             dcc.DatePickerRange(
                                 id='date_picker_visit_duration',
-                                min_date_allowed=input_data.input_raw_min_date,
-                                max_date_allowed=input_data.input_raw_max_date,
-                                start_date=input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                min_date_allowed=input_data.input_data.input_raw_min_date,
+                                max_date_allowed=input_data.input_data.input_raw_max_date,
+                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
                                                                                  microsecond=0),
                                 # need to truncate the dates here
-                                end_date=input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
                                 # to prevent unconverted data error
                                 start_date_placeholder_text='Select start date',
@@ -287,7 +288,7 @@ app.layout = html.Div([
                             dcc.Dropdown(
                                 id='filter_input_day_night',
                                 options=[{'label': i, 'value': j} for i, j in
-                                         input_data.get_num_visits_filter_options()],
+                                         input_data.input_data.get_num_visits_filter_options()],
                                 value='None',
                                 clearable=False
                             )
@@ -330,7 +331,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input_vital_signs',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in sensor_DAO.get_juvo_resident_ids()],
                                 placeholder='Select resident(s) to view',
                                 value=[],
                                 multi=True
@@ -348,12 +349,12 @@ app.layout = html.Div([
                         html.Div([
                             dcc.DatePickerRange(
                                 id='date_picker_vital_signs',
-                                min_date_allowed=input_data.input_raw_min_date,
-                                max_date_allowed=input_data.input_raw_max_date,
-                                start_date=input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                min_date_allowed=input_data.input_data.input_raw_min_date,
+                                max_date_allowed=input_data.input_data.input_raw_max_date,
+                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
                                                                                  microsecond=0),
                                 # need to truncate the dates here
-                                end_date=input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
                                 # to prevent unconverted data error
                                 start_date_placeholder_text='Select start date',
@@ -374,7 +375,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input_qos',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in sensor_DAO.get_juvo_resident_ids()],
                                 placeholder='Select resident(s) to view',
                                 value=[],
                                 multi=True
@@ -383,12 +384,12 @@ app.layout = html.Div([
                         html.Div([
                             dcc.DatePickerRange(
                                 id='date_picker_qos',
-                                min_date_allowed=input_data.input_raw_min_date,
-                                max_date_allowed=input_data.input_raw_max_date,
-                                start_date=input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                min_date_allowed=input_data.input_data.input_raw_min_date,
+                                max_date_allowed=input_data.input_data.input_raw_max_date,
+                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
                                                                                  microsecond=0),
                                 # need to truncate the dates here
-                                end_date=input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
                                 # to prevent unconverted data error
                                 start_date_placeholder_text='Select start date',
@@ -409,7 +410,7 @@ app.layout = html.Div([
                         html.Div([
                             dcc.Dropdown(
                                 id='resident_input',
-                                options=[{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()],
+                                options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
                                 placeholder='Select a resident to view'
                             )
                         ], className='col-md-4 col-xs-12'),
@@ -423,12 +424,12 @@ app.layout = html.Div([
                         html.Div([
                             dcc.DatePickerRange(
                                 id='date_picker',
-                                min_date_allowed=input_data.input_raw_min_date,
-                                max_date_allowed=input_data.input_raw_max_date,
-                                start_date=input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                min_date_allowed=input_data.input_data.input_raw_min_date,
+                                max_date_allowed=input_data.input_data.input_raw_max_date,
+                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
                                                                                  microsecond=0),
                                 # need to truncate the dates here
-                                end_date=input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
                                 # to prevent unconverted data error
                                 start_date_placeholder_text='Select start date',
@@ -475,7 +476,7 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
         modified_date = temp_date + datetime.timedelta(days=1)
         end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
         # print('debug ' + str(type(end_date)))
-        df = input_data.get_relevant_data(input_location, start_date, end_date, input_resident, grouped=group_checkbox)
+        df = input_data.input_data.get_relevant_data(input_location, start_date, end_date, input_resident, grouped=group_checkbox)
         # df = input_data.input_raw_data
         return dcc.Graph(id='firstplot',
                          figure={
@@ -529,13 +530,14 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
         draw_data = []
         if filter_input == 'None':  # default option
             for r in input_resident:
-                df = input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r,
+                r_name = resident_DAO.get_resident_name_by_resident_id(r)
+                df = input_data.input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r,
                                                        ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
                 # print("test 2", df)
-                draw_data.append({'x': df['gw_date_only'], 'y': df['event'], 'mode': 'lines+markers', 'name': r})
+                draw_data.append({'x': df['gw_date_only'], 'y': df['event'], 'mode': 'lines+markers', 'name': r_name})
                 if seven_checkbox:
                     # get moving averages
-                    moving_averages_7 = input_data.get_visit_numbers_moving_average(r, days=7,
+                    moving_averages_7 = input_data.input_data.get_visit_numbers_moving_average(r, days=7,
                                                                                     ignore_short_durations=ignore_checkbox,
                                                                                     grouped=group_checkbox)
 
@@ -543,10 +545,10 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                     moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (
                             moving_averages_7['gw_date_only'] >= start_date)]
                     draw_data.append({'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
-                                      'mode': 'lines+markers', 'name': str(r) + ' 7D MA'})
+                                      'mode': 'lines+markers', 'name': r_name + ' 7D MA'})
                 if twentyone_checkbox:
                     # get moving averages
-                    moving_averages_21 = input_data.get_visit_numbers_moving_average(r, days=21,
+                    moving_averages_21 = input_data.input_data.get_visit_numbers_moving_average(r, days=21,
                                                                                      ignore_short_durations=ignore_checkbox,
                                                                                      grouped=group_checkbox)
 
@@ -555,20 +557,21 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                             moving_averages_21['gw_date_only'] >= start_date)]
                     draw_data.append(
                         {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
-                         'mode': 'lines+markers', 'name': str(r) + ' 21D MA'})
+                         'mode': 'lines+markers', 'name': r_name + ' 21D MA'})
 
         else:
             # if user chose both, both if statements below will execute
             if filter_input != 'Night':  # if not night means have to display for 'Day'
                 for r in input_resident:
-                    df = input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r, time_period='Day',
+                    r_name = resident_DAO.get_resident_name_by_resident_id(r)
+                    df = input_data.input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r, time_period='Day',
                                                            ignore_short_durations=ignore_checkbox,
                                                            grouped=group_checkbox)
                     draw_data.append(
-                        {'x': df['gw_date_only'], 'y': df['event'], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+                        {'x': df['gw_date_only'], 'y': df['event'], 'mode': 'lines+markers', 'name': r_name + ' - Day'})
                     if seven_checkbox:
                         # get moving averages
-                        moving_averages_7 = input_data.get_visit_numbers_moving_average(r, days=7, time_period='Day',
+                        moving_averages_7 = input_data.input_data.get_visit_numbers_moving_average(r, days=7, time_period='Day',
                                                                                         ignore_short_durations=ignore_checkbox,
                                                                                         grouped=group_checkbox)
 
@@ -577,10 +580,10 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                 moving_averages_7['gw_date_only'] >= start_date)]
                         draw_data.append(
                             {'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
-                             'mode': 'lines+markers', 'name': str(r) + ' 7D MA Day'})
+                             'mode': 'lines+markers', 'name': r_name + ' 7D MA Day'})
                     if twentyone_checkbox:
                         # get moving averages
-                        moving_averages_21 = input_data.get_visit_numbers_moving_average(r, days=21, time_period='Day',
+                        moving_averages_21 = input_data.input_data.get_visit_numbers_moving_average(r, days=21, time_period='Day',
                                                                                          ignore_short_durations=ignore_checkbox,
                                                                                          grouped=group_checkbox)
 
@@ -589,19 +592,19 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                 moving_averages_21['gw_date_only'] >= start_date)]
                         draw_data.append(
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
-                             'mode': 'lines+markers', 'name': str(r) + ' 21D MA Day'})
+                             'mode': 'lines+markers', 'name': r_name + ' 21D MA Day'})
 
             if filter_input != 'Day':  # if not day means have to display for 'Night'
                 for r in input_resident:
-                    df = input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r, time_period='Night',
+                    df = input_data.input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r, time_period='Night',
                                                            offset=offset_checkbox,
                                                            ignore_short_durations=ignore_checkbox,
                                                            grouped=group_checkbox)  # offset only relevant at night
                     draw_data.append({'x': df['gw_date_only'], 'y': df['event'], 'mode': 'lines+markers',
-                                      'name': str(r) + ' - Night'})
+                                      'name': r_name + ' - Night'})
                     if seven_checkbox:
                         # get moving averages
-                        moving_averages_7 = input_data.get_visit_numbers_moving_average(r, days=7, time_period='Night',
+                        moving_averages_7 = input_data.input_data.get_visit_numbers_moving_average(r, days=7, time_period='Night',
                                                                                         offset=offset_checkbox,
                                                                                         ignore_short_durations=ignore_checkbox,
                                                                                         grouped=group_checkbox)
@@ -611,10 +614,10 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                 moving_averages_7['gw_date_only'] >= start_date)]
                         draw_data.append(
                             {'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
-                             'mode': 'lines+markers', 'name': str(r) + ' 7D MA Night'})
+                             'mode': 'lines+markers', 'name': r_name + ' 7D MA Night'})
                     if twentyone_checkbox:
                         # get moving averages
-                        moving_averages_21 = input_data.get_visit_numbers_moving_average(r, days=21,
+                        moving_averages_21 = input_data.input_data.get_visit_numbers_moving_average(r, days=21,
                                                                                          time_period='Night',
                                                                                          offset=offset_checkbox,
                                                                                          ignore_short_durations=ignore_checkbox,
@@ -625,7 +628,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                 moving_averages_21['gw_date_only'] >= start_date)]
                         draw_data.append(
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
-                             'mode': 'lines+markers', 'name': str(r) + ' 21D MA Night'})
+                             'mode': 'lines+markers', 'name': r_name + ' 21D MA Night'})
 
         return dcc.Graph(id='toilet_numbers_plot',
                          figure={
@@ -664,9 +667,10 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
         end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
         draw_data = []
         for r in input_resident:
-            df = input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
+            r_name = resident_DAO.get_resident_name_by_resident_id(r)
+            df = input_data.input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
             # print(df.head())
-            draw_data.append({'x': df['recieved_timestamp'], 'y': df['visit_duration'], 'mode':'markers', 'name': r})
+            draw_data.append({'x': df['recieved_timestamp'], 'y': df['visit_duration'], 'mode':'markers', 'name': r_name})
         return dcc.Graph(id = 'visit_duration_plot',
                 figure = {
                     'data':draw_data,
@@ -706,39 +710,42 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
         draw_data = []
         if filter_input == 'None':  # default option
             for r in input_resident:
+                r_name = resident_DAO.get_resident_name_by_resident_id(r)
                 df = input_shiftlogs.get_logs_by_date(start_date, end_date, r)
                 if filter_type != 'sys_dia':
-                    draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': r})
+                    draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': r_name})
                 else:
-                    draw_data.append({'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers', 'name': r})
-                    draw_data.append({'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers', 'name': r})
+                    draw_data.append({'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers', 'name': r_name})
+                    draw_data.append({'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers', 'name': r_name})
 
         else:
 
             if filter_input != 'Night':  # if not night means have to display for 'Day'
                 for r in input_resident:
+                    r_name = resident_DAO.get_resident_name_by_resident_id(r)
                     df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Day')
                     if filter_type != 'sys_dia':
                         draw_data.append(
-                            {'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+                            {'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': r_name + ' - Day'})
                     else:
                         draw_data.append(
-                            {'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+                            {'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers', 'name': r_name + ' - Day'})
                         draw_data.append(
-                            {'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers', 'name': str(r) + ' - Day'})
+                            {'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers', 'name': r_name + ' - Day'})
 
 
             if filter_input != 'Day':  # if not day means have to display for 'Night'
                 for r in input_resident:
+                    r_name = resident_DAO.get_resident_name_by_resident_id(r)
                     df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Night')
                     if filter_type != 'sys_dia':
                         draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers',
-                                          'name': str(r) + ' - Night'})
+                                          'name': r_name + ' - Night'})
                     else:
                         draw_data.append({'x': df['date_only'], 'y': df['systolic_bp'], 'mode': 'lines+markers',
-                                          'name': str(r) + ' - Night'})
+                                          'name': r_name + ' - Night'})
                         draw_data.append({'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers',
-                                          'name': str(r) + ' - Night'})
+                                          'name': r_name + ' - Night'})
 
         return dcc.Graph(id='logs_plot',
                          figure={
@@ -780,16 +787,18 @@ def update_graph_05(input_residents, input_vital_signs, start_date, end_date):
         draw_data = []
         if 'heart_rate' in input_vital_signs:
             for r in input_residents:
-                df = input_data.retrieve_heart_rate_info(r, start_date, end_date)
+                r_name = resident_DAO.get_resident_name_by_resident_id(r)
+                df = input_data.input_data.retrieve_heart_rate_info(r, start_date, end_date)
                 if isinstance(df, str):
                     continue
-                draw_data.append({'x': df['local_start_time'], 'y': df['heart_rate'], 'mode': 'markers', 'name': str(r) + ' ' + 'heart_rate'})
+                draw_data.append({'x': df['local_start_time'], 'y': df['heart_rate'], 'mode': 'markers', 'name': r_name + ' ' + 'heart_rate'})
         if 'breathing_rate' in input_vital_signs:
             for r in input_residents:
-                df = input_data.retrieve_breathing_rate_info(r, start_date, end_date)
+                r_name = resident_DAO.get_resident_name_by_resident_id(r)
+                df = input_data.input_data.retrieve_breathing_rate_info(r, start_date, end_date)
                 if isinstance(df, str):
                     continue
-                draw_data.append({'x': df['local_start_time'], 'y': df['breathing_rate'], 'mode': 'markers', 'name': str(r) + ' ' + 'breathing_rate'})
+                draw_data.append({'x': df['local_start_time'], 'y': df['breathing_rate'], 'mode': 'markers', 'name': r_name + ' ' + 'breathing_rate'})
         return dcc.Graph(id='vital_signs_plot',
                 figure = {
                     'data': draw_data,
@@ -828,12 +837,12 @@ def update_graph_06(input_residents, start_date, end_date):
         draw_data = []
         for r in input_residents:
             # first get the target (using API for future refactor)
-            curr_target = 460 if r == 2005 else 0 # TODO: to change to proper target id
-
+            curr_target = sensor_DAO.get_juvo_target_from_resident_id(r)
+            r_name = resident_DAO.get_resident_name_by_resident_id(r)
             tuple_list = japi.get_qos_by_day(curr_target, start_date, end_date)
             try:
                 qos_df = pd.DataFrame(list(tuple_list), columns=['date_timestamp', 'qos'])
-                draw_data.append({'x': qos_df['date_timestamp'], 'y': qos_df['qos'], 'mode': 'markers', 'name': str(r) + ' - ' + 'qos'})
+                draw_data.append({'x': qos_df['date_timestamp'], 'y': qos_df['qos'], 'mode': 'markers', 'name': r_name + ' - qos'})
             except TypeError as e:
                 pass # just don't add to draw data
 
@@ -865,35 +874,35 @@ def update_graph_06(input_residents, start_date, end_date):
     Output('resident_input', 'options'),
     [Input('resident_input', 'value')])
 def set_residents_options_one(selection):
-    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
 
 @app.callback(
     Output('resident_input_toilet_numbers', 'options'),
     [Input('resident_input_toilet_numbers', 'value')])
-def set_residents_options_one(selection):
-    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+def set_residents_options_two(selection):
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
 
 @app.callback(
     Output('resident_input_visit_duration', 'options'),
     [Input('resident_input_visit_duration', 'value')])
-def set_residents_options_one(selection):
-    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+def set_residents_options_three(selection):
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()]
 
 @app.callback(
     Output('resident_input_logs', 'options'),
     [Input('resident_input_logs', 'value')])
-def set_residents_options_one(selection):
+def set_residents_options_four(selection):
     return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_shiftlogs.get_residents_options()]
 
 
 @app.callback(
     Output('resident_input_vital_signs', 'options'),
     [Input('resident_input_vital_signs', 'value')])
-def set_residents_options_one(selection):
-    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+def set_residents_options_five(selection):
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in sensor_DAO.get_juvo_resident_ids()]
 
 @app.callback(
     Output('resident_input_qos', 'options'),
     [Input('resident_input_qos', 'value')])
-def set_residents_options_one(selection):
-    return [{'label': resident_DAO.get_resident_name_by_node_id(i), 'value': i} for i in input_data.get_residents_options()]
+def set_residents_options_six(selection):
+    return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in sensor_DAO.get_juvo_resident_ids()]

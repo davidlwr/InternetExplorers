@@ -87,7 +87,7 @@
                                     <ul class="nav nav-third-level">
                                         {% for r in all_residents(location_filter='bkttm') %}
                                         <li>
-                                            <a href="/overview/{{ r['node_id'] }}">{{ r['name'] }}</a>
+                                            <a href="/overview/{{ r['resident_id'] }}">{{ r['name'] }}</a>
                                         </li>
                                         {% endfor %}
                                     </ul>

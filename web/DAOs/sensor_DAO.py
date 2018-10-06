@@ -35,7 +35,7 @@ class sensor_DAO(object):
         if location != None: ps.append((Sensor.location_tname, location))
         if facility != None: ps.append(Sensor.facility_tname, facility)
         if uuid != None:     ps.append((Sensor.uuid_tname, uuid))
-        
+
         for i in range(len(ps)):
             if i==0: query += f" WHERE  `{ps[i][0]}` = \"{ps[i][1]}\""
             else:    query += f" AND    `{ps[i][0]}` = \"{ps[i][1]}\""
@@ -70,12 +70,12 @@ class sensor_DAO(object):
         sensor (Entities.sensor)
         """
         # Check exception: allow only bed sensor to be found in bed
-        if (sensor.type == "bed sensor" and sensor.location != "bed") or (sensor.type != "bed sensor" and sensor.location == "bed"): 
+        if (sensor.type == "bed sensor" and sensor.location != "bed") or (sensor.type != "bed sensor" and sensor.location == "bed"):
             raise ValueError('only sensor.type=\"bed sensor\" can be assigned sensor.location=\"bed\"')
 
-        query = f"""INSERT INTO {sensor_DAO.table_name} 
+        query = f"""INSERT INTO {sensor_DAO.table_name}
                     (`{Sensor.uuid_tname}`,`{Sensor.type_tname}`,`{Sensor.location_tname}`,
-                    `{Sensor.facility_tname}`,`{Sensor.description_tname}`, `{Sensor.juvo_target_tname}`) 
+                    `{Sensor.facility_tname}`,`{Sensor.description_tname}`, `{Sensor.juvo_target_tname}`)
                     VALUES (%s, %s, %s, %s, %s, %s)"""
 
         # Get connection
@@ -122,7 +122,7 @@ class sensor_DAO(object):
 
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
-        
+
 
     @staticmethod
     def verify_sensor(uuid):
@@ -132,8 +132,8 @@ class sensor_DAO(object):
 
         Inputs
         uuid (str)  -- uuid identifier of sensor
-        
-        Returns 
+
+        Returns
         True if pass, False if fail
         """
         # Get all logs in SENSOR_LOG with uuid
@@ -150,7 +150,7 @@ class sensor_DAO(object):
 
 
     # SENSOR OWNERSHIP HISTORY ==============================================================
-    soh_table_name   = "stbern.SENSOR_OWNERSHIP_HIST"
+    soh_table_name   = "stbern.sensor_ownership_hist"
     soh_period_start = "period_start"
     soh_period_end   = "period_end"
     soh_resident_id  = "resident_id"
@@ -162,7 +162,7 @@ class sensor_DAO(object):
 
         Inputs
         uuid (str)  -- Sensor uuid
-        resident_id (int)   
+        resident_id (int)
         start_datetime (datetime)
 
         Raises
@@ -175,7 +175,7 @@ class sensor_DAO(object):
             if rvals[1] == None: raise AssertionError("There is an open period left on the ownership table, close period before adding new owner")
 
         # Add ownership history
-        query = f"""INSERT INTO {sensor_DAO.soh_table_name} ({sensor_DAO.soh_uuid}, {sensor_DAO.soh_resident_id}, {sensor_DAO.soh_period_start}, {sensor_DAO.soh_period_end}) 
+        query = f"""INSERT INTO {sensor_DAO.soh_table_name} ({sensor_DAO.soh_uuid}, {sensor_DAO.soh_resident_id}, {sensor_DAO.soh_period_start}, {sensor_DAO.soh_period_end})
                     VALUES (%s, %s, %s, %s)"""
 
         # Get connection
@@ -196,7 +196,7 @@ class sensor_DAO(object):
 
         Inputs
         uuid (str)  -- Sensor uuid
-        resident_id (int)   
+        resident_id (int)
         end_datetime (datetime) -- default None, closes with datetime.now()
 
         Raises
@@ -208,13 +208,13 @@ class sensor_DAO(object):
         for ruuid,rvals in rdict.items():
             if rvals[-1][1] == None: openPeriod = True
 
-        if openPeriod == False: raise(AssertionError("No open period for uuid, resident_id pair. Unable to close anything"))     
-        
+        if openPeriod == False: raise(AssertionError("No open period for uuid, resident_id pair. Unable to close anything"))
+
         # Construct query
         if end_datetime == None: end_datetime = datetime.datetime.now()
-        query = f"""UPDATE {sensor_DAO.soh_table_name} SET `{sensor_DAO.soh_period_end}` = %s 
-                     WHERE `{sensor_DAO.soh_uuid}` = %s 
-                     AND `{sensor_DAO.soh_resident_id}` = %s 
+        query = f"""UPDATE {sensor_DAO.soh_table_name} SET `{sensor_DAO.soh_period_end}` = %s
+                     WHERE `{sensor_DAO.soh_uuid}` = %s
+                     AND `{sensor_DAO.soh_resident_id}` = %s
                      AND `{sensor_DAO.soh_period_end}` IS NULL"""
         feedDict = [end_datetime, uuid, resident_id]
 
@@ -224,7 +224,7 @@ class sensor_DAO(object):
         cursor = connection.cursor()
 
         try:
-            cursor.execute(query, feedDict) 
+            cursor.execute(query, feedDict)
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
@@ -235,19 +235,19 @@ class sensor_DAO(object):
         Returns ownership hisotry of sensor: Which resident was using the sensor during a period
 
         Inputs:
-        uuid (str)       -- Default None 
+        uuid (str)       -- Default None
         residentID (int) -- Default None
 
         Return:
-        Dict: {"uuid1": [(startdate, enddate), (datetime, datetime)],
-               "uuid2": [(startdate, enddate)]}
-        * NOTE: Final start and end date pairs will have NO END_DATETIME as this represents an ongoing period
+        Dict: {"uuid1": [(residentID, startdate, enddate), (residentID, datetime, datetime)],
+               "uuid2": [(residentID, startdate, None)]}
+        * NOTE: Final start and end date pairs will have 'None' END_DATETIME as this represents an ongoing period
         * NOTE: (startdate, enddate) are (inclusive, exclusive)
         '''
-        
+
         queryCols = []
         queryVals = []
-        if residentID != None: 
+        if residentID != None:
             queryCols.append(sensor_DAO.soh_resident_id)
             queryVals.append(residentID)
         if uuid != None:
@@ -258,8 +258,8 @@ class sensor_DAO(object):
         query = f"SELECT * FROM {sensor_DAO.soh_table_name} "
         for i in range(len(queryVals)):
             if i == 0: query += f" WHERE `{queryCols[i]}` = %s "
-            else:      query += f" AND   `{queryCols[i]}` = %s " 
-        query += f" ORDER BY `{sensor_DAO.soh_period_start}` ASC"       # Sort by start periods 
+            else:      query += f" AND   `{queryCols[i]}` = %s "
+        query += f" ORDER BY `{sensor_DAO.soh_period_start}` ASC"       # Sort by start periods
 
         # Get connection
         factory = connection_manager()
@@ -276,18 +276,43 @@ class sensor_DAO(object):
             records = defaultdict(list)
             if result != None:
                 for r in result:
+                    rid    = r[sensor_DAO.soh_resident_id]
                     uuid   = r[sensor_DAO.soh_uuid]
                     pStart = r[sensor_DAO.soh_period_start]
                     pEnd   = r[sensor_DAO.soh_period_end]
-                    records[uuid].append((pStart, pEnd))
-
+                    records[uuid].append((rid, pStart, pEnd))
             return records
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
+    @staticmethod
+    def get_current_owner(uuid):
+        '''
+        Get current owner of the sensor, returns a resident id
+
+        Inputs:
+        uuid (str)
+
+        Returns:
+        A (int) residentID or None if no current owner found
+        '''
+
+        r_dict = sensor_DAO.get_ownership_hist(uuid=uuid)
+        l_hist = r_dict[uuid]
+
+        # Check if any ownership records exist
+        if len(l_hist) == 0: return None
+
+        # Check if any open period exists
+        last_ownership = l_hist[-1]         # (residentID, startDt, endDt)
+        rid = last_ownership[0]
+        edt = last_ownership[2]
+        if edt == None: return rid          # Empty end datetime found, this is an ongoing period
+        else: return None                   # Existing end datetime found, this is a closed period
+
 
     # TYPES =================================================================================
-    type_table_name     = "stbern.SENSOR_TYPE"
+    type_table_name     = "stbern.sensor_type"
     type_col_name       = "type"
     @staticmethod
     def get_types():
@@ -312,12 +337,12 @@ class sensor_DAO(object):
             return types
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
-        
+
 
     @staticmethod
     def insert_type(type):
         """
-        Inserts a type into the type table... 
+        Inserts a type into the type table...
         Technically should not be used in the front end, unless you wanna implement some gross logic
 
         Inputs
@@ -337,7 +362,7 @@ class sensor_DAO(object):
 
 
     # LOCATIONS ==============================================================================
-    location_table_name = "stbern.SENSOR_LOCATION"
+    location_table_name = "stbern.sensor_location"
     location_col_name   = "location"
     @staticmethod
     def get_locations():
@@ -367,7 +392,7 @@ class sensor_DAO(object):
     @staticmethod
     def insert_location(location):
         """
-        Inserts a type into the type table... 
+        Inserts a type into the type table...
         Technically should not be used in the front end, unless you wanna implement some gross logic
 
         Inputs
@@ -387,7 +412,7 @@ class sensor_DAO(object):
 
 
     # FACILITYS ==============================================================================
-    facility_table_name     = "stbern.FACILITY"
+    facility_table_name     = "stbern.facility"
     facility_abrv_cname     = "abrv"
     facility_fullname_cname = "fullname"
     facility_desc_cname     = "description"
@@ -419,7 +444,7 @@ class sensor_DAO(object):
             return facilities
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
-    
+
 
     @staticmethod
     def insert_facilities(abrv, fullname, description=""):
@@ -443,42 +468,90 @@ class sensor_DAO(object):
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
 
+    @staticmethod
+    def get_juvo_resident_ids(location_filter='bkttm'):
+        '''
+        Returns list of resident_id for residents with juvo bed sensors
+
+        Not implemented: filter by ALF location
+        '''
+        output = []
+        try:
+            query = f"SELECT {sensor_DAO.soh_resident_id} FROM {sensor_DAO.soh_table_name} WHERE {sensor_DAO.soh_uuid} IN (SELECT {Sensor.uuid_tname} FROM {sensor_DAO.table_name} WHERE {Sensor.juvo_target_tname} is not Null)"
+            factory = connection_manager()
+            connection = factory.connection
+            cursor = connection.cursor()
+
+            cursor.execute(query)
+            result = cursor.fetchall()
+
+            if result:
+                for r in result:
+                    output.append(r['resident_id'])
+        except Exception as e:
+            print(e)
+
+        return output
+
+    @staticmethod
+    def get_juvo_target_from_resident_id(_resident_id, date_in_use=None):
+        '''
+        Returns the juvo target (int) in use at the current time for the input resident id (int)
+
+        TODO: optional input to get juvo target at another point in time
+        '''
+        output = 0
+
+        query = f"SELECT {Sensor.juvo_target_tname} FROM {sensor_DAO.table_name} WHERE {Sensor.uuid_tname} IN (SELECT {sensor_DAO.soh_uuid} FROM {sensor_DAO.soh_table_name} WHERE {sensor_DAO.soh_resident_id} = {_resident_id} AND {sensor_DAO.soh_uuid} LIKE '%-j-%' AND {sensor_DAO.soh_period_end} is Null)"
+        try:
+            factory = connection_manager()
+            connection = factory.connection
+            cursor = connection.cursor()
+
+            cursor.execute(query)
+            result = cursor.fetchone()
+            if result:
+                output = result[Sensor.juvo_target_tname]
+        except Exception as e:
+            print(e)
+
+        return output
 
 # TESTS ====================================================================================================
-if __name__ == '__main__': 
-    # Ownership hists
-    delete = False
+# if __name__ == '__main__':
+    # # Ownership hists
+    # delete = True
 
-    # Test 01: insert
-    try:
-        print(sensor_DAO.insert_ownership_hist(uuid="2006-m-01", resident_id=1, start_datetime=datetime.datetime.now()))
-        delete = True
-        print("success insert 1")
-    except: 
-        print("existing test record")
-        delete = True
+    # # Test 01: insert
+    # try:
+    #     print(sensor_DAO.insert_ownership_hist(uuid="2006-m-01", resident_id=1, start_datetime=datetime.datetime.now()))
+    #     delete = True
+    #     print("success insert 1")
+    # except:
+    #     print("existing test record")
+    #     delete = True
 
-    # test 02: get 
-    print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=1))
-    print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=None))
-    print(sensor_DAO.get_ownership_hist(uuid=None, residentID=None))
+    # # test 02: get
+    # print(sensor_DAO.get_ownership_hist(uuid="2006-m-01"))
+    # print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=None))
+    # print(sensor_DAO.get_ownership_hist(uuid=None, residentID=None))
 
-    # test 03: close 
-    try:
-        sensor_DAO.close_ownership_hist(uuid="2006-m-01", resident_id=1, end_datetime=None)
-        print("success close 1... Checking with get")
-        print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=1))
+    # # test 03: close
+    # try:
+    #     sensor_DAO.close_ownership_hist(uuid="2006-m-01", resident_id=1, end_datetime=None)
+    #     print("success close 1... Checking with get")
+    #     print(sensor_DAO.get_ownership_hist(uuid="2006-m-01", residentID=1))
 
-        sensor_DAO.close_ownership_hist(uuid="2006-m-01", resident_id=1, end_datetime=None)
-        print("fail close 2: should throw exception")
-    except AssertionError as e:
-        print("success close 2", e)
+    #     sensor_DAO.close_ownership_hist(uuid="2006-m-01", resident_id=1, end_datetime=None)
+    #     print("fail close 2: should throw exception")
+    # except AssertionError as e:
+    #     print("success close 2", e)
 
-    # end test: delete
-    if delete:
-        factory = connection_manager()
-        connection = factory.connection
-        cursor = connection.cursor()
-        try: cursor.execute(f"DELETE FROM {sensor_DAO.soh_table_name} WHERE `{sensor_DAO.soh_resident_id}` = 1 AND `{sensor_DAO.soh_uuid}` = \"2006-m-01\"")
-        except: raise
-        finally: factory.close_all(cursor=cursor, connection=connection)
+    # # end test: delete
+    # if delete:
+    #     factory = connection_manager()
+    #     connection = factory.connection
+    #     cursor = connection.cursor()
+    #     try: cursor.execute(f"DELETE FROM {sensor_DAO.soh_table_name} WHERE `{sensor_DAO.soh_resident_id}` = 1 AND `{sensor_DAO.soh_uuid}` = \"2006-m-01\"")
+    #     except: raise
+    #     finally: factory.close_all(cursor=cursor, connection=connection)
