@@ -633,7 +633,7 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Quality of sleep in past wk',
+                    title = 'Quality of sleep in past wk (%)',
                     titlefont = dict(
                         size = 14
                     ),
@@ -648,7 +648,7 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         pad = 5
                     ),
                     yaxis = dict(
-                        title = '%',
+                        title = "",#'%',
                         scaleanchor = 'x',
                         scaleratio = 0.5,
                         hoverformat = '.2f'
