@@ -12,6 +12,9 @@ class Sysmon_Log(object):
     key_tname                = "key"
     recieved_timestamp_tname = "recieved_timestamp"
 
+    key_burglar = "Burglar"
+    key_battery = "Battery Level"
+
     # write param defs
     def __init__(self, uuid, node_id, event, key, recieved_timestamp):
         '''

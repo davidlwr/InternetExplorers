@@ -201,20 +201,20 @@ class sensor_log_DAO(object):
         '''
         feed_dict = [target_dt, start_dt, end_dt, target_dt, start_dt, end_dt]
         query = f"""SELECT * FROM 
-                        (SELECT * FROM {sensor_log_DAO.table_name}) 
+                        (SELECT * FROM {sensor_log_DAO.table_name} 
                         WHERE {Sensor_Log.recieved_timestamp_tname} < %s
                         AND {Sensor_Log.recieved_timestamp_tname} > %s
                         AND {Sensor_Log.recieved_timestamp_tname} < %s
                         ORDER BY {Sensor_Log.recieved_timestamp_tname} ASC
                         LIMIT 1) as a
                         union
-                        (SELECT * FROM {sensor_log_DAO.table_name}) 
-                        WHERE {Sensor_Log.recieved_timestamp_tname} < %s
+                        (SELECT * FROM {sensor_log_DAO.table_name} 
+                        WHERE {Sensor_Log.recieved_timestamp_tname} > %s
                         AND {Sensor_Log.recieved_timestamp_tname} > %s
                         AND {Sensor_Log.recieved_timestamp_tname} < %s
                         ORDER BY {Sensor_Log.recieved_timestamp_tname} DESC
-                        LIMIT 1) as a
-                    ORDER BY {Sensor_Log.recieved_timestamp_tname} ASC; 
+                        LIMIT 1)
+                    ORDER BY {Sensor_Log.recieved_timestamp_tname} ASC
                 """
         
         # Get connection
@@ -231,7 +231,7 @@ class sensor_log_DAO(object):
                 for r in result:
                     r_ts = r[Sensor_Log.recieved_timestamp_tname]
                     if r_ts < target_dt: enclosing_logs[0] = r_ts
-                    else: enclosing_logs[0] = r_ts
+                    else: enclosing_logs[1] = r_ts
             return enclosing_logs
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
