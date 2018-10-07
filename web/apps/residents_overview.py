@@ -100,7 +100,7 @@ def detailedLayerTwoOverviewResidents(resident_id):
         if resident is None:
             return 'Resident not found<a href="/overview">Go Back</a>'
         # parameters
-        resident['para_ratio_threshold'] = input_data.input_data.get_para_ratio_threshold()
+        resident['para_ratio_threshold'] = input_data.input_data.get_para_ratio_threshold(resident_id, date_in_use)
 
         # sleep alerts
         resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'], resident['average_longest_uninterrupted_sleep_difference'], resident['qos_mean'], qos_df = input_data.input_data.get_nightly_sleep_indicator(resident_id, date_in_use)
@@ -670,7 +670,7 @@ def detailedLayerTwoOverviewResidents(resident_id):
                 night_toilet_MA_graph_json=night_toilet_MA_graph_json, sleeping_motion_graph_json=sleeping_motion_graph_json, uninterrupted_sleep_graph_json=uninterrupted_sleep_graph_json,
                 breathing_rates_json=breathing_rates_json, heartbeat_rates_json=heartbeat_rates_json, qos_json=qos_json)
     except Exception as e:
-        print(sys.exc_info()[0])
+        print(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
         return "An Error Occurred!"
 
 if __name__ == '__main__':
