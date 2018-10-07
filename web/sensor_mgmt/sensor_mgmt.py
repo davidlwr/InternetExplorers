@@ -2,7 +2,10 @@ import datetime, os, sys, math
 from datetime import timedelta
 
 if __name__ == '__main__':  sys.path.append("..")
-from JuvoAPI import JuvoAPI
+if __name__ == '__main__':
+    from JuvoAPI import JuvoAPI
+else:
+    from sensor_mgmt.JuvoAPI import JuvoAPI
 from Entities.sysmon_log import Sysmon_Log
 from Entities.sensor_log import Sensor_Log
 from DAOs.connection_manager import connection_manager
@@ -16,7 +19,7 @@ class Sensor_mgmt(object):
     INVALID_SENSOR = -1
     OK             = 0     # Can be OK and LOW_BATT at the same time
     DISCONNECTED   = 1
-    LOW_BATT       = 2 
+    LOW_BATT       = 2
     CHECK_WARN     = 3    # Potentially down
 
     # SETTINGS
@@ -26,9 +29,9 @@ class Sensor_mgmt(object):
     @classmethod
     def get_sensor_status(cls, uuid, retBatteryLevel=False):
         '''
-        Returns 'up' | 'down' status of sensors. 
+        Returns 'up' | 'down' status of sensors.
         For new sensors, Im assuming that at least a single record is sent and thus will trigger true.
-        
+
         Inputs:
         uuid (str)
         retBatteryLevel (boolean)
@@ -36,10 +39,10 @@ class Sensor_mgmt(object):
         Return:
         1. A List of status codes: See class variables
         2. A list of Battery level
-            - None if Juvo 
+            - None if Juvo
             - Empty if no records found. e.g. Door sensors only send battery level logs when on low battery
             - Single value in %
-        i.e. ([1,3], [75])    
+        i.e. ([1,3], [75])
         i.e. ([1]  , [])        // Battery or newly installed sensor
         i.e. ([0]  , [None]])   // Juvo
         '''
@@ -59,7 +62,7 @@ class Sensor_mgmt(object):
             return ret_codes
         uuid = sensor.uuid
         type = sensor.type
-        
+
         isDoor   = True if type == "door" else False
         isMotion = True if type == "motion" else False
         isBed    = True if type == "bed sensor" else False
@@ -98,15 +101,15 @@ class Sensor_mgmt(object):
                 if len(sleeps) > 0: ret_codes.append(cls.OK)    # sleep recorded
                 else: ret_codes.append(cls.CHECK_WARN)          # no sleep recorded
 
-        else: 
+        else:
            ret_codes.append(cls.INVALID_SENSOR)
 
-        # Check2: Battery level 
+        # Check2: Battery level
         if isMotion or isDoor:
             last_batt = sysmon_log_DAO.get_last_battery_level(uuid=uuid)
             if last_batt != None:       # Sysmon batt event found
                 batt_lvl = last_batt.event
-                if batt_lvl < cls.batt_thresh: 
+                if batt_lvl < cls.batt_thresh:
                     ret_codes.append(cls.LOW_BATT)
             else:                       # No Sysmon batt event found, door sensor high batt, or newly installed sensor
                 batt_lvl = []
@@ -118,34 +121,34 @@ class Sensor_mgmt(object):
     @classmethod
     def get_all_sensor_status(cls, retBatteryLevel=False):
         '''
-        Returns 'up' | 'down' status of ALL sensors. 
+        Returns 'up' | 'down' status of ALL sensors.
 
         Inputs:
         retBatteryLevel -- True, return battery level if exists. Default false
 
         Return:
-            list of sensors, status codes, and optionally battery levels: 
+            list of sensors, status codes, and optionally battery levels:
             NOTE: Battery level can be 'None' if no records are found
 
             [ [Sensor.Entity, [Status, Codes, battLVL]],
               [Sensor.Entity, [Status, Codes, None]]...
             ]
-        
-            See list of status codes 
+
+            See list of status codes
         '''
         # Ret list in form: [[uuid, [status codes], [uuid, [status codes]]]]
         sensor_status = []
 
         # List of all Sensors
         sensors = sensor_DAO.get_sensors()
-        
+
         # Iterate all sensors and get statuss
         for sensor in sensors:
             uuid   = sensor.uuid
             print(uuid)
             status = cls.get_sensor_status(uuid=uuid, retBatteryLevel=retBatteryLevel)
             if retBatteryLevel: sensor_status.append([uuid, status[0], status[1]])
-            else: sensor_status.append([uuid, status]) 
+            else: sensor_status.append([uuid, status])
 
         return sensor_status
 
@@ -153,7 +156,7 @@ class Sensor_mgmt(object):
     @classmethod
     def get_down_periods_motion(cls, uuid, start_dt, end_dt):
         '''
-        Checks if readings during `start_dt` to `end_dt` can be trusted. i.e. 
+        Checks if readings during `start_dt` to `end_dt` can be trusted. i.e.
         If we can confirm sensor is ON during the period
 
         INPUTS
@@ -172,7 +175,7 @@ class Sensor_mgmt(object):
 
         # get all sysmon battery readings within start_dt and end_dt
         records = sysmon_log_DAO.get_logs(uuid=uuid, key=Sysmon_Log.key_battery, start_dt=start_dt_buff, end_dt=end_dt_buff, descDT=False, limit=0)
-        # CHECK 1: If no records found, sensor is confirmed down during the period, but just 
+        # CHECK 1: If no records found, sensor is confirmed down during the period, but just
         if records == None: return [(start_dt, end_dt)]
 
         # CHECK 2: sysmon battery updates >> hourly sysmon battery updates are ASSURED
@@ -180,21 +183,21 @@ class Sensor_mgmt(object):
 
         #   >> Corner case, when period given is current. and only 1 batt sysmon can be found before
         #   >> Return true if diff has been less than 1 hour. Assume still up
-        if len(records) == 1: 
+        if len(records) == 1:
             curr_ts = records[0][Sysmon_Log.recieved_timestamp_tname]
             if curr_ts < start_dt and (start_dt-curr_ts) < timedelta(hours=1.2): return []
 
         prev_ts      = None
         for i in range(0, len(records)):     # Greedy
-            
+
             # Initial assignment
             curr_ts = records[i][Sysmon_Log.recieved_timestamp_tname]
-            if prev_ts == None: 
+            if prev_ts == None:
                 prev_ts = curr_ts
                 continue
 
             # Nothing wrong >> update was within 1 hour + buffer
-            if (curr_ts - prev_ts) / timedelta(minutes=1) <= (60 * 1.2): 
+            if (curr_ts - prev_ts) / timedelta(minutes=1) <= (60 * 1.2):
                 prev_ts = curr_ts
                 continue
 
@@ -203,18 +206,18 @@ class Sensor_mgmt(object):
 
             #       >> Assumption here is that there will never be a period where sensor revives and sends a reading without a sysmon battery update
             #           >> Therefore if sensor is brought back up, it sends a sysmon battery update soon after
-            enc_logs     = Sensor_mgmt.get_enclosing_logs(start_dt=prev_ts, end_dt=curr_ts, target_dt=pred_missing)     
-            # ^ last before and first atfer reading (sensor and sysmon) from where the next missing battery update is 
-            
+            enc_logs     = Sensor_mgmt.get_enclosing_logs(start_dt=prev_ts, end_dt=curr_ts, target_dt=pred_missing)
+            # ^ last before and first atfer reading (sensor and sysmon) from where the next missing battery update is
+
             if len(enc_logs) == 0: down_periods.append([prev_ts, curr_ts])
             if len(enc_logs) == 2: down_periods.append([enc_logs[0], enc_logs[1]])
-            if len(enc_logs) == 1: 
+            if len(enc_logs) == 1:
                 if enc_logs[0] < pred_missing: down_periods.append([enc_logs[0], curr_ts])
                 if enc_logs[0] > pred_missing: down_periods.append([prev_ts, enc_logs[0]])
 
-            # shift down 1 
+            # shift down 1
             prev_ts = curr_ts
-        
+
         return down_periods
 
 
@@ -222,7 +225,7 @@ class Sensor_mgmt(object):
     def get_enclosing_logs(cls, start_dt, end_dt, target_dt):
         '''
         Given a target datetime, returns...
-        Last record (sysmon or sensor reading) before the target and first record after the target 
+        Last record (sysmon or sensor reading) before the target and first record after the target
 
         Inputs:
         start_dt (datetime)
@@ -240,12 +243,12 @@ class Sensor_mgmt(object):
         if   enc_sensor[0] == None and enc_sysmon[0] != None: enc_logs[0] = enc_sysmon[0]
         elif enc_sensor[0] != None and enc_sysmon[0] == None: enc_logs[0] = enc_sensor[0]
         elif enc_sensor[0] < enc_sysmon[0]: enc_logs[0] = enc_sysmon[0]
-        else: enc_logs[0] = enc_sensor[0] 
+        else: enc_logs[0] = enc_sensor[0]
 
         if   enc_sensor[1] == None and enc_sysmon[1] != None: enc_logs[1] = enc_sysmon[1]
         elif enc_sensor[1] != None and enc_sysmon[1] == None: enc_logs[1] = enc_sensor[1]
         elif enc_sensor[1] < enc_sysmon[1]: enc_logs[1] = enc_sensor[1]
-        else: enc_logs[1] = enc_sysmon[1] 
+        else: enc_logs[1] = enc_sysmon[1]
 
         return enc_logs
 
@@ -255,7 +258,7 @@ class Sensor_mgmt(object):
         '''
         Returns the down period for Juvo Bed sensors
         Logic is based on the Environment readings, which should be read in continous 5 minute windows
-        
+
         Inputs:
         target   (int)
         start_dt (datetime)
@@ -263,7 +266,7 @@ class Sensor_mgmt(object):
 
         Returns:
         list -- [[start,end], ...]
-        ''' 
+        '''
 
         readings = JuvoAPI.get_target_environ_stats(target=target, start_time=start_dt, end_time=end_dt)
 
@@ -283,7 +286,7 @@ class Sensor_mgmt(object):
             if prev_sdt==None and prev_edt==None: prev_sdt, prev_edt = curr_sdt, curr_edt
 
             # Periods not continuous
-            elif prev_edt != start_dt: 
+            elif prev_edt != start_dt:
                 down_periods.append([prev_edt, curr_sdt])
                 prev_sdt = curr_sdt
                 prev_edt = curr_edt
@@ -302,11 +305,11 @@ class Sensor_mgmt(object):
     #     uuid     (str)
     #     start_dt (datetime) -- Inclusive
     #     end_dt   (datetime) -- Inclusive
-        
+
     #     Return
     #     List of down time: [[start,end]...]
     #     '''
-        
+
     #     # Split into periods whereby the 10th would refer to 12pm 9th, to 12pm 10th
 
     #     # Get list of all bed sensors and periods
@@ -317,7 +320,7 @@ class Sensor_mgmt(object):
     #     # If SLEEP: ensure a door log exists within 12pm to 12pm  >> UP, else down
 
     Juvo_SLEEP = 1      # Someone was sleeping
-    JUVO_NOONE = 0      # No one slept 
+    JUVO_NOONE = 0      # No one slept
     JUVO_DOWN  = -1     # There is no way to know if anyone slept or not, so just scrumb the entire preiod as down
     @classmethod
     def check_sleep_noone_down_juvo(cls, target, date):
@@ -349,7 +352,7 @@ class Sensor_mgmt(object):
 
 
 # TESTS ======================================================================================
-if __name__ == '__main__': 
+if __name__ == '__main__':
 
     # # Room 1
     # print("================ ROOM 1 ================")
@@ -384,7 +387,7 @@ if __name__ == '__main__':
 
     # uuid = "2006-j-01"
     # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
-    
+
     # # Room 3
     # print("================ ROOM 3 ================")
     # uuid = "2100-room 3-m-01"
@@ -398,7 +401,7 @@ if __name__ == '__main__':
 
     # uuid = "2100-room 3-j-01"
     # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
-    
+
     # # Room 4
     # print("================ ROOM 4 ================")
     # uuid = "2100-room 4-m-01"
@@ -413,7 +416,7 @@ if __name__ == '__main__':
     # # ADAM
     # print("================ ADAM ROAD ================")
     # uuid = "2100-room 4-m-01"
-    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}") 
+    # print(f"Testing UUID: {uuid}, Status: {Sensor_mgmt.get_sensor_status(uuid)}")
 
     # All
     # print("=============== ALL SENSORS ==============")

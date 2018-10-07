@@ -14,12 +14,12 @@ if __name__ == '__main__':  # we want to import from same directory if using thi
     sys.path.append(".")
     import input_sysmon
     from DAOs.sensor_log_DAO import sensor_log_DAO
-    from sensor_mgmt import JuvoAPI
+    from sensor_mgmt import JuvoAPI, sensor_mgmt
     from DAOs.sensor_DAO import sensor_DAO
 else:  # if called from index.py
     from apps import input_sysmon
     from DAOs.sensor_log_DAO import sensor_log_DAO
-    from sensor_mgmt import JuvoAPI
+    from sensor_mgmt import JuvoAPI, sensor_mgmt
     from DAOs.sensor_DAO import sensor_DAO
 
 # specify file parameters
@@ -231,6 +231,19 @@ class input_data(object):
 
 
         # TODO: for sensors that are still active at the end of the query period, make it inactive at the end date
+
+        # if 'm' in input_location:
+        #     uuid_list = relevant_data['uuid'].unique().tolist() # should only have 1 element
+        #     for u in uuid_list:
+        #         start_date_dt = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        #         end_date_dt = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+        #         # print(u)
+        #         # print(start_date_dt)
+        #         # print(end_date_dt)
+        #         dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, start_date_dt, end_date_dt)
+        #         dc_list = [d[0] for d in dc_list]
+        #         relevant_data = input_sysmon.remove_disconnected_periods(relevant_data, dc_list)
+        # else:
         relevant_data = input_sysmon.remove_disconnected_periods(relevant_data)
 
         # TODO: make grouping applicable for bedroom motion as well
