@@ -26,7 +26,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # internal imports
 from app import app, server, db
 from apps import input_data, input_shiftlogs, dashboard, reports, residents_overview, shift_log_form, \
-    risk_assessment_form
+    risk_assessment_form, change_password_form
 from apps.shift_log_form import Resident, ShiftLogForm
 from apps.risk_assessment_form import RiskAssessmentForm
 from Entities.user import User
@@ -243,6 +243,7 @@ MY_DEFAULT_FORMATTERS.update({
     date: date_format
 })
 
+
 class ResidentView(ModelView):
     # column_list = ('name', 'node_id', 'age', 'fall_risk', 'status', 'stay_location')
     column_type_formatters = MY_DEFAULT_FORMATTERS
@@ -322,13 +323,15 @@ class RiskAssessmentView(ModelView):
     column_display_pk = True
     column_default_sort = ('datetime', True)
     column_list = (
-        'datetime', 'patient_id', 'resident_name', 'weight', 'num_falls', 'injury_sustained', 'mbs_normal', 'mbs_confusion',
+        'datetime', 'patient_id', 'resident_name', 'weight', 'num_falls', 'injury_sustained', 'mbs_normal',
+        'mbs_confusion',
         'mbs_restlessness', 'mbs_agitation', 'mbs_uncooperative', 'mbs_hallucination', 'mbs_drowsy', 'mbs_others',
         'mbs_status', 'ast_medication', 'ast_clothes', 'ast_eating', 'ast_bathing', 'ast_walking', 'ast_toileting',
         'ast_others', 'pain_level', 'pain_other', 'num_medication', 'num_medicalCondition', 'hearing_ability',
         'vision_ability', 'mobility', 'dependency', 'dependency_comments', 'total_score')
     column_sortable_list = (
-        'datetime', 'patient_id', 'resident_name', 'weight', 'num_falls', 'injury_sustained', 'mbs_normal', 'mbs_confusion',
+        'datetime', 'patient_id', 'resident_name', 'weight', 'num_falls', 'injury_sustained', 'mbs_normal',
+        'mbs_confusion',
         'mbs_restlessness', 'mbs_agitation', 'mbs_uncooperative', 'mbs_hallucination', 'mbs_drowsy', 'mbs_others',
         'mbs_status', 'ast_medication', 'ast_clothes', 'ast_eating', 'ast_bathing', 'ast_walking', 'ast_toileting',
         'ast_others', 'pain_level', 'pain_other', 'num_medication', 'num_medicalCondition', 'hearing_ability',
@@ -338,6 +341,50 @@ class RiskAssessmentView(ModelView):
     def create_view(self):
         form = RiskAssessmentForm()
         return render_template('raforms.html', form=form, currentDate=datetime.now().strftime('%Y-%m'))
+
+    def is_accessible(self):
+        if current_user.staff_type == 'Admin':
+            return True
+
+    def inaccessible_callback(self, name, **kwargs):
+        flash('You do not have the user rights to access this page!')
+        return redirect(url_for('showRiskForm'))
+
+
+class Sensor(db.Model):
+    uuid = db.Column(db.String(45), primary_key=True)
+    type = db.Column(db.String(45))
+    location = db.Column(db.String(45))
+    description = db.Column(db.String(45))
+    juvo_target = db.Column(db.Integer)
+    facility_abrv = db.Column(db.String(45))
+
+
+# class SensorCreateForm(Form):
+#     uuid = StringField('uuid')
+#     type = StringField('type')
+#     location = StringField('location')
+#     description = StringField('description')
+#     juvo_target = IntegerField('juvo target')
+#     facility_abrv = StringField('facility abbreviation')
+
+
+class BedSensorCreateForm(Form):
+    uuid = StringField('uuid')
+    description = StringField('description')
+    juvo_target = IntegerField('juvo target')
+    facility_abrv = StringField('facility abbreviation')
+
+
+class SensorView(ModelView):
+    column_display_pk = True
+
+    @expose('/new/', methods=('GET', 'POST'))
+    def create_view(self):
+        form = SensorCreateForm()
+        uuid_list = sensor_DAO.get_unregistered_uuids()
+        form.uuid.choices = [(uuid, uuid) for uuid in uuid_list]
+        return render_template('create_sensor_form.html', form=form)
 
     def is_accessible(self):
         if current_user.staff_type == 'Admin':
@@ -366,6 +413,7 @@ admin.add_view(MyModelView(User, db.session, 'User'))
 admin.add_view(ResidentView(Resident, db.session, 'Residents'))
 admin.add_view(FormView(Shift_log, db.session, 'Shift Logs'))
 admin.add_view(RiskAssessmentView(Risk_assessment, db.session, 'Risk Assessment Forms'))
+admin.add_view(SensorView(Sensor, db.session, 'Sensors'))
 
 
 # utlity method for security
