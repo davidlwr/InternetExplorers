@@ -596,6 +596,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
 
             if filter_input != 'Day':  # if not day means have to display for 'Night'
                 for r in input_resident:
+                    r_name = resident_DAO.get_resident_name_by_resident_id(r)
                     df = input_data.input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r, time_period='Night',
                                                            offset=offset_checkbox,
                                                            ignore_short_durations=ignore_checkbox,
