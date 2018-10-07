@@ -15,6 +15,23 @@
 </div>
 {% endmacro %}
 
+{% macro render_password_field(field) %}
+<div class="form-group">
+  <label for="{{field.name}}" class="col-md-4 control-label" >{{ field.label.text }}</label>
+  <div class="col-md-4 inputGroupContainer">
+    <div class="input-group">{{ field(class_='form-control',**kwargs)|safe }}
+      {% if field.errors %}
+      <ul class=errors>
+        {% for error in field.errors %}
+        <li style="color:red;">Password length must be between 8 to 25 characters</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
 {% macro render_name_field(field) %}
 <div class="form-group">
   <label for="{{field.name}}" class="col-md-4 control-label" >{{ field.label.text }}</label>
