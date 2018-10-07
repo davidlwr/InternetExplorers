@@ -542,7 +542,7 @@ class sensor_DAO(object):
 
         return output
 
- @staticmethod
+    @staticmethod
     def get_unregistered_motion_door_sensors():
         """
         Returns all distinct uuids found in `SENSOR_LOG` but not in `SENSOR` table
