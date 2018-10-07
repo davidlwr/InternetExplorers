@@ -232,19 +232,29 @@ class input_data(object):
 
         # TODO: for sensors that are still active at the end of the query period, make it inactive at the end date
 
-        # if 'm' in input_location:
-        #     uuid_list = relevant_data['uuid'].unique().tolist() # should only have 1 element
-        #     for u in uuid_list:
-        #         start_date_dt = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-        #         end_date_dt = datetime.datetime.strptime(end_date, "%Y-%m-%d")
-        #         # print(u)
-        #         # print(start_date_dt)
-        #         # print(end_date_dt)
-        #         dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, start_date_dt, end_date_dt)
-        #         dc_list = [d[0] for d in dc_list]
-        #         relevant_data = input_sysmon.remove_disconnected_periods(relevant_data, dc_list)
-        # else:
-        relevant_data = input_sysmon.remove_disconnected_periods(relevant_data)
+        if 'm' in input_location:
+            uuid_list = relevant_data['uuid'].unique().tolist() # should only have 1 element
+            for u in uuid_list:
+                if isinstance(start_date, str):
+                    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+                if isinstance(end_date, str):
+                    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+
+                try:
+                    start_date = start_date.to_pydatetime()
+                    end_date = end_date.to_pydatetime()
+                except:
+                    pass
+
+                # print(u)
+                # print(isinstance(start_date, datetime.datetime))
+                # print(type(start_date))
+                dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, start_date, end_date)
+                dc_list = [d[0] for d in dc_list]
+                # print("HEREHRERERE")
+                relevant_data = input_sysmon.remove_disconnected_periods(relevant_data, dc_list)
+        else:
+            relevant_data = input_sysmon.remove_disconnected_periods(relevant_data)
 
         # TODO: make grouping applicable for bedroom motion as well
         if grouped and ('m-02' in input_location):

@@ -328,7 +328,7 @@ class Sensor_mgmt(object):
     #         # if any readings consider the date up
     #         filtered_logs = [x for x in logs if x.recieved_timestamp >= curr_start and x.recieved_timestamp <= curr_end]
 
-            
+
     #         if len(filtered_logs) > 0:      # Logs found, consider up
     #             status.append(True)
     #             continue
@@ -446,4 +446,10 @@ if __name__ == '__main__':
 
     # for ss in Sensor_mgmt.get_all_sensor_status(retBatteryLevel=False):
     #     print(ss)
-
+    uuid = "2005-m-02"
+    sdt = datetime.datetime(year=2018, month=3, day=2, minute=15, second=46)
+    sdt2 = datetime.datetime(year=2018, month=3, day=2)
+    edt = datetime.datetime(year=2018, month=10, day=4, hour=22, minute=20, second=40)
+    down_periods = Sensor_mgmt.get_down_periods_motion(uuid=uuid, start_dt=sdt2, end_dt=edt)
+    down_periods = Sensor_mgmt.get_down_periods_motion(uuid=uuid, start_dt=sdt, end_dt=edt)
+    for p in down_periods: print(p)

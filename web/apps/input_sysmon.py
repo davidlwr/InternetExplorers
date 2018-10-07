@@ -74,7 +74,7 @@ def remove_disconnected_periods(current_data, dc_list=None):
                                                         & (sysmon_disconnected_data['recieved_timestamp'] < current_data[
             'recieved_timestamp'].max())]
     else:
-        sysmon_relevant_data = dc_list
+        sysmon_relevant_data = pd.DataFrame({'recieved_timestamp': dc_list})
 
     # issue where motion is considered active when sensor is disconnected
     previous_disconnection = current_data['recieved_timestamp'].min()
