@@ -132,15 +132,15 @@ class sysmon_log_DAO(object):
         query = f"""SELECT * FROM
                         (SELECT * FROM {sysmon_log_DAO.table_name}
                         WHERE {Sysmon_Log.recieved_timestamp_tname} < %s
-                        AND {Sysmon_Log.recieved_timestamp_tname} > %s
-                        AND {Sysmon_Log.recieved_timestamp_tname} < %s
+                        AND {Sysmon_Log.recieved_timestamp_tname} >= %s
+                        AND {Sysmon_Log.recieved_timestamp_tname} <= %s
                         ORDER BY {Sysmon_Log.recieved_timestamp_tname} ASC
                         LIMIT 1) as a
                         union
                         (SELECT * FROM {sysmon_log_DAO.table_name}
                         WHERE {Sysmon_Log.recieved_timestamp_tname} > %s
-                        AND {Sysmon_Log.recieved_timestamp_tname} > %s
-                        AND {Sysmon_Log.recieved_timestamp_tname} < %s
+                        AND {Sysmon_Log.recieved_timestamp_tname} >= %s
+                        AND {Sysmon_Log.recieved_timestamp_tname} <= %s
                         ORDER BY {Sysmon_Log.recieved_timestamp_tname} DESC
                         LIMIT 1)
                     ORDER BY {Sysmon_Log.recieved_timestamp_tname} ASC
