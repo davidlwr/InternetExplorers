@@ -48,7 +48,18 @@ auth = FlaskLoginAuth(app)
 def custom_jinja_global_variables():
     def get_list_of_residents_jinja(filter_active=True, location_filter='BKT'):
         return resident_DAO.get_list_of_residents(filter_active, location_filter)
-    return dict(all_residents=get_list_of_residents_jinja)
+
+    def get_admin_management_paths():
+        '''
+        Returns a list of tuples with the management console paths available to admin users
+        [(path_1, name_1), (path_2, name_2) ... ]
+        '''
+    def get_staff_management_paths():
+        '''
+        Returns a list of tuples with the management console paths available to staff users
+        [(path_1, name_1), (path_2, name_2) ... ]
+        '''
+    return dict(all_residents=get_list_of_residents_jinja, get_admin_management_paths=get_admin_management_paths, get_staff_management_paths=get_staff_management_paths)
 
 class Anonymous(AnonymousUserMixin):
     def __init__(self):
