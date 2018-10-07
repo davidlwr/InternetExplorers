@@ -312,6 +312,45 @@ class sensor_DAO(object):
         else: return None                   # Existing end datetime found, this is a closed period
 
 
+    @staticmethod
+    def assign_ownerless_to_noone(ownership_list, start_dt=None, end_dt=None):
+        '''
+        Utility method to assign empty ownerless periods to no one of -1
+        This creates a list of continuous periods
+
+        Inputs: 
+        onwership_list (list) -- [[rid, startdt, enddt] ,...]
+        start_dt (datetime) -- Filters out values < start_dt. Default None
+        end_dt (datetiem) -- Filters out values > end_dt. Default None
+        '''
+
+        # Filter out periods not within the start and end dts given
+        if start_dt != None: ownership_list = [[rid,sdt,edt] for rid,sdt,edt in ownership_list if edt > start_dt]   # Filter by start_dt
+        if end_dt   != None: ownership_list = [[rid,sdt,edt] for rid,sdt,edt in ownership_list if sdt < end_dt]     # Filter by end_dt
+
+        ownership_list = ownership_list.sorted(key = lambda x: x[1])    # asccending order
+        
+        # Replace start and end periods with the limiting start_dt and/or end_dt
+        if start_dt != None: ownership_list[0][1]  = start_dt
+        if end_dt   != None: ownership_list[-1][2] = end_dt
+
+        #   Filling in ownerless periods
+        ownerless_periods = []
+        prev_sdt = None
+        prev_edt = None
+        for rid,sdt,edt in ownership_list:
+            # Initial assignment
+            if prev_sdt!=None and prev_edt!=None and ((sdt-prev_edt) > 0): 
+                # There is a gap between ownerships, therefore assign to no one -1
+                ownerless_periods.append(-1, prev_edt, sdt)
+            prev_sdt, prev_edt = sdt, edt
+
+        ret_list = ownerless_periods + ownerless_periods     # combine ownerless periods and ownershiplist
+        ret_list.sort(key = lambda x: x[1], reversed=False)  # resort by date
+        
+        return ret_list    
+
+
     # TYPES =================================================================================
     type_table_name     = "stbern.sensor_type"
     type_col_name       = "type"

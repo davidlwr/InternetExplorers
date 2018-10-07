@@ -1,4 +1,4 @@
-import datetime, os, sys
+import datetime, os, sys, math
 from datetime import timedelta
 
 if __name__ == '__main__':  sys.path.append("..")
@@ -151,7 +151,7 @@ class Sensor_mgmt(object):
 
 
     @classmethod
-    def check_trust_motion(cls, uuid, start_dt, end_dt):
+    def get_down_periods_motion(cls, uuid, start_dt, end_dt):
         '''
         Checks if readings during `start_dt` to `end_dt` can be trusted. i.e. 
         If we can confirm sensor is ON during the period
@@ -249,6 +249,105 @@ class Sensor_mgmt(object):
 
         return enc_logs
 
+
+    @classmethod
+    def get_down_periods_Juvo(cls, target, start_dt, end_dt):
+        '''
+        Returns the down period for Juvo Bed sensors
+        Logic is based on the Environment readings, which should be read in continous 5 minute windows
+        
+        Inputs:
+        target   (int)
+        start_dt (datetime)
+        end_dt   (datetime)
+
+        Returns:
+        list -- [[start,end], ...]
+        ''' 
+
+        readings = JuvoAPI.get_target_environ_stats(target=target, start_time=start_dt, end_time=end_dt)
+
+        # No readings, therefore all down
+        if readings == None: return [[start_dt, end_dt]]
+
+        readings.sort(key=lambda x: x['local_start_time'], reverse=False) # Sorted in increasing time order
+
+        down_periods = []
+        prev_sdt = None
+        prev_edt = None
+        for reading in readings:
+            curr_sdt = reading['local_start_time']
+            curr_edt = reading['local_end_time']
+
+            # Inital assignment
+            if prev_sdt==None and prev_edt==None: prev_sdt, prev_edt = curr_sdt, curr_edt
+
+            # Periods not continuous
+            elif prev_edt != start_dt: 
+                down_periods.append([prev_edt, curr_sdt])
+                prev_sdt = curr_sdt
+                prev_edt = curr_edt
+
+        # What about no readings at all
+        return down_periods
+
+
+    # @classmethod
+    # def get_down_periods_door(cls,uuid, start_dt, end_dt):
+    #     '''
+    #     Returns the down periods for the door sensor
+    #     NOTE: down/up can only be assigned to a daily/24 hour basis, hard to get more accurate than that
+
+    #     Inputs:
+    #     uuid     (str)
+    #     start_dt (datetime) -- Inclusive
+    #     end_dt   (datetime) -- Inclusive
+        
+    #     Return
+    #     List of down time: [[start,end]...]
+    #     '''
+        
+    #     # Split into periods whereby the 10th would refer to 12pm 9th, to 12pm 10th
+
+    #     # Get list of all bed sensors and periods
+
+    #     # If on that day the door owner also owns a bed sensor:
+    #         # Evaluate juvo - SLEEP, NOONE, DOWN
+
+    #     # If SLEEP: ensure a door log exists within 12pm to 12pm  >> UP, else down
+
+    Juvo_SLEEP = 1      # Someone was sleeping
+    JUVO_NOONE = 0      # No one slept 
+    JUVO_DOWN  = -1     # There is no way to know if anyone slept or not, so just scrumb the entire preiod as down
+    @classmethod
+    def check_sleep_noone_down_juvo(cls, target, date):
+        '''
+        Utility method to investigate the reason for a missing date (i.e. no sleep_summary readings from sensor)
+        NOTE: Will return weird results if given a date that has readings
+
+        Inputs:
+        target (int)
+        date (datetime) -- Sleep period for 12th considers 12th noon - 13th noon
+
+        Returns:
+        JUVO_NOONE = 0      -- Probably no one slept that night
+        JUVO_DOWN  = 1      -- Sensor is down during that date
+        '''
+
+        # Juvo looks at night after, but we want to look at the night before
+        prev_date = date - timedelta(days=1) # 12 am   of 1 day before date
+        end_dt   = date.replace(hour=12)     # 12 noon of date
+        start_dt = edt - timedelta(days=1)   # 12 noon of 1 day before date
+
+        sleep_summaries = JuvoAPI.get_target_sleep_summaries(target=target, start_date=prev_date, end_date=prev_date)
+        down_periods = cls.get_down_periods_Juvo(target=target, start_dt=start_dt, end_dt=end_dt)
+
+        if sleep_summaries != None: return cls.Juvo_SLEEP       # C1: If sleep summaries found, then JUVO_SLEEP
+        elif len(down_periods) == 0: return cls.JUVO_NOONE      # C2: If no sleep summaries found, AND  0 down periods, then JUVO_NOONE
+        else: return cls.JUVO_DOWN                              # C3: If no sleep summaries found, AND any down period: JUVO DOWN
+
+
+
 # TESTS ======================================================================================
 if __name__ == '__main__': 
 
@@ -333,5 +432,5 @@ if __name__ == '__main__':
 
     fucked_sdt = datetime.datetime(year=2018, month=8, day=15)      # 2018-08-15 03:46:49
     fucked_edt = datetime.datetime(year=2018, month=10, day=5, )    # 2018-10-04 around 3pm
-    down_periods = Sensor_mgmt.check_trust_motion(uuid=uuid, start_dt=fucked_sdt, end_dt=fucked_edt)
+    down_periods = Sensor_mgmt.get_down_periods_motion(uuid=uuid, start_dt=fucked_sdt, end_dt=fucked_edt)
     for p in down_periods: print(p)
