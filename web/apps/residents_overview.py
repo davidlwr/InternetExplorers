@@ -605,6 +605,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
         # print(qos_df.info())
         # print(qos_df)
 
+        resident['check_qos_too_low'] =  any('Quality of sleep lower than' in s for s in resident['sleep_alerts'])
+
         qos_graph = dict(
                 data=[
                     dict(

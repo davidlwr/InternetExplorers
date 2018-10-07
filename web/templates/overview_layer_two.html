@@ -455,11 +455,11 @@ a.deco-none {
                                 </script>
                             </div>
                             <div class="col-xs-12">
-                                <div class="panel panel-{{ 'red' if resident['check_out_of_rr_range'] else 'info' }}">
+                                <div class="panel panel-{{ 'red' if resident['check_qos_too_low'] else 'info' }}">
                                     <div class="panel-heading">
                                         <div class="row">
                                             <div class="col-xs-12 text-right">
-                                                Sleep respiratory rates are {{ 'outside of' if resident['check_out_of_rr_range'] else 'within' }} the typical range in the past week
+                                                Quality of sleep is {{ 'too low' if resident['check_qos_too_low'] else 'normal' }}
                                             </div>
                                         </div>
                                     </div>
