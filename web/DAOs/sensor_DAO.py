@@ -158,7 +158,7 @@ class sensor_DAO(object):
             return False
 
     # SENSOR OWNERSHIP HISTORY ==============================================================
-    soh_table_name = "stbern.SENSOR_OWNERSHIP_HIST"
+    soh_table_name = "stbern.sensor_ownership_hist"
     soh_period_start = "period_start"
     soh_period_end = "period_end"
     soh_resident_id = "resident_id"

@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from wtforms.validators import InputRequired
 import flask_login
 from DAOs.sensor_DAO import sensor_DAO
-from datetime import datetime
+from datetime import datetime, date
 
 from app import app, server, db
 from apps.shift_log_form import resident_query
@@ -83,6 +83,7 @@ def create_sensor():
 
             sensor = Sensor(submitted_uuid, submitted_type, submitted_location, submitted_facility, submitted_description)
             sensor_DAO.insert_sensor(sensor)
+            sensor_DAO.insert_ownership_hist(submitted_uuid, submitted_resident, date.today())
             response = 'You have successfully added the ' + submitted_type + ' sensor "' + submitted_uuid + '" for ' + submitted_name + '. Click <a href="/admin/sensor" class="alert-link">here</a> to view/edit responses.'
             flash(Markup(response))
             previous = 0
@@ -97,6 +98,7 @@ def create_sensor():
 
             sensor = Sensor(str(submitted_juvo_id), "bed sensor", "bed", submitted_facility, submitted_description, submitted_juvo_id)
             sensor_DAO.insert_sensor(sensor)
+            sensor_DAO.insert_ownership_hist(submitted_juvo_id, submitted_resident, date.today())
             response = 'You have successfully added the bed sensor "' + str(submitted_juvo_id) + '" for ' + submitted_name + '. Click <a href="/admin/sensor" class="alert-link">here</a> to view/edit responses.'
             flash(Markup(response))
             previous = 1
