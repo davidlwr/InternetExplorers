@@ -483,11 +483,13 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         # handle logic here
-        authenticate_user = user_DAO.authenticate(form.username.data, form.password.data)
+        username = request.form.get('username')
+        password = request.form.get('password')
+        authenticate_user = user_DAO.authenticate(username, password)
         next = request.args.get('next')
 
         if authenticate_user:
-            user = User.query.get(form.username.data)
+            user = User.query.get(username)
             flask_login.login_user(user, remember=form.remember.data)
 
             print("DEBUG:", next)
