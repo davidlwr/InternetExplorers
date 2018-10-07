@@ -293,7 +293,7 @@ class Sensor_mgmt(object):
 
 
     # @classmethod
-    # def get_down_periods_door(cls,uuid, start_dt, end_dt):
+    # def get_down_periods_door(cls, uuid, start_dt, end_dt):
     #     '''
     #     Returns the down periods for the door sensor
     #     NOTE: down/up can only be assigned to a daily/24 hour basis, hard to get more accurate than that
@@ -308,13 +308,34 @@ class Sensor_mgmt(object):
     #     '''
         
     #     # Split into periods whereby the 10th would refer to 12pm 9th, to 12pm 10th
+    #     start_date = start_dt.replace(hours=0, minutes=0, seconds=0)
+    #     end_date   = end_dt.replace(hours=0, minutes=0, seconds=0)
+    #     date_diff  = math.floor((end_date - start_date) / timedelta(days=1))
 
-    #     # Get list of all bed sensors and periods
+    #     # Get all sensor of this uuid between start and end dates
+    #     logs = sensor_log_DAO.get_logs(uuid=uuid, start_datetime=start_date, end_datetime=end_date).sort(key = lambda x: x.recieved_timestamp) # ASC
 
-    #     # If on that day the door owner also owns a bed sensor:
-    #         # Evaluate juvo - SLEEP, NOONE, DOWN
+    #     # C1: if any readings within the date, consider up
+    #     status = []
+    #     for i in range(0, date_diff):
+    #         curr_date = (start_date + timedelta(days=1)).replace(hour=12)
+    #         curr_start = (curr_date - timedelta(days=1)).replace(hour=12)
+    #         curr_end   = curr_date
 
-    #     # If SLEEP: ensure a door log exists within 12pm to 12pm  >> UP, else down
+    #         # if any readings consider the date up
+    #         filtered_logs = [x for x in logs if x.recieved_timestamp >= curr_start and x.recieved_timestamp <= curr_end]
+
+            
+    #         if len(filtered_logs) > 0:      # Logs found, consider up
+    #             status.append(True)
+    #             continue
+
+    #         else:                           # No logs, finetune
+    #             # Get owner by period
+    #             # Get Juvo owner by period
+
+    #             # Use Juvo to finetune
+
 
     Juvo_SLEEP = 1      # Someone was sleeping
     JUVO_NOONE = 0      # No one slept 
@@ -337,7 +358,7 @@ class Sensor_mgmt(object):
         # Juvo looks at night after, but we want to look at the night before
         prev_date = date - timedelta(days=1) # 12 am   of 1 day before date
         end_dt   = date.replace(hour=12)     # 12 noon of date
-        start_dt = edt - timedelta(days=1)   # 12 noon of 1 day before date
+        start_dt = end_dt - timedelta(days=1)   # 12 noon of 1 day before date
 
         sleep_summaries = JuvoAPI.get_target_sleep_summaries(target=target, start_date=prev_date, end_date=prev_date)
         down_periods = cls.get_down_periods_Juvo(target=target, start_dt=start_dt, end_dt=end_dt)
@@ -423,14 +444,3 @@ if __name__ == '__main__':
     # for ss in Sensor_mgmt.get_all_sensor_status(retBatteryLevel=False):
     #     print(ss)
 
-
-    # Checking check_trust_motion
-    uuid = "2005-m-01"
-    edt = sdt = datetime.datetime.now()
-    # down_periods = Sensor_mgmt.check_trust_motion(uuid=uuid, start_dt=sdt, end_dt=edt)
-    # print(down_periods)
-
-    fucked_sdt = datetime.datetime(year=2018, month=8, day=15)      # 2018-08-15 03:46:49
-    fucked_edt = datetime.datetime(year=2018, month=10, day=5, )    # 2018-10-04 around 3pm
-    down_periods = Sensor_mgmt.get_down_periods_motion(uuid=uuid, start_dt=fucked_sdt, end_dt=fucked_edt)
-    for p in down_periods: print(p)

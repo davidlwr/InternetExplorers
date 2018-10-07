@@ -184,6 +184,7 @@ class sensor_log_DAO(object):
 
         return pd.read_sql_query(query, connection)
 
+
     @staticmethod
     def get_enclosing_logs(start_dt, end_dt, target_dt):
         '''
@@ -203,15 +204,15 @@ class sensor_log_DAO(object):
         query = f"""SELECT * FROM 
                         (SELECT * FROM {sensor_log_DAO.table_name} 
                         WHERE {Sensor_Log.recieved_timestamp_tname} < %s
-                        AND {Sensor_Log.recieved_timestamp_tname} > %s
-                        AND {Sensor_Log.recieved_timestamp_tname} < %s
+                        AND {Sensor_Log.recieved_timestamp_tname} >= %s
+                        AND {Sensor_Log.recieved_timestamp_tname} <= %s
                         ORDER BY {Sensor_Log.recieved_timestamp_tname} ASC
                         LIMIT 1) as a
                         union
                         (SELECT * FROM {sensor_log_DAO.table_name} 
                         WHERE {Sensor_Log.recieved_timestamp_tname} > %s
-                        AND {Sensor_Log.recieved_timestamp_tname} > %s
-                        AND {Sensor_Log.recieved_timestamp_tname} < %s
+                        AND {Sensor_Log.recieved_timestamp_tname} >= %s
+                        AND {Sensor_Log.recieved_timestamp_tname} <= %s
                         ORDER BY {Sensor_Log.recieved_timestamp_tname} DESC
                         LIMIT 1)
                     ORDER BY {Sensor_Log.recieved_timestamp_tname} ASC
