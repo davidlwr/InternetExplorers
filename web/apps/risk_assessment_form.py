@@ -30,7 +30,7 @@ from Entities.risk_assessment import Risk_assessment
 
 
 class RiskAssessmentForm(Form):
-    name = QuerySelectField(query_factory=resident_query, allow_blank=False, get_label='name')
+    resident = QuerySelectField(query_factory=resident_query, allow_blank=False, get_label='name')
     # date = DateField('Date', format='%Y-%m', validators=[InputRequired('Please enter date!')], default=datetime.today)
     weight = FloatField('Monthly weight updates (kg)')
     num_falls = RadioField('No. of falls for past 6 months',
@@ -78,8 +78,8 @@ def showRiskForm():
         if form.validate_on_submit():
             # handle submitted data here
             # process form here
-            submitted_name = form.name.data.resident_id
-            name_to_show = form.name.data.name
+            submitted_name = form.resident.data.resident_id
+            name_to_show = form.resident.data.name
             submitted_date = request.form.get('year_month')
             submitted_weight = form.weight.data
 
@@ -135,7 +135,7 @@ def showRiskForm():
             #                                  submitted_mobility, submitted_dependent,
             #                                  submitted_dependency)
 
-            submitted_dob = form.name.data.dob
+            submitted_dob = form.resident.data.dob
             # submitted_dob = datetime.strptime(submitted_dob, '%Y-%m-%d')
             today = date.today()
 

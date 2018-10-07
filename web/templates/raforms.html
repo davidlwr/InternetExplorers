@@ -21,7 +21,7 @@
         <a href="/admin/risk_assessment" style="color:black;">View/Edit Responses</a>
         <form class="well form-horizontal" method="POST" action="/raforms">
         {{ form.csrf_token }}
-        {{ render_name_field(form.name) }}
+        {{ render_name_field(form.resident) }}
             <br>
             <div class="form-group">
                 <label class="col-md-4 control-label">Month</label>
@@ -97,7 +97,11 @@
                     </div>
                 </div>
             <br>
-        {{ render_field(form.submit) }}
+        <div class="form-group">
+            <div class="col-md-5 control-label">
+                <button type=submit class="btn btn-primary">Submit</button>
+            </div>
+        </div>
 
         </form>
     </div>
