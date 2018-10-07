@@ -125,9 +125,9 @@
 				<em class="fa fa-navicon">&nbsp;</em>Residents Details<span data-toggle="collapse" href="#residents-view" class="icon pull-right"><em class="fa fa-plus"></em></span>
 				</a>
 				<ul class="children collapse" id="residents-view">
-					<li><a class="" href="#">
-						<span class="fa fa-arrow-right">&nbsp;</span>Bukit Timah</a>
-						<ul class="nav nav-third-level">
+					<li class="parent"><a data-toggle="collapse" href="#resident-bkttm">
+						<span data-toggle="collapse" href="#residents-bkttm" class="icon"><em class="fa fa-plus"></em></span> Bukit Timah</a>
+						<ul class="children collapse" id="resident-bkttm">
 						{% for r in all_residents(location_filter='bkttm') %}
 						<li>
 							<a href="/overview/{{ r['resident_id'] }}">{{ r['name'] }}</a>
@@ -136,13 +136,13 @@
 						</ul>
 					</li>
 					<li><a class="" href="#">
-						<span class="fa fa-arrow-right">&nbsp;</span>Adam Road</a>
+						<span data-toggle="collapse" href="#residents-adm" class="icon"><em class="fa fa-plus"></em></span> Adam Road</a>
 					</li>
 				</ul>
 			</li>
 			<li><a href="/graphs"><em class="fa fa-bar-chart">&nbsp;</em> Graphs</a></li>
 			<li class="parent"><a data-toggle="collapse" href="#sub-item-1">
-				<em class="fa fa-edit">&nbsp;</em>Forms<span data-toggle="collapse" href="#sub-item-1" class="icon pull-right"><em class="fa fa-plus"></em></span>
+				<em class="fa fa-wpforms">&nbsp;</em>Forms<span data-toggle="collapse" href="#sub-item-1" class="icon pull-right"><em class="fa fa-plus"></em></span>
 				</a>
 				<ul class="children collapse" id="sub-item-1">
 					<li><a class="" href="/eosforms">
