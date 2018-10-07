@@ -146,16 +146,35 @@
 				</a>
 				<ul class="children collapse" id="sub-item-1">
 					<li><a class="" href="/eosforms">
-							<span class="fa fa-arrow-right">&nbsp;</span> End of Shift Forms
+							End of Shift Forms
 						</a>
 					</li>
-				<!--
-					<a href="/raforms">Risk Assessment Forms<span class="fa arrow">&nbsp;</span></a>
-				</li> -->
+                <li>Risk Assessment Forms<span class="fa arrow">&nbsp;</span></a>
+				</li>
 				</ul>
 			</li>
-
-			<li><a href="/admin/resident"><em class="fa fa-wrench fa-fw">&nbsp;</em>Manage</a></li> <!--or should be manage users / residents-->
+            {% if current_user.staff_type == 'Admin' %}
+			<li class="parent"><a data-toggle="collapse" href="#sub-item-3"><em class="fa fa-wrench fa-fw">&nbsp;</em>Manage<span data-toggle="collapse" href="#sub-item-3" class="icon pull-right"><em class="fa fa-plus"></em></span></a>
+                <ul class="children collapse" id="sub-item-3">
+                    {% for l in get_admin_management_paths() %}
+                    <li>
+                        <a href="{{ l[0] }}">{{ l[1] }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li> <!--or should be manage users / residents-->
+            {% endif %}
+            {% if current_user.staff_type == 'Staff' %}
+			<li class="parent"><a data-toggle="collapse" href="#sub-item-3"><em class="fa fa-wrench fa-fw">&nbsp;</em>Manage<span data-toggle="collapse" href="#sub-item-3" class="icon pull-right"><em class="fa fa-plus"></em></span></a>
+                <ul class="children collapse" id="sub-item-3">
+                    {% for l in get_staff_management_paths() %}
+                    <li>
+                        <a href="{{ l[0] }}">{{ l[1] }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li> <!--or should be manage users / residents-->
+            {% endif %}
 			<!--<li><a href="login.html"><em class="fa fa-power-off">&nbsp;</em> Logout</a></li>-->
 	</div><!--/.sidebar-->
 
