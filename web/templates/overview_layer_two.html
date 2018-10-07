@@ -185,7 +185,7 @@ a.deco-none {
                             <div class="row">
                                 <div class="col-xs-12 text-right">
                                     Average number of night toilet usage<br/>
-                                    <span class="huge"><b>{{ '%0.2f'|format((resident['number_of_night_toilet_usage_in_past_week'])|float) }}</b></span><b> Times</b>
+                                    <span class="huge"><b>{{ '%0.0f'|format((resident['number_of_night_toilet_usage_in_past_week'])|round(0)) }}</b></span><b> Times</b>
                                 </div>
                             </div>
                         </div>
@@ -398,8 +398,9 @@ a.deco-none {
                             <div class="row">
                                 <div class="col-xs-12 text-right">
                                     Average longest uninterrupted sleep duration<br/>
-                                    <span class="huge"><b>{{ '%0.2f'|format((resident['average_longest_uninterrupted_sleep'] / 3600)|float) }}</b>
-                                    </span><b> Hours</b>
+                                    <span class="huge"><b>{{ '%0.0f'|format((resident['average_longest_uninterrupted_sleep'] / 3600)|round(0, 'floor')) }}</b>
+                                    </span><b> Hours </b><span class="huge"><b>{{ '%0.0f'|format(((resident['average_longest_uninterrupted_sleep'] / 60) % 60)|round(0)) }}</b>
+                                    </span><b> Minutes</b>
                                 </div>
                             </div>
                         </div>
