@@ -117,9 +117,32 @@
                             </ul>
                             <!-- /.nav-second-level -->
                         </li>
+                        {% if current_user.staff_type == 'Admin' %}
                         <li>
-                            <a href="/admin/resident"><i class="fa fa-wrench fa-fw"></i> Manage Users/Residents</a>
+                            <a href="#"><i class="fa fa-wrench fa-fw"></i> Manage<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                {% for l in get_admin_management_paths() %}
+                                <li>
+                                    <a href="{{ l[0] }}">{{ l[1] }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <!-- /.nav-second-level -->
                         </li>
+                        {% endif %}
+                        {% if current_user.staff_type == 'Staff' %}
+                        <li>
+                            <a href="#"><i class="fa fa-wrench fa-fw"></i> Manage<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                {% for l in get_staff_management_paths() %}
+                                <li>
+                                    <a href="{{ l[0] }}">{{ l[1] }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <!-- /.nav-second-level -->
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->

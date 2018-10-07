@@ -54,17 +54,23 @@ def custom_jinja_global_variables():
         Returns a list of tuples with the management console paths available to admin users
         [(path_1, name_1), (path_2, name_2) ... ]
         '''
+        return [("/admin/user/", "Users"), ("/admin/resident/", "Residents"), ("/admin/shift_log/", "Shift Logs"), ("/admin/risk_assessment/", "Risk Assesments"), ("/admin/sensor/", "Sensors")]
+
     def get_staff_management_paths():
         '''
         Returns a list of tuples with the management console paths available to staff users
         [(path_1, name_1), (path_2, name_2) ... ]
         '''
+        output = []
+        output.append(("/admin/resident/", "Residents"))
+        output.append(("/admin/shift_log/", "Shift Logs"))
+        return output
+
     return dict(all_residents=get_list_of_residents_jinja, get_admin_management_paths=get_admin_management_paths, get_staff_management_paths=get_staff_management_paths)
 
 class Anonymous(AnonymousUserMixin):
     def __init__(self):
         self.staff_type = 'Guest'
-
 
 login_manager.anonymous_user = Anonymous
 
@@ -467,12 +473,12 @@ def login():
     if form.validate_on_submit():
         # handle logic here
         authenticate_user = user_DAO.authenticate(form.username.data, form.password.data)
+        next = request.args.get('next')
 
         if authenticate_user:
             user = User.query.get(form.username.data)
             flask_login.login_user(user, remember=form.remember.data)
 
-            next = request.args.get('next')
             print("DEBUG:", next)
             # is_safe_url should check if the url is safe for redirects.
             # See http://flask.pocoo.org/snippets/62/ for an example.
@@ -483,6 +489,7 @@ def login():
             return redirect(next or url_for('showOverviewResidents'))
         # if wrong username or password
         flash('Invalid username or password')
+        print("DEBUG next if wrong credentials: ", next)
         return render_template('login.html', form=form)
 
     # else if fail authentication
