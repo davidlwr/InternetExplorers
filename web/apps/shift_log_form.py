@@ -28,7 +28,7 @@ def resident_query():
 
 
 class ShiftLogForm(Form):
-    name = QuerySelectField(query_factory=resident_query, allow_blank=False, get_label='name')
+    resident = QuerySelectField(query_factory=resident_query, allow_blank=False, get_label='name')
     date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')], default=datetime.today)
     timeNow = datetime.time(datetime.now())
     today7pm = timeNow.replace(hour=19, minute=0, second=0, microsecond=0)
@@ -59,8 +59,8 @@ def showForms():
         if form.validate_on_submit():
             # handle submitted data here
             # process form here
-            submitted_name = form.name.data.resident_id
-            name_to_show = form.name.data.name
+            submitted_name = form.resident.data.resident_id
+            name_to_show = form.resident.data.name
             submitted_date = form.date.data
             submitted_time = form.time.data
             submitted_falls = form.falls.data

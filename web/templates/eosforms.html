@@ -20,7 +20,7 @@
         <a href="/admin/shift_log" style="color:black;">View/Edit Responses</a>
             <form class="well form-horizontal" method="POST" action="/eosforms">
                 {{ form.csrf_token }}
-                {{ render_name_field(form.name) }}
+                {{ render_name_field(form.resident) }}
                 {{ render_field(form.date) }}
                 {{ render_field(form.time) }}
                 {{ render_field(form.falls) }}
@@ -42,7 +42,11 @@
                 {{ render_field(form.sbp) }}
                 {{ render_field(form.dbp) }}
                 {{ render_field(form.pulse) }}
-                {{ render_field(form.submit) }}
+                <div class="form-group">
+                    <div class="col-md-5 control-label">
+                        <button type=submit class="btn btn-primary">Submit</button>
+                    </div>
+                </div>
             </form>
     </div>
 </div>

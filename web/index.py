@@ -20,6 +20,8 @@ from flask_sqlalchemy import SQLAlchemy
 from urllib.parse import urlparse, urljoin
 from dash_flask_login import FlaskLoginAuth
 from datetime import datetime, date
+from DAOs.sensor_DAO import sensor_DAO
+from sensor_mgmt.JuvoAPI import JuvoAPI
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -28,6 +30,7 @@ from app import app, server, db
 from apps import input_data, input_shiftlogs, dashboard, reports, residents_overview, shift_log_form, \
     risk_assessment_form, change_password_form
 from apps.shift_log_form import Resident, ShiftLogForm
+from apps.create_sensor_form import SensorCreateForm, BedSensorCreateForm
 from apps.risk_assessment_form import RiskAssessmentForm
 from Entities.user import User
 from DAOs.user_DAO import user_DAO
@@ -172,7 +175,7 @@ class CreateForm(Form):
     email = StringField('Email')
     encrypted_password = PasswordField('Password', validators=[InputRequired(), Length(min=8)])
     encrypted_password_token = HiddenField()
-    staff_type = SelectField('Staff Type',
+    staff_type = SelectField('User Type',
                              choices=[('Staff', 'Staff'), ('Admin', 'Admin')])
 
     def get_user(self):
@@ -183,13 +186,15 @@ class EditForm(Form):
     username = StringField('Username', validators=[InputRequired(), Length(min=4, max=25)])
     name = StringField('Name')
     email = StringField('Email')
-    staff_type = StringField('Staff Type')
+    staff_type = StringField('User Type',
+                             choices=[('Staff', 'Staff'), ('Admin', 'Admin')])
 
     def get_user(self):
         return db.session.query(User).filter_by(username=self.username.data).first()
 
 
 class MyModelView(ModelView):
+    column_labels = dict(staff_type='User Type')
     column_display_pk = True
     column_default_sort = 'username'
     column_exclude_list = ('encrypted_password', 'encrypted_password_token')
@@ -386,13 +391,6 @@ class Sensor(db.Model):
 #     facility_abrv = StringField('facility abbreviation')
 
 
-class BedSensorCreateForm(Form):
-    uuid = StringField('uuid')
-    description = StringField('description')
-    juvo_target = IntegerField('juvo target')
-    facility_abrv = StringField('facility abbreviation')
-
-
 class SensorView(ModelView):
     column_display_pk = True
 
@@ -401,7 +399,20 @@ class SensorView(ModelView):
         form = SensorCreateForm()
         uuid_list = sensor_DAO.get_unregistered_uuids()
         form.uuid.choices = [(uuid, uuid) for uuid in uuid_list]
-        return render_template('create_sensor_form.html', form=form)
+        if len(uuid_list) == 0:
+            list1 = "0"
+        else:
+            list1 = "1"
+
+        form2 = BedSensorCreateForm()
+        juvo_id_list = JuvoAPI.get_unregistered_sensors()
+        form2.juvo_id.choices = [(juvo_id, juvo_id) for juvo_id in juvo_id_list]
+        if len(juvo_id_list) == 0:
+            list2 = "0"
+        else:
+            list2 = "1"
+
+        return render_template('create_sensor_form.html', form=form, form2=form2, current=0, list1=list1, list2=list2)
 
     def is_accessible(self):
         if current_user.staff_type == 'Admin':
