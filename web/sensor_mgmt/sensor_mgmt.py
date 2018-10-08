@@ -1,4 +1,4 @@
-import datetime, os, sys, math
+import datetime, os, sys, math, time
 from datetime import timedelta
 from dateutil import parser
 
@@ -341,8 +341,8 @@ class Sensor_mgmt(object):
             batt_lvl = []
             last_batt = sysmon_log_DAO.get_last_battery_level(uuid=uuid)
             if last_batt != None:       # Sysmon batt event found
-                batt_lvl = last_batt.event
-                if batt_lvl < cls.batt_thresh: 
+                batt_lvl.append(last_batt.event)
+                if last_batt.event < cls.batt_thresh: 
                     ret_codes.append(cls.LOW_BATT)
             return ret_codes, batt_lvl
 
@@ -445,18 +445,20 @@ class Sensor_mgmt(object):
         start_dt = end_dt - timedelta(hours=1)
         readings = JuvoAPI.get_target_environ_stats(target=target, start_time=start_dt, end_time=end_dt)
         
-        # No readings, therefore down
-        if readings == None: return cls.CHECK_WARN
-        
-        # Compare last reading with current time, against threshold
-        logs = readings['data']['stats']
-        logs.sort(key=lambda x:  parser.parse(x['local_start_time'])) # Sorted in increasing time order
-        last_log = logs[-1]
-        last_log_edt = parser.parse(last_log['local_end_time']).replace(tzinfo=None)
+        ret_codes = []
+        if readings == None: ret_codes.append(cls.CHECK_WARN)        # No readings, therefore down
+        else:   
+            # Compare last reading with current time, against threshold
+            logs = readings['data']['stats']
+            logs.sort(key=lambda x:  parser.parse(x['local_start_time'])) # Sorted in increasing time order
+            last_log = logs[-1]
+            last_log_edt = parser.parse(last_log['local_end_time']).replace(tzinfo=None)
 
-        time_since_update = end_dt - last_log_edt
-        if time_since_update > timedelta(minutes=cls.juvo_thresh): return cls.CHECK_WARN
-        else: return cls.OK
+            time_since_update = end_dt - last_log_edt
+            if time_since_update > timedelta(minutes=cls.juvo_thresh): ret_codes.append(cls.CHECK_WARN)
+            else: ret_codes.append(cls.OK)
+
+        return ret_codes, []
 
 
     @classmethod
@@ -492,6 +494,18 @@ class Sensor_mgmt(object):
             max_log_dt = logs_d_only[-1]
             full_cal = set(min_log_dt + timedelta(x) for x in range((max_log_dt - min_log_dt).days))    # All dates between start and end
             missing_dates = sorted(full_cal - set(logs_d_only))
+
+            # Slice out dates with no owner
+            ownership = sensor_DAO.get_ownership_hist(uuid=uuid, start_dt=start_dt, end_dt=end_dt)
+            min_dt = max_dt = datetime.datetime.now()
+            for p in ownership[uuid]:
+                if p[1] != None and (p[1] < min_dt): min_dt = p[1].replace(hour=0, minute=0, microsecond=0)
+                if p[2] != None and (p[2] > max_dt): max_dt = p[2].replace(hour=0, minute=0, microsecond=0)
+
+            ownerless = []
+            if min_dt > start_dt: ownerless += [start_dt + timedelta(x) for x in range((min_dt - start_dt).days)]
+            if max_dt < end_dt:   ownerless += [max_dt + timedelta(x) for x in range((end_dt - max_dt).days)] 
+            missing_dates = sorted(set(missing_dates) - set(ownerless))
 
         # Fine tune periods without logs, it may just be the case where no one uses the door at all
         # Assumption: reisdents sleep with doors closed. Therefore use Juvo to fine-tune
@@ -556,8 +570,8 @@ class Sensor_mgmt(object):
             batt_lvl = []
             last_batt = sysmon_log_DAO.get_last_battery_level(uuid=uuid)
             if last_batt != None:       # Sysmon batt event found
-                batt_lvl = last_batt.event
-                if batt_lvl < cls.batt_thresh: 
+                batt_lvl.append(last_batt.event)
+                if last_batt.event < cls.batt_thresh: 
                     ret_codes.append(cls.LOW_BATT)
             return ret_codes, batt_lvl
 
@@ -695,12 +709,17 @@ if __name__ == '__main__':
 
 
     # DOOR =============================================
-    uuid = "2006-d-01"
-    print("DOOR ===================================")
-    print("===== Down Periods =====")
-    down_periods = Sensor_mgmt.get_down_periods_door(uuid, sdt, edt)
-    for p in down_periods: print(p)
-    print("periods done")
-    print(f"Curr status: ", Sensor_mgmt.get_curr_status_door(uuid=target, retBatteryLevel=True))
+    # uuid = "2006-d-01"
+    # print("DOOR ===================================")
+    # print("===== Down Periods =====")
+    # down_periods = Sensor_mgmt.get_down_periods_door(uuid, sdt, edt)
+    # for p in down_periods: print(p)
+    # print("periods done")
+    # print(f"Curr status: ", Sensor_mgmt.get_curr_status_door(uuid=target, retBatteryLevel=True))
 
-
+    # ALL ==============================================
+    print("ALL =====================================")
+    start = time.clock()
+    for status in Sensor_mgmt.get_all_sensor_status_v2(retBatteryLevel=True):
+        print(status)
+    print("time taken: ", time.clock() - start)
