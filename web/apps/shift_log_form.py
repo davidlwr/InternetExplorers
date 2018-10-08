@@ -39,7 +39,7 @@ class ShiftLogForm(Form):
     time = SelectField('Shift', choices=[(1, 'Day'), (2, 'Night')], coerce=int, default=dayNightSelector)
     falls = IntegerField('Number of Slips/Falls of Resident', default=0)
     near_falls = IntegerField('Number of Near Falls', default=0)
-    consumption = RadioField('Food consumption',
+    consumption = SelectField('Food consumption',
                              choices=[(1, 'Insufficient'), (2, 'Moderate'),
                                       (3, 'Excessive')], coerce=int, default=2)
     toilet_visits = HiddenField()

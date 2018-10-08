@@ -250,10 +250,9 @@ class ResidentCreateForm(Form):
     name = StringField('Name')
     node_id = StringField('Node')
     dob = DateField('Date of Birth', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')])
-    fall_risk = StringField('Fall Risk')
-    status = StringField('Status')
-    stay_location = RadioField('Stay Location',
-                               choices=[('bkttm', 'Bukit Timah'), ('adm', 'Adam Road')])
+    fall_risk = SelectField('Fall Risk', choices=[('None', 'None'), ('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')], default='Medium')
+    status = SelectField('Status', choices=[('Active', 'Active'), ('Inactive', 'Inactive')], default='Active')
+    stay_location = SelectField('Stay Location', choices=[('bkttm', 'Bukit Timah'), ('adm', 'Adam Road')])
 
 
 def date_format(view, value):
@@ -269,6 +268,7 @@ MY_DEFAULT_FORMATTERS.update({
 class ResidentView(ModelView):
     # column_list = ('name', 'node_id', 'age', 'fall_risk', 'status', 'stay_location')
     column_type_formatters = MY_DEFAULT_FORMATTERS
+    can_delete = False
 
     def is_accessible(self):
         if current_user.staff_type == 'Admin' or current_user.staff_type == 'Staff':

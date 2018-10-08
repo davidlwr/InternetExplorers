@@ -1,17 +1,14 @@
 {% macro render_field(field) %}
 <div class="form-group">
-    <label for="{{field.name}}" class="col-md-4 control-label" >{{ field.label.text }}</label>
-  <div class="col-md-4 inputGroupContainer">
-    <div class="input-group">{{ field(class_='form-control',**kwargs)|safe }}
-  {% if field.errors %}
-    <ul class=errors>
-    {% for error in field.errors %}
-      <li style="color:red;">Invalid Input</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-    </div>
-  </div>
+  <label for="{{field.name}}">{{ field.label.text }}</label>
+    {{ field(class_='form-control',**kwargs)|safe }}
+      {% if field.errors %}
+        <ul class=errors>
+        {% for error in field.errors %}
+          <li style="color:red;">Invalid Input</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
 </div>
 {% endmacro %}
 
@@ -34,8 +31,8 @@
 
 {% macro render_name_field(field) %}
 <div class="form-group">
-  <label for="{{field.name}}" class="col-md-4 control-label" >{{ field.label.text }}</label>
-  <div class="col-md-4 inputGroupContainer">
+  <label for="{{field.name}}">{{ field.label.text }}</label>
+
     <div class="input-group">
       <span class="input-group-addon"><i class="material-icons" style="align-content:center; font-size:18px;">face</i></span>
         {{ field(class_='form-control',**kwargs)|safe }}
@@ -47,7 +44,7 @@
               </ul>
             {% endif %}
     </div>
-  </div>
+
 </div>
 {% endmacro %}
 

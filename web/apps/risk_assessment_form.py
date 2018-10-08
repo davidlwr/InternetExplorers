@@ -33,37 +33,37 @@ class RiskAssessmentForm(Form):
     resident = QuerySelectField(query_factory=resident_query, allow_blank=False, get_label='name')
     # date = DateField('Date', format='%Y-%m', validators=[InputRequired('Please enter date!')], default=datetime.today)
     weight = FloatField('Monthly weight updates (kg)')
-    num_falls = RadioField('No. of falls for past 6 months',
-                           choices=[(0, '0'), (1, '1'), (2, '2-3'), (3, '>=4')], coerce=int, default=0)
-    injury_sustained = RadioField('Injury sustained from falls past 6 months',
-                                  choices=[(0, 'None'), (1, 'Minor'), (2, 'Major'), (3, 'Hospitalized')], coerce=int,
-                                  default=0)
-    medical_conditions = RadioField('Number of Medical Conditions',
-                                    choices=[(0, '0'), (1, '1-2'), (2, '3-4'), (3, '>=5')], coerce=int, default=0)
-    medication_amount = RadioField('Number of Medications',
-                                   choices=[(0, '0'), (1, '1-5'), (2, '6-10'), (3, '>=11')], coerce=int, default=0)
+    num_falls = SelectField('No. of falls for past 6 months',
+                            choices=[(0, '0'), (1, '1'), (2, '2-3'), (3, '>=4')], coerce=int, default=0)
+    injury_sustained = SelectField('Injury sustained from falls past 6 months',
+                                   choices=[(0, 'None'), (1, 'Minor'), (2, 'Major'), (3, 'Hospitalized')], coerce=int,
+                                   default=0)
+    medical_conditions = SelectField('Number of Medical Conditions',
+                                     choices=[(0, '0'), (1, '1-2'), (2, '3-4'), (3, '>=5')], coerce=int, default=0)
+    medication_amount = SelectField('Number of Medications',
+                                    choices=[(0, '0'), (1, '1-5'), (2, '6-10'), (3, '>=11')], coerce=int, default=0)
 
-    vision = RadioField('Vision (based on observation)',
-                        choices=[(0, 'No impairment (with/ without eye glasses)'),
-                                 (1, 'Unable to assess/ Blurring of vision'), (2, '1 side - Unilateral blindness'),
-                                 (3, '2 side - Bilateral blindness')], coerce=int, default=0)
-    hearing = RadioField('Hearing Ability (based on observation)',
-                         choices=[(0, 'No impairment (with/ without hearing aid)'),
-                                  (1, 'Unable to assess/ Poor hearing (with/ without hearing aid)'),
-                                  (2, '1 side - Unilateral deafness'),
-                                  (3, '2 side - Bilateral deafness')], coerce=int, default=0)
-    mobility = RadioField('Mobility',
-                          choices=[(0, 'Unable to move or transfer'), (1, 'Moves with no gait disturbances'),
-                                   (2, 'Moves or transfer with assistance'),
-                                   (3, 'Moves with unsteady gait needs full assistance')], coerce=int, default=1)
-    pain = RadioField('Pain affecting level of function',
-                      choices=[(0, ' No pain'), (1, 'Musculoskeletal/ Joint Pain'),
-                               (2, 'Generalized pain (e.g. abdominal, headache, etc.)'),
-                               (3, 'Critical Pain in other parts')], coerce=int, default=0)
-    dependent = RadioField('Elimination',
-                           choices=[(0, 'Totally Dependent'), (1, 'Needs assistance with Toileting'),
-                                    (2, 'Frequent toileting habits/ Independent with frequency'),
-                                    (3, 'Independent with Incontinence ')], coerce=int, default=2)
+    vision = SelectField('Vision (based on observation)',
+                         choices=[(0, 'No impairment (with/ without eye glasses)'),
+                                  (1, 'Unable to assess/ Blurring of vision'), (2, '1 side - Unilateral blindness'),
+                                  (3, '2 side - Bilateral blindness')], coerce=int, default=0)
+    hearing = SelectField('Hearing Ability (based on observation)',
+                          choices=[(0, 'No impairment (with/ without hearing aid)'),
+                                   (1, 'Unable to assess/ Poor hearing (with/ without hearing aid)'),
+                                   (2, '1 side - Unilateral deafness'),
+                                   (3, '2 side - Bilateral deafness')], coerce=int, default=0)
+    mobility = SelectField('Mobility',
+                           choices=[(0, 'Unable to move or transfer'), (1, 'Moves with no gait disturbances'),
+                                    (2, 'Moves or transfer with assistance'),
+                                    (3, 'Moves with unsteady gait needs full assistance')], coerce=int, default=1)
+    pain = SelectField('Pain affecting level of function',
+                       choices=[(0, ' No pain'), (1, 'Musculoskeletal/ Joint Pain'),
+                                (2, 'Generalized pain (e.g. abdominal, headache, etc.)'),
+                                (3, 'Critical Pain in other parts')], coerce=int, default=0)
+    dependent = SelectField('Elimination',
+                            choices=[(0, 'Totally Dependent'), (1, 'Needs assistance with Toileting'),
+                                     (2, 'Frequent toileting habits/ Independent with frequency'),
+                                     (3, 'Independent with Incontinence ')], coerce=int, default=2)
     dependency = TextField(
         'If dependency is increasing, please describe what type (Example, toilet usage assistance, mobility assistance, daily activities, etc). ')
     submit = SubmitField('Submit')
