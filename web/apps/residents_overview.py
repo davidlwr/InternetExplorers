@@ -137,7 +137,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = night_toilet_MA_graph_df_last_week['event'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk no.',
+                        text = 'Last week no.',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -148,7 +149,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = night_toilet_MA_graph_df_last_week['latest_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg',
+                        text = 'Last week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, .5)'
@@ -159,7 +161,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = night_toilet_MA_graph_df_last_week['past_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'prev 3 wk avg',
+                        text = 'Previous 3 week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(0, 128, 0)'
@@ -217,7 +220,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = sleeping_motion_df['values'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk duration',
+                        text = 'Last week duration',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -228,7 +232,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = sleeping_motion_df['latest_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg',
+                        text = 'Last week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, .5)'
@@ -239,7 +244,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = sleeping_motion_df['past_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'prev 3 wk avg',
+                        text = 'Previous 3 week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(0, 128, 0)'
@@ -295,7 +301,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = uninterrupted_sleep_df['values'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk duration',
+                        text = 'Last week duration',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -306,7 +313,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = uninterrupted_sleep_df['latest_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg',
+                        text = 'Last week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, .5)'
@@ -317,7 +325,7 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = uninterrupted_sleep_df['past_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'prev 3 wk avg',
+                        text = 'Previous 3 week average',
                         line = dict(
                             width = 2,
                             color = 'rgb(0, 128, 0)'
@@ -399,7 +407,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = breathing_graph_df['breathing_rate'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk daily RR',
+                        text = 'Last week daily respiratory rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -410,7 +419,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = breathing_graph_df['past_week_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg RR',
+                        text = 'Last week average respiratory rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, 0.5)'
@@ -421,7 +431,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = breathing_graph_df['normal_lower_bound_rr'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'min normal RR',
+                        text = 'Min normal respiratory rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(191, 0, 0, 0.5)'
@@ -432,7 +443,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = breathing_graph_df['normal_upper_bound_rr'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'max normal RR',
+                        text = 'Max normal respiratory rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(191, 0, 0, 0.5)'
@@ -443,7 +455,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = breathing_graph_df['previous_weeks_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'prev 3 wk avg',
+                        text = 'Previous 3 week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(0, 128, 0)'
@@ -520,7 +533,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = heartbeat_graph_df['heart_rate'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk daily pulse rate',
+                        text = 'Last week daily pulse rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -531,7 +545,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = heartbeat_graph_df['normal_upper_bound_hb'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'max normal pulse rate',
+                        text = 'Max normal pulse rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(191, 0, 0, 0.5)'
@@ -542,7 +557,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = heartbeat_graph_df['past_week_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg RR',
+                        text = 'Last week average respiratory rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, 0.5)'
@@ -553,7 +569,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = heartbeat_graph_df['previous_weeks_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'prev 3 wk avg',
+                        text = 'Previous 3 week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(0, 128, 0)'
@@ -614,7 +631,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = qos_df['qos'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk nightly sleep quality',
+                        text = 'Last week nightly sleep quality',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -625,7 +643,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = qos_df['past_week_average'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg sleep quality',
+                        text = 'Last week average sleep quality',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, 0.5)'
