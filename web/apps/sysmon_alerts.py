@@ -1,22 +1,15 @@
 from datetime import datetime
 from flask import render_template, flash, redirect, url_for, request, g, jsonify, current_app
 from flask_login import current_user, login_required
-from apps import input_data
 from app import app, server
 from DAOs.connection_manager import connection_manager
-
-table_name = "stbern.alert_log"
-chatid_tname = "chat_id"
-text_tname   = "alert_text"
 
 LOW_BATT_SUBSTR = "Battery Low"
 TYPE_BATT   = 1
 TYPE_SENSOR = 2
 
 @server.route('/notifications', methods=['GET', 'POST'])     # see init in main for example
-@login_required
 def notifications():
-
     # Get connection
     factory = connection_manager()
     connection = factory.connection
@@ -24,12 +17,11 @@ def notifications():
 
     type_texts = []
     try:
-        cursor.execute(f'SELECT * FROM {table_name}')
-        result = cursor.fetchone()
-
-        if result != None:      # Append 1. Alert_Type, and 2. Text.        Alert type used to determine icon type
+        cursor.execute('SELECT * FROM stbern.alert_log')
+        result = cursor.fetchall()
+        if result != None:
             for r in result:
-                alerttext  = r[text_tname]
+                alerttext  = r['alert_text']
                 alert_type = TYPE_BATT if LOW_BATT_SUBSTR in alerttext else TYPE_SENSOR
                 type_texts.append([alert_type, alerttext])
         
@@ -41,7 +33,6 @@ def notifications():
                     } for type,text in type_texts])
 
 @server.route('/notifications_count', methods=['GET', 'POST'])
-@login_required
 def notifications_count():
     # Get connection
     factory = connection_manager()
@@ -49,11 +40,11 @@ def notifications_count():
     cursor = connection.cursor()
 
     try:
-        cursor.execute(f'SELECT * FROM {table_name}')
-        result = cursor.fetchone()
+        cursor.execute('SELECT * FROM stbern.alert_log')
+        result = cursor.fetchall()
 
         if result == None: return 0
-        else: len(result)
+        else: return len(result)
         
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
