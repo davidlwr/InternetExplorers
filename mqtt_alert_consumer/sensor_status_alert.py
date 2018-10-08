@@ -40,7 +40,7 @@ while 1:
 	minute = current_time.minute
 	second = current_time.second
 	microsecond = current_time.microsecond
-	if((hour ==9) and (minute==57) and (second == 0)):
+	if((hour ==19) and (minute==34) and (second == 0)):
 		downList = []
 		for ss in Sensor_mgmt.get_all_sensor_status():
 			if 1 in ss[1]:
@@ -60,7 +60,10 @@ while 1:
 				text = "Sensor " + downSS 
 				send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
 				alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
-			
+			alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
+			keyboardBottom = [[alert['alert_text']] for alert in alerts]
+			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
+			response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "Yor task has been added to the to-do list:", reply_markupBottom)
 	elif((hour ==21) and (minute==0) and (second == 0)):
 		downList = []
 		for ss in Sensor_mgmt.get_all_sensor_status():
@@ -81,3 +84,7 @@ while 1:
 				text = "Sensor " + downSS 
 				send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
 				alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
+			alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
+			keyboardBottom = [[alert['alert_text']] for alert in alerts]
+			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
+			response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "Yor task has been added to the to-do list:", reply_markupBottom)

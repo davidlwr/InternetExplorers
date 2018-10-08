@@ -95,7 +95,7 @@ def action_motion(event):
         alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
         keyboardBottom = [[alert['alert_text']] for alert in alerts]
         reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
-        response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "You still have these incomplete tasks:", reply_markupBottom)
+        response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markupBottom)
         print(response.json()['result']['message_id'])
         message_id = response.json()['result']['message_id']
         # delete_message_with_reply(DUTY_NURSE_CHAT_ID, message_id)
