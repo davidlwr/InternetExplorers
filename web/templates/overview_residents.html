@@ -9,6 +9,7 @@
 {% from "_classconverter.html" import getGMHFromAlertLength %}
 {% from "_classconverter.html" import getFooterFromAlertLength %}
 {% from "_classconverter.html" import getTextColorFromAlertLength %}
+{% from "_classconverter.html" import getTextColorFromAlertLength2 %}
 {% extends 'nav_bar.html' %}
 {% block title %}Residents Overview{% endblock %}
 {% block additional_stylesheets %}
@@ -24,6 +25,7 @@
 .clickable-row {
     cursor: pointer;
 }
+tr:hover { background: WhiteSmoke; }
 </style>
 {% endblock %}
 {% block content %}
@@ -33,6 +35,14 @@
 <!-- /.col-lg-12 -->
 
 <div class="col-sm-push-0"> <!--overall-->
+	<div class="row">
+		<ol class="breadcrumb" style="position:fixed; z-index:1000; padding-top:15px; width:100%">
+			<li><a href="#">
+				<em class="fa fa-home"></em>
+			</a></li>
+			<li class="active">Dashboard</li>
+		</ol>
+	</div><!--/.row-->
 	<div class="row">
 		<ol class="breadcrumb">
 			<li><a href="#">
@@ -154,7 +164,7 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th width="20%">Name</th>
+                                <th width="20%" style="padding-left:15px">Name</th>
                                 <th width="20%" class="not-in-mobile">Vital Signs</th>
                                 <th width="20%" class="not-in-mobile">Sleep Quality</th>
                                 <th width="20%" class="not-in-mobile">Night Toilet Usage</th>
@@ -163,23 +173,23 @@
                         </thead>
                         <tbody>
                             {% for resident in residents %}
-                            <tr class='clickable-row' data-href='./overview/{{ resident['resident_id'] }}'>
-                                <td width="20%"> {{ resident['name'] }}</td>
-                                <td width="20%" style="color:{{ getTextColorFromAlertLength(resident['vitals_alerts']|length) }}" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['vitals_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
-                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
-                                    </span><b>{{ getFooterFromAlertLength(resident['vitals_alerts']|length) }}</b>
+                            <tr class='clickable-row' data-href='./overview/{{ resident['resident_id'] }}'">
+                                <td width="20%" style="padding-left:15px; padding:14px;"> {{ resident['name'] }}</td>
+                                <td width="20%" style="padding:14px" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['vitals_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
+                                        <i class="material-icons" style="font-size:15px; vertical-align:sup;color:{{ getTextColorFromAlertLength(resident['vitals_alerts']|length) }}">info</i>
+                                    </span>{{ getFooterFromAlertLength(resident['vitals_alerts']|length) }}
                                 </td>
-                                <td width="20%" style="color:{{ getTextColorFromAlertLength(resident['sleep_alerts']|length) }}" class="not-in-mobile">
+                                <td width="20%" style="padding:14px" class="not-in-mobile">
 								<span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['sleep_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
-                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
-                                    </span><b>{{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}</b>
+                                        <i class="material-icons" style="font-size:15px; vertical-align:sup;color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}">info</i>
+                                    </span>{{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}
                                 </td>
-                                <td width="20%" style="color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['toilet_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
-                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
+                                <td width="20%" style="padding:14px" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['toilet_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
+                                        <i class="material-icons" style="font-size:15px; vertical-align:sup;color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}">info</i>
                                     </span>
-								<b>{{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}</b>
+								{{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}
                                 </td>
-                                <td width="20%" bgcolor="{{ getTextColorFromAlertLength(resident['alert_highest']) }}" style="font-size:15px; text-align:center"><b>{{ getFooterFromAlertLength(resident['alert_highest']) }}</b></td>
+                                <td width="20%" style="font-size:15px; text-align:center"><button class="btn btn-sm btn-{{ getTextColorFromAlertLength2(resident['alert_highest']) }}" type="button" style="font-size:13px;width:91px">{{ getFooterFromAlertLength(resident['alert_highest']) }}</button></td>
                             </tr>
                             {% endfor %}
                         </tbody>

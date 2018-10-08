@@ -29,8 +29,16 @@
 
 {% macro getTextColorFromAlertLength(_length) %}
 {# the + and - signs are used to remove whitespaces #}
-{%+ if _length == 0 -%}#32CD32{%+ endif -%}
+{%+ if _length == 0 -%}#8ad919{%+ endif -%}
 {%+ if _length == 1 -%}#efc52b{%+ endif -%}
 {%+ if _length == 2 -%}#FF6347{%+ endif -%}
 {%+ if _length >= 3 -%}#FF6347{%+ endif -%}
+{% endmacro %}
+
+{% macro getTextColorFromAlertLength2(_length) %}
+{# the + and - signs are used to remove whitespaces #}
+{%+ if _length == 0 -%}success{%+ endif -%}
+{%+ if _length == 1 -%}warning{%+ endif -%}
+{%+ if _length == 2 -%}danger{%+ endif -%}
+{%+ if _length >= 3 -%}danger{%+ endif -%}
 {% endmacro %}
