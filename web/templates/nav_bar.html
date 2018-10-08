@@ -51,7 +51,46 @@
 	</script>-->
 
     {% block additional_stylesheets %}{% endblock %}
-    {% block scripts %} {% endblock %}
+	<!-- {% block scripts %} 
+	<script>
+		function set_message_count(n) {
+			$('#sysmon_num').text(n);
+		}
+	</script>
+	
+	<script>
+		function set_message_dropdown(types, texts) {
+			$('sysmon alerts').html('');    // clear 
+			for (var i = 0; i < types.length; i++) {
+				if (types[i] == "1") {  // Battery
+					$('sysmon_alerts').append("<li><a href=\"#\"><div><em class=\"fa fa-battery-quarter\"></em>" + texts[i] + "</div></a></li>")
+				} else {
+					$('sysmon_alerts').append("<li><a href=\"#\"><div><em class=\"fa fa-feed\"></em>" + texts[i] + "</div></a></li>")
+				}
+			}
+		}
+	</script>
+	
+	<script>
+		$(document).ready((function() {
+			setInterval(function() {
+				$.ajax("{{ url_for('notifications') }}").done(
+					function(type_txts) {
+						set_message_count(type_txts.length)
+						var types = new Array();
+						var texts = new Array();
+						for (var i = 0; i < type_txts.length; i++) {
+							types.push(type_txts[i].type)
+							texts.push(type_txts[i].text)
+						}
+						set_message_dropdown(types, texts);
+					}
+				);
+			}, 1000000);	// prev 10000
+		}));
+	</script>
+	
+	{% endblock %} -->
 </head>
 <body> <!-- common sidebar -->
 <nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
@@ -65,18 +104,9 @@
 
 				<ul class="nav navbar-top-links navbar-right">
 					<li class="dropdown"><a class="dropdown-toggle count-info" data-toggle="dropdown" href="#"> <!--add link to sensor mgmt page-->
-						<em class="fa fa-bell"></em><span class="label label-danger">2</span>
+						<em class="fa fa-bell"></em><span id="sysmon_num" class="label label-danger">0</span>
 					</a>
-						<ul class="dropdown-menu dropdown-alerts">
-							<li><a href="#"><!--add link to sensor mgmt page-->
-								<div><em class="fa fa-feed"></em> Juvo Sensor 2 Down
-									<span class="pull-right text-muted small">15 mins ago</span></div>
-							</a></li>
-							<li class="divider"></li>
-							<li><a href="#"><!--add link to sensor mgmt page-->
-								<div><em class="fa fa-battery-quarter"></em> Door Sensor 7 Battery Low
-									<span class="pull-right text-muted small">4 hours ago</span></div>
-							</a></li>
+						<ul id="sysmon_alerts" class="dropdown-menu dropdown-alerts">
 						</ul>
 					</li>
 
