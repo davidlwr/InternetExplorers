@@ -812,14 +812,14 @@ a.label:hover, a.label:focus {
 
 .sidebar ul.nav ul.children {
   width: auto;
-  padding-top: 3px;
+  padding: 0;
   color: #fff;
   margin: 0; }
 
 .sidebar ul.nav ul.children li a {
   height: 40px;
   background: #333;
-  padding-top: 3px;
+  padding: 0;
   color: #fff; }
 
 .sidebar ul.nav li.current a {
