@@ -38,13 +38,8 @@
 			<li class="active">Dashboard</li>
 		</ol>
 	</div><!--/.row-->
-	<div class="row">
-		<div class="col-lg-12">
-			<h1 class="page-header"></h1>
-		</div>
-	</div><!--/.row-->
 	
-	<div class="row">
+	<div class="row"></br>
 			<div class="col-xs-6 col-md-3">
 				<div class="panel panel-teal">
 					<div class="panel-heading dark-overlay text-center">
@@ -58,7 +53,7 @@
                             <div class="huge" style="font-size:40px">{{ information['num_residents'] }}</div>
                         </div>
                     </div>
-					<a href="/admin/residents">
+					<a href="/admin/resident">
                     <div class="panel-footer" style="height:40px">
                         <span class="pull-left">View Resident Details</span>
                         <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
@@ -67,30 +62,7 @@
                 </a>
 				</div>
 			</div>
-			
-			<div class="col-xs-6 col-md-3">
-				<div class="panel panel-blue">
-					<div class="panel-heading dark-overlay text-center">
-						Good Health Status
-					</div>
-					<div class="panel-body" style="height:90px">
-                        <div class="col-xs-3">
-                            <i class="fa fa-heartbeat fa-4x" style="color:white"></i>
-                        </div>
-                        <div class="col-xs-9 text-right">
-                            <div class="huge" style="font-size:40px">{{ '%0.1f'|format((information['health_percentage'])|float) }}%</div>
-                        </div>
-                    </div>
-					<a href="#">
-                    <div class="panel-footer" style="height:40px">
-                        <span class="pull-left">View Residents Health Status</span>
-                        <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
-                        <div class="clearfix"></div>
-                    </div>
-					</a>
-				</div>
-			</div>
-			
+						
 			<div class="col-xs-6 col-md-3">
 				<div class="panel panel-orange">
 					<div class="panel-heading dark-overlay text-center">
@@ -106,7 +78,7 @@
                     </div>
 					<a href="/admin/shift_log">
                     <div class="panel-footer" style="height:40px">
-                        <span class="pull-left">View Alerts Details</span>
+                        <span class="pull-left">View Submitted Shift Forms</span>
                         <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
                         <div class="clearfix"></div>
                     </div>
@@ -136,11 +108,32 @@
 					</a>
 				</div>
 			</div>
+			
+			<div class="col-xs-6 col-md-3">
+				<div class="panel panel-blue">
+					<div class="panel-heading dark-overlay text-center">
+						Good Health Status
+					</div>
+					<div class="panel-body" style="height:90px">
+                        <div class="col-xs-3">
+                            <i class="fa fa-heartbeat fa-4x" style="color:white"></i>
+                        </div>
+                        <div class="col-xs-9 text-right">
+                            <div class="huge" style="font-size:40px">{{ '%0.1f'|format((information['health_percentage'])|float) }}%</div>
+                        </div>
+                    </div>
+					<a href="#">
+                    <div class="panel-footer" style="height:40px">
+                        <span class="pull-left">View Health Statuses Below</span>
+                        <div class="clearfix"></div>
+                    </div>
+					</a>
+				</div>
+			</div>
 		</div><!--/.row-->
 	
-	
+
     <div class="row"></div>
-        <div class="col-lg-12">
             <h4><b>Current Resident Statuses</b></h4>
             <!-- <div class="panel">
                 <div class="panel-heading">
@@ -148,46 +141,42 @@
                 </div>
             </div> -->
             <!-- /.panel-heading -->
-            <div class="panel-body">
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th class="not-in-mobile">Vital Signs</th>
-                                <th class="not-in-mobile">Night Toilet Usage</th>
-                                <th class="not-in-mobile">Sleep Quality</th>
-                                <th>Overall Status</th>
+                                <th class="not-in-mobile" style="padding-left:20px">Name</th>
+                                <th class="not-in-mobile" style="text-align:center">Vital Signs</th>
+                                <th class="not-in-mobile" style="text-align:center">Night Toilet Usage</th>
+                                <th class="not-in-mobile" style="text-align:center">Sleep Quality</th>
+                                <th class="not-in-mobile" style="text-align:center">Overall Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for resident in residents %}
                             <tr class='clickable-row' data-href='./overview/{{ resident['node_id'] }}'>
-                                <td>{{ resident['name'] }}</td>
-                                <td style="color:{{ getTextColorFromAlertLength(resident['vitals_alerts']|length) }}" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['vitals_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
+                                <td style="padding-left:20px"> {{ resident['name'] }}</td>
+                                <td style="padding-left:130px; color:{{ getTextColorFromAlertLength(resident['vitals_alerts']|length) }}" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['vitals_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
                                         <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
                                     </span><b>{{ getFooterFromAlertLength(resident['vitals_alerts']|length) }}</b>
                                 </td>
-                                <td style="color:{{ getTextColorFromAlertLength(resident['sleep_alerts']|length) }}" class="not-in-mobile">
+                                <td style="padding-left:90px; color:{{ getTextColorFromAlertLength(resident['sleep_alerts']|length) }}" class="not-in-mobile">
 								<span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['sleep_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
                                         <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
                                     </span><b>{{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}</b>
                                 </td>
-                                <td style="color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['toilet_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
+                                <td style="padding-left:100px; color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['toilet_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
                                         <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
                                     </span>
 								<b>{{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}</b>
                                 </td>
-                                <td bgcolor="{{ getTextColorFromAlertLength(resident['alert_highest']) }}"><b>{{ getFooterFromAlertLength(resident['alert_highest']) }}</b></td>
+                                <td bgcolor="{{ getTextColorFromAlertLength(resident['alert_highest']) }}" style="font-size:15px; text-align:center"><b>{{ getFooterFromAlertLength(resident['alert_highest']) }}</b></td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             <!-- /.table-responsive -->
-            </div>
-            <!-- /.panel-body -->
-        </div>
 </div><!--overall-->
 {% endblock %}
 {% block footer%}
