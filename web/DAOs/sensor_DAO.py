@@ -230,13 +230,16 @@ class sensor_DAO(object):
 
 
     @staticmethod
-    def get_ownership_hist(uuid=None, residentID=None):
+    def get_ownership_hist(uuid=None, residentID=None, type=None, start_dt=None, end_dt=None):
         '''
         Returns ownership hisotry of sensor: Which resident was using the sensor during a period
 
         Inputs:
-        uuid (str)       -- Default None 
-        residentID (int) -- Default None
+        uuid (str)          -- Default None 
+        residentID (int)    -- Default None
+        type (str)          -- Default None, sensor type
+        start_dt (datetime) -- Default None Returns all periods within or overlapping the given start and end dts
+        end_dt (datetime)   -- Default None
 
         Return:
         Dict: {"uuid1": [(residentID, startdate, enddate), (residentID, datetime, datetime)],
@@ -244,21 +247,36 @@ class sensor_DAO(object):
         * NOTE: Final start and end date pairs will have 'None' END_DATETIME as this represents an ongoing period
         * NOTE: (startdate, enddate) are (inclusive, exclusive)
         '''
-        
-        queryCols = []
-        queryVals = []
-        if residentID != None: 
-            queryCols.append(sensor_DAO.soh_resident_id)
-            queryVals.append(residentID)
-        if uuid != None:
-            queryCols.append(sensor_DAO.soh_uuid)
-            queryVals.append(uuid)
 
+        queryVals = []
         # Construct query
-        query = f"SELECT * FROM {sensor_DAO.soh_table_name} "
-        for i in range(len(queryVals)):
-            if i == 0: query += f" WHERE `{queryCols[i]}` = %s "
-            else:      query += f" AND   `{queryCols[i]}` = %s " 
+        #stbern.sensor_ownership_hist as t1 inner join stbern.sensor as t2 on t1.uuid = t2.uuid
+        query = f"SELECT * FROM {sensor_DAO.soh_table_name} AS t1 INNER JOIN {sensor_DAO.table_name} AS t2 ON t1.uuid = t2.uuid "
+
+        prefix = None
+        if residentID != None:
+            prefix = "WHERE" if prefix==None else "AND"
+            query += f" {prefix} t1.`{sensor_DAO.soh_resident_id}` = %s "
+            queryVals.append(residentID)
+
+        if uuid != None:
+            prefix = "WHERE" if prefix==None else "AND"
+            query += f" {prefix} t1.`{sensor_DAO.soh_uuid}` = %s "
+            queryVals.append(uuid)
+            
+        if type != None:
+            prefix = "WHERE" if prefix==None else "AND"
+            query += f" {prefix} t1.`{sensor_DAO.soh_uuid}` = %s "
+            queryVals.append(type)
+        
+        if start_dt != None: 
+            prefix = "WHERE" if prefix==None else "AND"
+            query += f" {prefix} t1.`{sensor_DAO.soh_period_end}` > \"{start_dt.strftime('%Y-%m-%d %H:%M:%S')}\" "
+            prefix = " AND "
+        
+        if end_dt != None:
+            query += f" {prefix} (`{sensor_DAO.soh_period_start}` IS NULL OR `{sensor_DAO.soh_period_start}` < \"{end_dt.strftime('%Y-%m-%d %H:%M:%S')}\")"
+
         query += f" ORDER BY `{sensor_DAO.soh_period_start}` ASC"       # Sort by start periods 
 
         # Get connection
@@ -268,8 +286,7 @@ class sensor_DAO(object):
 
         # Read results and return dict
         try:
-            if len(queryCols) != 0: cursor.execute(query, queryVals)
-            else: cursor.execute(query)
+            cursor.execute(query, queryVals)
 
             result = cursor.fetchall()
 
@@ -510,9 +527,9 @@ class sensor_DAO(object):
 
 
 # TESTS ====================================================================================================
-# if __name__ == '__main__': 
+if __name__ == '__main__': 
     # # Ownership hists
-    # delete = True
+    delete = True
 
     # # Test 01: insert
     # try:

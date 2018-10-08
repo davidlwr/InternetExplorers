@@ -94,25 +94,25 @@ class sensor_log_DAO(object):
         end_datetime (datetime)
         """
 
-        query = """
-                SELECT * FROM {}
-                WHERE '{}' = %s
-                AND `{}` > %s
-                AND `{}` < %s
-                ORDER BY `{}`
+        query = f"""
+                SELECT * FROM {sensor_log_DAO.table_name}
+                WHERE `{Sensor_Log.uuid_tname}` = %s
+                AND `{Sensor_Log.recieved_timestamp_tname}` > %s
+                AND `{ Sensor_Log.recieved_timestamp_tname}` < %s
+                ORDER BY `{Sensor_Log.recieved_timestamp_tname}`
                 DESC
-                """.format(sensor_log_DAO.table_name, Sensor_Log.uuid_tname, Sensor_Log.recieved_timestamp_tname,
-                           Sensor_Log.recieved_timestamp_tname, Sensor_Log.recieved_timestamp_tname)
-
+                """
         # Get connection
         factory = connection_manager()
         connection = factory.connection
         cursor = connection.cursor()
 
         try:
-            cursor.execute(query, [uuid, start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
-                                   end_datetime.strftime('%Y-%m-%d %H:%M:%S')])
+            # cursor.execute(query, [uuid, start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                                #    end_datetime.strftime('%Y-%m-%d %H:%M:%S')])
+            cursor.execute(query, [uuid, start_datetime, end_datetime])
             result = cursor.fetchall()
+            
 
             logs = []
             if result != None:
