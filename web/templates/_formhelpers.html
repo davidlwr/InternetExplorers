@@ -36,7 +36,7 @@
 
 {% macro render_radio_fields(field) %}
 <div class="form-group">
-  <label  class="col-md-4 control-label" >{{ field.label.text }}</label>
+  <label class="col-md-4 control-label" >{{ field.label.text }}</label>
   <div class="col-md-4">
     {% for subfield in field %}
     <div class="radio">
@@ -52,7 +52,8 @@
 
 {% macro render_login_field(field) %}
 <div class="form-group">
-  <label>{{ field.label }}</label>
+	<label for="{{field.name}}" class="form-control">{{ field.label.text}}
+  <!--<label>{{ field.label }}</label>-->
   <dd>{{ field(**kwargs)|safe }}
     {% if field.errors %}
     <ul class=errors>
@@ -62,5 +63,25 @@
     </ul>
     {% endif %}
   </dd>
+</div>
+{% endmacro %}
+
+{% macro render_login_field2(field) %}
+<div class="form-group">
+  <label for="{{field.name}}" class="form-control">{{ field.label.text }}</label>
+  <dd>{{ field(**kwargs)|safe }}
+    {% if field.errors %}
+    <ul class=errors>
+      {% for error in field.errors %}
+      <li style="color:red;">Invalid Input</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </dd>
+</div>
+{% endmacro %}
+
+{% macro render_login_field3(field) %}
+<div class="checkbox"><label for="{{field.name}}">{{ field.label }}</label>
 </div>
 {% endmacro %}
