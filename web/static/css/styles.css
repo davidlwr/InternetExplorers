@@ -766,7 +766,7 @@ a.label:hover, a.label:focus {
   padding: 0;
   display: none;
   box-shadow: none;
-  background: #fff; }
+  background: #333; }
 
 .sidebar ul {
   margin: 20px 0px; }
@@ -808,18 +808,19 @@ a.label:hover, a.label:focus {
   height: 50px;
   font-size: 15px;
   line-height: 2em;
-  color: #444444; }
+  color: #fff; }
 
 .sidebar ul.nav ul.children {
   width: auto;
-  padding: 0;
-  margin: 0;
-  background: #f9f9f9; }
+  padding-top: 3px;
+  color: #fff;
+  margin: 0; }
 
 .sidebar ul.nav ul.children li a {
   height: 40px;
-  background: #f1f4f7;
-  color: #444444; }
+  background: #333;
+  padding-top: 3px;
+  color: #fff; }
 
 .sidebar ul.nav li.current a {
   background-color: #30a5ff;
@@ -861,6 +862,7 @@ a.label:hover, a.label:focus {
 
 .profile-usertitle-name {
   font-size: 20px;
+  font-color: #fff;
   margin-bottom: 0px; }
 
 .profile-usertitle-status {

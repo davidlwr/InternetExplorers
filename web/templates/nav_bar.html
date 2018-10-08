@@ -98,13 +98,13 @@
 		</div><!-- /.container-fluid -->
 	</nav>
 
-	<div id="sidebar-collapse" class="col-sm-3 col-lg-2 sidebar">
+	<div id="sidebar-collapse" class="col-sm-3 col-lg-2 sidebar" seamless="seamless">
 		<div class="profile-sidebar">
 			<div class="profile-userpic">
 				<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLafIe7TB0l45AWCyt4X3o8Ojrh3kbQYlvgZvSKbhOouV4zCIjrg" class="img-responsive" alt="">
 			</div>
 			<div class="profile-usertitle">
-				<div class="profile-usertitle-name"> {{ current_user.username }}</div>
+				<div class="profile-usertitle-name" style="color:#ffffff">{{ current_user.username }}</div>
 				<div class="profile-usertitle-status"><span class="indicator label-success"></span>Online</div>
 			</div>
 			<div class="clear"></div>
@@ -124,11 +124,11 @@
 			<li class="parent"><a data-toggle="collapse" href="#residents-view">
 				<em class="fa fa-navicon">&nbsp;</em>Residents Details<span data-toggle="collapse" href="#residents-view" class="icon pull-right"><em class="fa fa-plus"></em></span>
 				</a>
-				<ul class="children collapse" id="residents-view">
+				<ul class="children collapse" id="residents-view" style="font-color:white">
 					<li class="parent"><a data-toggle="collapse" href="#resident-bkttm">
 						<span data-toggle="collapse" href="#residents-bkttm" class="icon"><em class="fa fa-plus"></em></span> Bukit Timah</a>
 						<ul class="children collapse" id="resident-bkttm">
-						{% for r in all_residents(location_filter='bkttm') %}
+						   {% for r in all_residents(location_filter='bkttm') %}
 						<li>
 							<a href="/overview/{{ r['resident_id'] }}">{{ r['name'] }}</a>
 						</li>
