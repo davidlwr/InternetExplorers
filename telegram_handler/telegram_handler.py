@@ -13,7 +13,6 @@ def button(bot, update):
 	# keyboardtext = update.message.text 
 	query = update.callback_query
 	queryText = query['message']['text']
-	print(queryText)
 
 	keyboard = [[InlineKeyboardButton("Defecation", callback_data='Defecation'),
 				 InlineKeyboardButton("Urine", callback_data='Urine')],
@@ -100,13 +99,11 @@ def button(bot, update):
 						  message_id=query.message.message_id)
 		alert_DAO.delete_alert(DUTY_NURSE_CHAT_ID, text)
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
-		print(len(alerts))
 		if len(alerts) > 0:
 			keyboardBottom = [[alert['alert_text']] for alert in alerts]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
-		elif alerts == None:
-			print("why")
+		else:
 			reply_markupRemove = ReplyKeyboardRemove()
 			bot.send_message(query.message.chat_id, "You have no more tasks left", reply_markup=reply_markupRemove)
 			
@@ -165,7 +162,6 @@ def text_reply(bot, update):
 	
 	query = update.callback_query
 	hitext = update.message.text
-	print("Sensor" in hitext)
 	if exists(hitext) and "Sensor" in hitext:
 		bot.send_message(update.message.chat_id, hitext, reply_markup=reply_markupSensor)
 	else:

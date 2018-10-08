@@ -40,34 +40,44 @@ while 1:
 	minute = current_time.minute
 	second = current_time.second
 	microsecond = current_time.microsecond
-	if((hour ==21) and (minute==17) and (second == 30)):
+	if((hour ==9) and (minute==57) and (second == 0)):
 		downList = []
 		for ss in Sensor_mgmt.get_all_sensor_status():
 			if 1 in ss[1]:
 				error = ss[0] + " issue: disconnected" 
-				downList.append(ss[0])
+				downList.append(error)
 			elif 2 in ss[1]:
 				error = ss[0] + " issue: low battery" 
-				downList.append(ss[0])
+				downList.append(error)
 			elif 3 in ss[1]:
 				error = ss[0] + " issue: warning" 
-				downList.append(ss[0])
+				downList.append(error)
 				
 		reply_markup = {"inline_keyboard": [[{"text": "Fixed", "callback_data": "fixed"},{"text": "False Alarm", "callback_data": "False Alarm"}]]}
 		if(len(downList) > 0):
 			# text = "\n".join(downList)
 			for downSS in downList: 
-				text = "Sensor " + downSS + " is down"
+				text = "Sensor " + downSS 
 				send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
 				alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
 			
 	elif((hour ==21) and (minute==0) and (second == 0)):
 		downList = []
 		for ss in Sensor_mgmt.get_all_sensor_status():
-			if 0 in ss[1]:
-				downList.append(ss[0])
-		reply_markup = {"inline_keyboard": [[{"text": "Fixed", "callback_data": "Fix"}]]}
+			if 1 in ss[1]:
+				error = ss[0] + " issue: disconnected" 
+				downList.append(error)
+			elif 2 in ss[1]:
+				error = ss[0] + " issue: low battery" 
+				downList.append(error)
+			elif 3 in ss[1]:
+				error = ss[0] + " issue: warning" 
+				downList.append(error)
+				
+		reply_markup = {"inline_keyboard": [[{"text": "Fixed", "callback_data": "fixed"},{"text": "False Alarm", "callback_data": "False Alarm"}]]}
 		if(len(downList) > 0):
 			# text = "\n".join(downList)
 			for downSS in downList: 
-				send_message_with_reply(DUTY_NURSE_CHAT_ID, "Sensor " + downSS + " is down:\n", reply_markup)
+				text = "Sensor " + downSS 
+				send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
+				alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)

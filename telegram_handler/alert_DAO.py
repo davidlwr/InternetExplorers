@@ -21,7 +21,7 @@ def get_alerts_by_id(chat_id):
         cursor.execute(query, (chat_id, ))
         results = cursor.fetchall()
         if results: return results
-        else: return None
+        else: return []
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
 
