@@ -20,8 +20,11 @@
 <link href="static/css/font-awesome.min.css" rel="stylesheet">
 <link href="static/css/datepicker3.css" rel="stylesheet">
 <link href="static/css/styles.css" rel="stylesheet">
-
-
+<style>
+.clickable-row {
+    cursor: pointer;
+}
+</style>
 {% endblock %}
 {% block content %}
 <!--<div class="col-lg-12">
@@ -151,32 +154,32 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th style="padding-left:20px">Name</th>
-                                <th class="not-in-mobile">Vital Signs</th>
-                                <th class="not-in-mobile">Sleep Quality</th>
-                                <th class="not-in-mobile">Night Toilet Usage</th>
-                                <th style="text-align:center">Overall Status</th>
+                                <th width="20%">Name</th>
+                                <th width="20%" class="not-in-mobile">Vital Signs</th>
+                                <th width="20%" class="not-in-mobile">Sleep Quality</th>
+                                <th width="20%" class="not-in-mobile">Night Toilet Usage</th>
+                                <th width="20%" style="text-align:center">Overall Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for resident in residents %}
                             <tr class='clickable-row' data-href='./overview/{{ resident['resident_id'] }}'>
-                                <td style="padding-left:20px"> {{ resident['name'] }}</td>
-                                <td style="padding-left:130px; color:{{ getTextColorFromAlertLength(resident['vitals_alerts']|length) }}" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['vitals_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
+                                <td width="20%"> {{ resident['name'] }}</td>
+                                <td width="20%" style="color:{{ getTextColorFromAlertLength(resident['vitals_alerts']|length) }}" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['vitals_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
                                         <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
                                     </span><b>{{ getFooterFromAlertLength(resident['vitals_alerts']|length) }}</b>
                                 </td>
-                                <td style="padding-left:90px; color:{{ getTextColorFromAlertLength(resident['sleep_alerts']|length) }}" class="not-in-mobile">
+                                <td width="20%" style="color:{{ getTextColorFromAlertLength(resident['sleep_alerts']|length) }}" class="not-in-mobile">
 								<span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['sleep_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
                                         <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
                                     </span><b>{{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}</b>
                                 </td>
-                                <td style="padding-left:100px; color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['toilet_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
+                                <td width="20%" style="color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}" class="not-in-mobile"><span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['toilet_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
                                         <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
                                     </span>
 								<b>{{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}</b>
                                 </td>
-                                <td bgcolor="{{ getTextColorFromAlertLength(resident['alert_highest']) }}" style="font-size:15px; text-align:center"><b>{{ getFooterFromAlertLength(resident['alert_highest']) }}</b></td>
+                                <td width="20%" bgcolor="{{ getTextColorFromAlertLength(resident['alert_highest']) }}" style="font-size:15px; text-align:center"><b>{{ getFooterFromAlertLength(resident['alert_highest']) }}</b></td>
                             </tr>
                             {% endfor %}
                         </tbody>
