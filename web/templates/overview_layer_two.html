@@ -278,7 +278,7 @@ div.sticky {
                                         svg_container.style.height = (window_height - 40) + 'px';
                                         Plotly.Plots.resize('vitals_breathing_chart');
                                     }
-                                    
+
                                     Plotly.Plots.resize('qos_chart');
                                     var window_height = window.innerHeight;
                                     var content_div_height = document.getElementById('qos_chart').offsetHeight;
@@ -547,7 +547,7 @@ div.sticky {
                                 <div class="panel panel-{{ 'red' if resident['check_out_of_rr_range'] else 'info' }}">
                                     <div class="panel-heading"  style="text-align:center; font-size:16px;">
                                         <div class="row">
-										<b>{{ '%0.2f'|format((resident['past_week_average_breathing'])|float) }} min</b>
+										<b>Average Sleep Respiratory Rate {{ '%0.2f'|format((resident['past_week_average_breathing'])|float) }} /min</b>
                                             <div class="col-xs-12 text-center"style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; white-space:nowrap;height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_out_of_rr_range'] else 'WhiteSmoke' }} ">
                                                 Sleep respiratory rates are <b>{{ 'outside of' if resident['check_out_of_rr_range'] else 'within' }} the typical range</b><br> based on the past 7 days
                                             </div>
@@ -580,7 +580,7 @@ div.sticky {
                                 <div class="panel panel-{{ 'red' if resident['check_out_of_hb_range'] else 'info' }}">
                                     <div class="panel-heading" style="text-align:center; font-size:16px;">
                                         <div class="row">
-										<b>{{ '%0.2f'|format((resident['past_week_average_heart'])|float) }} min</b>
+										<b>Average Sleep Pulse Rate {{ '%0.2f'|format((resident['past_week_average_heart'])|float) }} /min</b>
                                             <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; white-space:nowrap;height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_out_of_hb_range'] else 'WhiteSmoke' }} ">
                                                 Sleep pulse rates are <b>{{ 'outside of' if resident['check_out_of_hb_range'] else 'within' }} the typical range</b><br> based on the past 7 days
                                             </div>
