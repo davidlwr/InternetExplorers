@@ -167,10 +167,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Night toilet usage in past week',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Night toilet usage in past week',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -247,10 +247,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Sleep motion (mins) in past week',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Sleep motion (mins) in past week',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -325,10 +325,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Uninterrupted slp (hrs) in past wk',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Uninterrupted slp (hrs) in past wk',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -451,10 +451,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Sleep RR in past week',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Sleep RR in past week',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -561,10 +561,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Sleep pulse rate in past wk',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Sleep pulse rate in past wk',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -633,10 +633,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Quality of sleep in past wk (%)',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Quality of sleep in past wk (%)',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
