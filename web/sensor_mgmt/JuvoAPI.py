@@ -274,7 +274,7 @@ class JuvoAPI(object):
         # Failed call
         if r.status_code != 200: return None
         
-        # Successfull call
+        # Successfull call 
         return r.json()
     
     
@@ -648,8 +648,19 @@ if __name__ == "__main__":
 
 
     # Testing getting of unregistered targets
-    print(JuvoAPI.get_unregistered_sensors())
+    # print(JuvoAPI.get_unregistered_sensors())
 
+    target = 583
+    edt = datetime.now()
+    sdt = edt - timedelta(hours=1)
+    result = JuvoAPI.get_target_environ_stats(target=target, start_time=sdt, end_time=edt)
+    stats = result['data']['stats']
+    for log in stats: print(log['local_start_time'], log['local_end_time'])
 
-
-
+# 460
+# 2018-10-08T12:40:00Z 2018-10-08T12:45:00Z
+# 2018-10-08T12:35:00Z 2018-10-08T12:40:00Z
+# 2018-10-08T12:30:00Z 2018-10-08T12:35:00Z
+# 2018-10-08T12:25:00Z 2018-10-08T12:30:00Z
+# 2018-10-08T12:20:00Z 2018-10-08T12:25:00Z
+# 2018-10-08T12:15:00Z 2018-10-08T12:20:00Z

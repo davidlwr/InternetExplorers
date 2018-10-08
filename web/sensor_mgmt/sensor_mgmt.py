@@ -1,5 +1,6 @@
 import datetime, os, sys, math
 from datetime import timedelta
+from dateutil import parser
 
 if __name__ == '__main__':  sys.path.append("..")
 from JuvoAPI import JuvoAPI
@@ -20,7 +21,9 @@ class Sensor_mgmt(object):
     CHECK_WARN     = 3    # Potentially down
 
     # SETTINGS
-    batt_thresh  = 10    # In percent
+    batt_thresh  = 10     # percent
+    motion_thresh = 1.2   # hours
+    juvo_thresh  = 50     # minutes >> Environment Stats >> Difference between reading and API availability
 
 
     @classmethod
@@ -142,7 +145,6 @@ class Sensor_mgmt(object):
         # Iterate all sensors and get statuss
         for sensor in sensors:
             uuid   = sensor.uuid
-            print(uuid)
             status = cls.get_sensor_status(uuid=uuid, retBatteryLevel=retBatteryLevel)
             if retBatteryLevel: sensor_status.append([uuid, status[0], status[1]])
             else: sensor_status.append([uuid, status]) 
@@ -182,7 +184,7 @@ class Sensor_mgmt(object):
         #   >> Return true if diff has been less than 1 hour. Assume still up
         if len(records) == 1: 
             curr_ts = records[0][Sysmon_Log.recieved_timestamp_tname]
-            if curr_ts < start_dt and (start_dt-curr_ts) < timedelta(hours=1.2): return []
+            if curr_ts < start_dt and (start_dt-curr_ts) < timedelta(hours=cls.motion_thresh): return []
 
         prev_ts      = None
         for i in range(0, len(records)):     # Greedy
@@ -264,32 +266,69 @@ class Sensor_mgmt(object):
         Returns:
         list -- [[start,end], ...]
         ''' 
-
         readings = JuvoAPI.get_target_environ_stats(target=target, start_time=start_dt, end_time=end_dt)
 
         # No readings, therefore all down
         if readings == None: return [[start_dt, end_dt]]
-
-        readings.sort(key=lambda x: x['local_start_time'], reverse=False) # Sorted in increasing time order
+        
+        logs = readings['data']['stats']
+        logs.sort(key=lambda x:  parser.parse(x['local_start_time'])) # Sorted in increasing time order
 
         down_periods = []
         prev_sdt = None
         prev_edt = None
-        for reading in readings:
-            curr_sdt = reading['local_start_time']
-            curr_edt = reading['local_end_time']
+        for log in logs: 
+            curr_sdt = parser.parse(log['local_start_time']).replace(tzinfo=None)
+            curr_edt = parser.parse(log['local_end_time']).replace(tzinfo=None)
 
             # Inital assignment
-            if prev_sdt==None and prev_edt==None: prev_sdt, prev_edt = curr_sdt, curr_edt
-
-            # Periods not continuous
-            elif prev_edt != start_dt: 
-                down_periods.append([prev_edt, curr_sdt])
+            if prev_sdt==None and prev_edt==None: 
                 prev_sdt = curr_sdt
                 prev_edt = curr_edt
+                continue
 
-        # What about no readings at all
+            # Periods not continuous
+            if (curr_sdt - prev_edt) > timedelta(minutes=10): 
+                down_periods.append([prev_edt, curr_sdt])
+
+            prev_sdt = curr_sdt
+            prev_edt = curr_edt
+
+        # Deal with last log - curr time
+        # Find the previous 5 divisible minute (when environ stats should have sent data)
+        edt = datetime.datetime.now()
+        edt = edt.replace(minute=(math.floor(edt.minute / 5) * 5), second=0, microsecond=0)
+        cutoff = edt - timedelta(minutes=cls.juvo_thresh)       # lag between data reading and availablity on API
+        if cutoff - prev_edt > cls.juvo_thresh: down_periods.append([prev_edt, cutoff]) 
+
         return down_periods
+
+
+    @classmethod
+    def get_juvo_curr_status(cls, target):
+        '''
+        Returns status of Juvo Bed sensor based on last received environment statistic
+        if last received was > threshold mins, then return down.
+
+        target (int) 
+        '''
+        # Get all environ readings for past 1 hour
+        end_dt   = datetime.datetime.now()      # Also the current time
+        start_dt = end_dt - timedelta(hours=1)
+        readings = JuvoAPI.get_target_environ_stats(target=target, start_time=start_dt, end_time=end_dt)
+        
+        # No readings, therefore down
+        if readings == None: return cls.CHECK_WARN
+        
+        # Compare last reading with current time, against threshold
+        logs = readings['data']['stats']
+        logs.sort(key=lambda x:  parser.parse(x['local_start_time'])) # Sorted in increasing time order
+        last_log = logs[-1]
+        last_log_edt = parser.parse(last_log['local_end_time']).replace(tzinfo=None)
+
+        time_since_update = end_dt - last_log_edt
+        if time_since_update > timedelta(minutes=cls.juvo_thresh): return cls.CHECK_WARN
+        else: return cls.OK
 
 
     # @classmethod
@@ -443,4 +482,26 @@ if __name__ == '__main__':
 
     # for ss in Sensor_mgmt.get_all_sensor_status(retBatteryLevel=False):
     #     print(ss)
+
+
+    # Checking motion down/up
+    uuid = "2005-m-02"
+    sdt = datetime.datetime(year=2018, month=3, day=2)     
+    edt = datetime.datetime(year=2018, month=10, day=5)    
+    # down_periods = Sensor_mgmt.get_down_periods_motion(uuid=uuid, start_dt=sdt, end_dt=edt)
+    # for p in down_periods: print(p)
+
+    # Checking Juvo down/up
+    # sdt = datetime.datetime(year=2018, month=9, day=19, hour=12)    # Target installation pains
+    # edt = datetime.datetime(year=2018, month=9, day=19, hour=16)    # Target installation pains
+    # sdt = datetime.datetime(year=2018, month=3, day=2)    # MIN
+    # edt = datetime.datetime(year=2018, month=10, day=5)   # MAX
+    target = 460
+    # down_periods = Sensor_mgmt.get_down_periods_Juvo(target, sdt, edt)
+    # for p in down_periods: print(p)
+
+    curr_stats = Sensor_mgmt.get_juvo_curr_status(target=target)
+    print(curr_stats)
+
+
 
