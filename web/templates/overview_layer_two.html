@@ -84,7 +84,7 @@ div.sticky {
 			</div>
 		</div>
 	</div>
-	
+
 </div>
 <div class="row"> {# edit here for night toilet usage #}
     <div class="col-lg-12">
@@ -201,7 +201,7 @@ div.sticky {
                                         <div class="panel-heading"style="text-align:center; font-size:16px;">
 										<b>Average Percentage: {{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }} %</b>
                                                 <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; white-space:nowrap;height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_indicator_night_toilet_ratio'] else 'WhiteSmoke' }} ">
-                                                    This is <b>{{ 'greater' if resident['toilet_night_to_both_ratio'] >= resident['para_ratio_threshold'] else 'less' }}</b> than the set threshold of <b>{{ '%0.1f'|format((resident['para_ratio_threshold'] * 100)|float) }}%</b><br>based on the past 7 days 
+                                                    This is <b>{{ 'greater' if resident['toilet_night_to_both_ratio'] >= resident['para_ratio_threshold'] else 'less' }}</b> than the set threshold of <b>{{ '%0.1f'|format((resident['para_ratio_threshold'] * 100)|float) }}%</b><br>based on the past 7 days
                                                 </div>
                                             </div>
                                         </div>
@@ -211,7 +211,7 @@ div.sticky {
                         </div>
                     </div>
                 </div><!--first night toilet graph end-->
-				
+
                 <div class="col-lg-6 col-md-6 col-xs-12"><!--second night toilet graph start-->
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -277,6 +277,16 @@ div.sticky {
                                         var svg_container = document.getElementById('vitals_breathing_chart').getElementsByClassName('vitals_breathing_chart_class')[0].getElementsByClassName('svg-container')[0];
                                         svg_container.style.height = (window_height - 40) + 'px';
                                         Plotly.Plots.resize('vitals_breathing_chart');
+                                    }
+                                    
+                                    Plotly.Plots.resize('qos_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('qos_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('qos_chart').getElementsByClassName('qos_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('qos_chart');
                                     }
 
                                     Plotly.Plots.resize('vitals_heartbeat_chart');
@@ -350,6 +360,16 @@ div.sticky {
                                         svg_container.style.height = (window_height - 40) + 'px';
                                         Plotly.Plots.resize('vitals_heartbeat_chart');
                                     }
+
+                                    Plotly.Plots.resize('qos_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('qos_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('qos_chart').getElementsByClassName('qos_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('qos_chart');
+                                    }
                                 });
                                 </script>
                             </div>
@@ -407,7 +427,7 @@ div.sticky {
                                 <div class="panel panel-{{ 'red' if resident['check_indicator_sleep_movements'] else 'info' }}">
 									<div class="panel-heading"style="text-align:center; font-size:16px;">
 										<b>Average Duration :{{ '%0.2f'|format((resident['average_motion_during_sleep'] / 60)|float) }} Mins</b>
-											
+
 										<div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; white-space:nowrap;height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_indicator_sleep_movements'] else 'WhiteSmoke' }} ">
 											This is shows <b>{{ 'increase' if resident['average_motion_during_sleep_difference'] >= 0 else 'decrease'}} of
 											<i class="material-icons" style="vertical-align:sup; align-content:center">
@@ -444,7 +464,7 @@ div.sticky {
                                     <div class="panel-heading" style="text-align:center; font-size:16px;">
 										<div class="col-xs-12 text-center" >
 											<b> Average Duration: {{ '%0.0f'|format((resident['average_longest_uninterrupted_sleep'] / 3600)|round(0, 'floor')) }} Hours {{ '%0.0f'|format(((resident['average_longest_uninterrupted_sleep'] / 60) % 60)|round(0)) }} Minutes</b>
-											
+
 											<div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; white-space:nowrap;height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_indicator_uninterrupted_sleep'] else 'WhiteSmoke' }} ">
 											This is shows <b>{{ 'increase' if resident['average_longest_uninterrupted_sleep_difference'] >= 0 else 'decrease'}} of
 											<i class="material-icons" style="vertical-align:sup; align-content:center">
@@ -452,7 +472,7 @@ div.sticky {
 											</i>{{ '%0.2f'|format((resident['average_longest_uninterrupted_sleep_difference'] / 3660)|float|abs) }}
 											  hours</b><br>compared to the past 3 weeks
 											</div>
-											
+
                                         </div>
                                     </div>
                                 </div>
