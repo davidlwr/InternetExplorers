@@ -75,6 +75,7 @@ def insert_resident(name, node_id, age, fall_risk=None, status="Active", stay_lo
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
 
+
 def get_resident_name_by_node_id(node_id):
     '''
     Returns the name of the resident based on current node_id
