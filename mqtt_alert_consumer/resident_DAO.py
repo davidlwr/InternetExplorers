@@ -4,7 +4,7 @@ import secrets
 import string
 
 
-table_name = 'stbern.RESIDENT'
+table_name = 'stbern.resident'
 
 def get_resident_name_by_resident_id(resident_id):
 	query = 'SELECT name FROM {} WHERE resident_id = %s'.format(table_name)

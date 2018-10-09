@@ -26,3 +26,22 @@ def get_uuids_by_id(id):
         else: return []
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
+
+
+def get_id_by_uuid(uuid):
+    '''
+    Returns a resident (in a dict) based on node_id (in int)
+    '''
+    query = 'SELECT distinct(resident_id) FROM {} WHERE uuid = %s'.format(table_name)
+    # Get connection
+    factory = connection_manager()
+    connection = factory.connection
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(query, (uuid, ))
+        results = cursor.fetchall()
+        if results: return results
+        else: return []
+    except: raise
+    finally: factory.close_all(cursor=cursor, connection=connection)
