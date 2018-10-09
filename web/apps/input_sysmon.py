@@ -72,7 +72,7 @@ def remove_disconnected_periods(current_data, dc_list=None):
             # print(dc_period)
             current_data = current_data.loc[(current_data['recieved_timestamp'] < dc_period[0]) | (current_data['recieved_timestamp'] > dc_period[1])]
 
-    dc_list = [d[0] for d in dc_list]
+        dc_list = [d[0] for d in dc_list]
 
     # filter out sysmon data for what is relevant in the current data first (by time and location)
     current_user = current_data['node_id'].iloc[0]

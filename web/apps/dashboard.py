@@ -641,7 +641,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                     if dc_list:
                         for dc_period in dc_list:
                             # print(dc_period)
-                            moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                            moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
                     ###
                     draw_data.append(
                         {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
@@ -726,7 +726,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                         if dc_list:
                             for dc_period in dc_list:
                                 # print(dc_period)
-                                moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                                moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
                         ###
                         draw_data.append(
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
@@ -813,7 +813,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                         if dc_list:
                             for dc_period in dc_list:
                                 # print(dc_period)
-                                moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                                moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
                         ###
                         draw_data.append(
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
@@ -857,8 +857,7 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
         modified_date = temp_date + datetime.timedelta(days=1)
         end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
         draw_data = []
-        if input_resident:
-            r = input_resident
+        for r in input_resident:
             r_name = resident_DAO.get_resident_name_by_resident_id(r)
             if input_location:
                 df = input_data.input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
