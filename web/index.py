@@ -194,6 +194,7 @@ class EditForm(Form):
 
 
 class MyModelView(ModelView):
+    action_disallowed_list = ['delete']
     column_labels = dict(staff_type='User Type')
     column_display_pk = True
     column_default_sort = 'username'
@@ -311,6 +312,7 @@ class FormView(ModelView):
     # def create_form(self):
     #     ShiftLogForm()
     # can_create = False
+    action_disallowed_list = ['delete']
     form_excluded_columns = 'resident_object'
     column_display_pk = True
     column_default_sort = ('datetime', True)
@@ -341,6 +343,7 @@ class FormView(ModelView):
 
 
 class RiskAssessmentView(ModelView):
+    action_disallowed_list = ['delete']
     form_excluded_columns = 'resident_object'
     column_display_pk = True
     column_default_sort = ('datetime', True)
@@ -393,7 +396,7 @@ class Sensor(db.Model):
 
 class SensorView(ModelView):
     column_display_pk = True
-
+    action_disallowed_list = ['delete']
     @expose('/new/', methods=('GET', 'POST'))
     def create_view(self):
         form = SensorCreateForm()
@@ -436,7 +439,7 @@ class MyAdminIndexView(AdminIndexView):
         return True
 
 
-admin = Admin(server, name='Home', index_view=MyAdminIndexView(), base_template='my_master.html')
+admin = Admin(server, name='', index_view=MyAdminIndexView(), base_template='my_master.html')
 admin.add_view(MyModelView(User, db.session, 'User'))
 admin.add_view(ResidentView(Resident, db.session, 'Residents'))
 admin.add_view(FormView(Shift_log, db.session, 'Shift Logs'))

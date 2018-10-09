@@ -1,7 +1,7 @@
 {% from "_formhelpers.html" import render_field %}
 {% from "_formhelpers.html" import render_radio_fields %}
 {% from "_formhelpers.html" import render_name_field %}
-{% extends 'new_base.html' %}
+{% extends 'nav_bar.html' %}
 {% block title %}End of Shift Forms{% endblock %}
 {% block additional_stylesheets %}
 <!--<link rel="stylesheet" href="{{ url_for('static', filename='overview.css') }}">-->
@@ -20,7 +20,7 @@
     body {font-family: Arial;}
     .panel > .panel-body {
     background-image: none;
-    background-color: #AED6F1;
+    background-color: #f1f4f7;
     color: black;
     }
     </style>
@@ -34,11 +34,12 @@
 {% endfor %}
 
 <div class="panel panel-default" >
-    <a href="/admin/risk_assessment" style="color:black;" class="pull-right"><button>View/Edit Responses</button></a>
+    <a href="/admin/risk_assessment" style="color:black;" class="pull-right"><button class="btn btn-info">View/Edit Responses</button></a>
     <div class="panel-body">
         <form role="form" method="POST" action="/raforms">
             <div class="col-md-6">
                 {{ form.csrf_token }}
+                <br>
                 {{ render_name_field(form.resident) }}
                 <br>
                 <div class="form-group">
