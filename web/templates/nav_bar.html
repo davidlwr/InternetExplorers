@@ -60,10 +60,10 @@
 			document.getElementById("sysmon_alerts").innerHTML = ""
 			for (var i = 0; i < types.length; i++) {
 				if (types[i] == "1") {  // Battery
-					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"/sensors\"><div><em class=\"fa fa-battery-quarter\"></em>" + texts[i] +
+					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div><em class=\"fa fa-battery-quarter\"></em>" + texts[i] +
 																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>")
 				} else {
-					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"/sensors\"><div><em class=\"fa fa-feed\"></em>" + texts[i] +
+					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div><em class=\"fa fa-feed\"></em>" + texts[i] +
 																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>")
 
 				}
