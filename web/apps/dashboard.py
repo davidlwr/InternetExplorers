@@ -485,7 +485,7 @@ app.layout = html.Div([
             ], className='row-fluid')
         # ])
         # this is where the page content goes
-], style={'background-color': '#f1f4f7', 'padding': '15px', 'font-family': 'Montserrat'})
+], style={'background-color': '#f1f4f7', 'padding': '15px', 'font-family': '"Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif'})
 
 
 @app.callback(
