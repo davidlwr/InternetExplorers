@@ -23,8 +23,8 @@
 
 <style>
 a.deco-none {
-    color: inherit;
-    text-decoration: inherit;
+	color: inherit;
+	text-decoration: inherit;
 }
 </style>
 {% endblock %}
@@ -50,119 +50,102 @@ a.deco-none {
 	</div><!--/.row-->
 	
 	
-    <div class="row"></div>
-        <div class="col-lg-12">
-            <h4><b>Sensor Information</b></h4>
-            <!-- <div class="panel">
-                <div class="panel-heading">
-                    Current Resident Statuses
-                </div>
-            </div> -->
-            <!-- /.panel-heading -->
-            <div class="panel-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th class="not-in-mobile">Vital Signs</th>
-                                <th class="not-in-mobile">Night Toilet Usage</th>
-                                <th class="not-in-mobile">Sleep Quality</th>
-                                <th>Overall Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for resident in residents %}
-                            <tr class='clickable-row' data-href='./overview/{{ resident['node_id'] }}'>
-                                <td>{{ resident['name'] }}</td>
-                                <td style="color:{{ getTextColorFromAlertLength(resident['vitals_alerts']|length) }}" class="not-in-mobile"><b>{{ getFooterFromAlertLength(resident['vitals_alerts']|length) }}
-                                    <span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['vitals_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
-                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
-                                    </span></b>
-                                </td>
-                                <td style="color:{{ getTextColorFromAlertLength(resident['sleep_alerts']|length) }}" class="not-in-mobile"><b>{{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}
-                                    <span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['sleep_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
-                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
-                                    </span></b>
-                                </td>
-                                <td style="color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}" class="not-in-mobile"><b>{{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}
-                                    <span data-toggle="tooltip" data-html="true" data-placement="bottom" title="Notes:{% for tooltip_line in resident['toilet_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}{% endfor %}">
-                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
-                                    </span></b>
-                                </td>
-                                <td bgcolor="{{ getTextColorFromAlertLength(resident['alert_highest']) }}"><b>{{ getFooterFromAlertLength(resident['alert_highest']) }}</b></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            <!-- /.table-responsive -->
-            </div>
-            <!-- /.panel-body -->
-        </div>
-    <!-- {% for resident in residents %}
-    <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
-        <a href="./overview/{{ resident['node_id'] }}" class="deco-none">
-            <div class="panel panel-{{ getPanelColorFromAlertLength(resident['alert_highest']) }}">
-                <div class="panel-heading">
-                    <div class="semihuge">{{ resident['name'] }}</div>
-                </div>
-                <div class="panel-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <tbody>
-                                <tr class="{{ getSWDFromAlertLength(resident['vitals_alerts']|length) }}">
-                                    <td><i class="material-icons" style="font-size:15px; vertical-align:sup; align-content:center">favorite</i> </td>
-                                    <td><b>Vital signs</b></td>
-                                    <td><div>{{ getFooterFromAlertLength(resident['vitals_alerts']|length) }}</div></td>
-                                    <td class="text-center"><div data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['vitals_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
-                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
-                                    </div></td>
-                                </tr>
-
-                                <tr class="{{ getSWDFromAlertLength(resident['sleep_alerts']|length) }}">
-                                    <td><i class="material-icons" style="font-size:17px; vertical-align:sup">brightness_4</i></td>
-                                    <td><b>Sleep Patterns</b></td>
-                                    <td><div>
-                                        {{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}</div></td>
-                                    <td class="text-center"><div data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['sleep_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
-                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
-                                    </div></td>
-                                </tr>
-
-                                <tr class="{{ getSWDFromAlertLength(resident['toilet_alerts']|length) }}">
-                                    <td><i class="fa fa-bathtub" style="font-size:15px; vertical-align:sup"></i></td>
-                                    <td><b>Night Toilet Usage</b></td>
-                                    <td><div>
-                                        {{ getGMHFromAlertLength(resident['toilet_alerts']|length) }}</div></td>
-                                    <td class="text-center"><div data-toggle="tooltip" data-html="true" data-placement="bottom" title="<div class='text-left'> Notes:{% for tooltip_line in resident['toilet_tooltip'] %}<br/>{{ loop.index }}. {{ tooltip_line }}{% endfor %}</div>">
-                                        <i class="material-icons" style="font-size:15px; vertical-align:sup">info</i>
-                                    </div></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                </div>
-                <div class="panel-footer">
-                    Status: {{ getFooterFromAlertLength(resident['alert_highest']) }}
-                </div>
-            </div>
-        </a>
-    </div>
-    {% endfor %} -->
+	<div class="row"></div>
+		<div class="col-lg-12">
+			<h4><b>Sensor Information {{ boo }}</b></h4>
+			<!-- <div class="panel">
+				<div class="panel-heading">
+					Current Resident Statuses
+				</div>
+			</div> -->
+			<!-- /.panel-heading -->
+			<div class="panel-body">
+				<div class="table-responsive">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th class="not-in-mobile">Sensor Name</th>
+								<th class="not-in-mobile">Sensor Type</th>
+								<th class="not-in-mobile">Sensor Battery Level</th>
+								<th>Sensor Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for resident in residents %}
+							<tr class='clickable-row' data-href='./overview/{{ resident['node_id'] }}'>
+								<td>{{ resident['name'] }}</td>
+								
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			<!-- /.table-responsive -->
+			</div>
+			<!-- /.panel-body -->
+		</div>
+	
 </div><!--overall-->
+<div class="row"> 
+	
+	<div class="col-lg-12">
+		{% for resident in residents %}
+		<div class="panel panel-default" align="center""> <!--Toilet Panel-->
+			<div class="panel-heading">
+				<td>{{ resident['name'] }}</td>
+				<span class="pull-right clickable panel-toggle panel-collapsed"><em class="fa fa-toggle-down"></em></span>
+			</div>
+			<div class="panel-body" style="height:880px;background-color:#fff;">
+				<div class="col-xs-12 text-center">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<div class="row">
+								<div class="col-xs-12 text-center">
+									<div class="table-responsive">
+										<table class="table">
+											<thead>
+												<tr>
+													<th class="not-in-mobile">Sensor ID</th>
+													<th class="not-in-mobile">Sensor Type</th>
+													<th class="not-in-mobile">Sensor Battery Level</th>
+													<th>Sensor Status</th>
+												</tr>
+											</thead>
+											<tbody>
+												{% for info in resident['infoList'] %}
+												<tr>
+												<td>{{ info[0]}}</td>
+												<td>{{ info[1]}}</td>
+												</tr>
+												{% endfor %}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+				</div>
+				
+				
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+</div>
 {% endblock %}
 {% block footer%}
 <script>
 $(document).ready(function(){
-    $('[data-toggle="tooltip"]').tooltip();
+	$('[data-toggle="tooltip"]').tooltip();
 });
 
 jQuery(document).ready(function($) {
-    $(".clickable-row").click(function() {
-        window.location = $(this).data("href");
-    });
+	$(".clickable-row").click(function() {
+		window.location = $(this).data("href");
+	});
 });
 </script>
 {% endblock%}
