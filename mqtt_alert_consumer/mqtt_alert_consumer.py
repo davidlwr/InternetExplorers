@@ -88,7 +88,7 @@ def action_motion(event):
         print("called action motion")
         # ts = time.time()
         reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
-        text='Sensor 1 Alert: Mr Poh at ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        text='Assistance Alert: Squid Ward at ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
         alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
 
@@ -103,11 +103,18 @@ def action_motion(event):
 def action_door(event):
     if event == 255:
         print("called action_door motion")
-        # ts = time.time()
         reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
-        text='Sensor 1 Alert: Mr Poh at ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        text='Assistance Alert: Squid Ward at ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
         alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
+
+        alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
+        keyboardBottom = [[alert['alert_text']] for alert in alerts]
+        reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
+        response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markupBottom)
+        print(response.json()['result']['message_id'])
+        message_id = response.json()['result']['message_id']
+        # delete_message_with_reply(DUTY_NURSE_CHAT_ID, message_id)
 
 
 

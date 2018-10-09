@@ -4,6 +4,13 @@ import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 import alert_DAO
+import shift_log_DAO
+import datetime
+import resident_DAO
+from sensor_mgmt.sensor_mgmt import Sensor_mgmt
+from DAOs.sensor_DAO import sensor_DAO
+from DAOs import sensor_hist_DAO
+
 
 
 DUTY_NURSE_CHAT_ID = -251433967
@@ -113,33 +120,75 @@ def button(bot, update):
 						  chat_id=query.message.chat_id,
 						  message_id=query.message.message_id, 
 						  reply_markup=reply_markupDefault)
+						  
+def check_shift_form(shifttime):
+	idQuery = shift_log_DAO.retrieveCountPerShift(shifttime)
+	patientIDList = []
+	# print(test)
+	for item in idQuery[:]:
+		patientID = item['patient_id']
+		patientIDList.append(patientID)
+	return patientIDList
 
-
+def shiftform(bot, update):
+	print("trig")
+	date = datetime.date.today()
+	time = datetime.datetime.strptime('1200','%H%M').time()
+	shifttime = datetime.datetime.combine(date, time)
+	patientIDList = check_shift_form(shifttime)
+	print("trig")
+	nameList = []
+	checkList = []
+	checkList.extend(range(1, 9))
+	for patient_ID in patientIDList[:]:
+		checkList.remove(patient_ID)
+	for id in checkList:
+		patientName = resident_DAO.get_resident_name_by_resident_id(id)[0]['name']
+		nameList.append(patientName)
+	
+	if(len(nameList) > 0):
+		text = "\n".join(nameList)
+		bot.send_message(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text)
+	
+	
 def help(bot, update):
 	update.message.reply_text("Use /start to test this bot.")
 
-def list(bot, update):
-
-	alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
-
-	message = update.message
-	keyboard = []
-	# keyboardBottom = []
-	alerts_list = []
-	for alert in alerts[:]:
-		
-		item = alert['alert_text']
-		alerts_list.append(item)
-		InlineKeyboardButton(text="{}".format(item), callback_data="{}".format(item))
-		keyboard.append([InlineKeyboardButton(text="{}".format(item), callback_data="{}".format(item))])
-		# keyboardBottom.append([item])
-	reply_markup = InlineKeyboardMarkup(keyboard) 
-	# keyboardBottom = [[yo['alert_text']] for yo in alerts]
-	# reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
-
-	text = "\n".join(alerts_list)
-	bot.send_message(message.chat_id, text, reply_markup=reply_markup)
-	# bot.send_message(message.chat_id, text, reply_markup=reply_markupBottom)
+def sensoralert(bot, update):
+	
+	downList = []
+	for ss in Sensor_mgmt.get_all_sensor_status_v2(True):
+		id = ss[0]
+		loc = sensor_DAO.get_location_by_node_id(id)
+		location = loc[0]['location']
+		rawtype = sensor_DAO.get_type_by_node_id(id)
+		type = rawtype[0]['type']
+		rawuuid = sensor_hist_DAO.get_id_by_uuid(id)
+		if len(rawuuid)> 0:
+			residentid = rawuuid[0]['resident_id']
+			residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
+			residentName = residentNameRaw[0]['name']
+			if 1 in ss[1]:
+				error = "Sensor Issue: Disconnected" + "\nLocation: " + residentName + " " + location + "\nType: " + type
+				downList.append(error)
+			elif 2 in ss[1]:
+				error = "Sensor Issue: Low Battery" + "\nLocation: " + residentName + " " + location + "\nType: " + type
+				downList.append(error)
+			elif 3 in ss[1]:
+				error = "Sensor Issue: Warning"+ "\nLocation: " + residentName + " " + location + "\nType: " + type
+				downList.append(error)
+				
+	reply_markup = {"inline_keyboard": [[{"text": "Fixed", "callback_data": "fixed"},{"text": "False Alarm", "callback_data": "False Alarm"}]]}
+	if(len(downList) > 0):
+		# text = "\n".join(downList)
+		for downSS in downList: 
+			text = downSS
+			bot.send_message(DUTY_NURSE_CHAT_ID, text, reply_markup=reply_markup)				
+			alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
+		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
+		keyboardBottom = [[alert['alert_text']] for alert in alerts]
+		reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
+		bot.send_message(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markup=reply_markupBottom)
 
 def exists(inputText):
 	alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
@@ -179,7 +228,8 @@ def main():
 	updater.dispatcher.add_handler(CallbackQueryHandler(button))
 	updater.dispatcher.add_handler(MessageHandler(Filters.text, text_reply))
 	updater.dispatcher.add_handler(CommandHandler('help', help))
-	updater.dispatcher.add_handler(CommandHandler('list', list))
+	updater.dispatcher.add_handler(CommandHandler('sensoralert', sensoralert))
+	updater.dispatcher.add_handler(CommandHandler('shiftform', shiftform))
 	updater.dispatcher.add_error_handler(error)
 
 	# Start the Bot
