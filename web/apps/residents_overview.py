@@ -17,12 +17,12 @@ if __name__ == '__main__':
     sys.path.append(".")
     import input_data
     from app import app, server
-    from DAOs import resident_DAO
+    from DAOs import resident_DAO, shift_log_DAO
     from Entities import resident
 else:
     from apps import input_data
     from app import app, server
-    from DAOs import resident_DAO
+    from DAOs import resident_DAO, shift_log_DAO
     from Entities import resident
 
 # settle routing
@@ -81,6 +81,8 @@ def showOverviewResidents():
         if r_dict['alert_highest'] == 0:
             num_good_health += 1
     information['health_percentage'] = num_good_health / information['num_residents'] * 100 # in percentage
+    sldao = shift_log_DAO.shift_log_DAO()
+    information['num_shift_forms'] = sldao.get_today_logs()
     return render_template('overview_residents.html', residents=residents, information=information)
 
 # layer 2 routing
