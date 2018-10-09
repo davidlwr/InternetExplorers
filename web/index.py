@@ -57,7 +57,7 @@ def custom_jinja_global_variables():
         Returns a list of tuples with the management console paths available to admin users
         [(path_1, name_1), (path_2, name_2) ... ]
         '''
-        return [("/admin/user/", "Users"), ("/admin/resident/", "Residents"), ("/admin/shift_log/", "Shift Logs"), ("/admin/risk_assessment/", "Risk Assesments"), ("/admin/sensor/", "Sensors")]
+        return [("/admin/user/", "Users"), ("/admin/resident/", "Residents"), ("/admin/shift_log/", "Shift Logs"), ("/admin/risk_assessment/", "Risk Assesments"), ("/admin/sensor/new/", "Sensors")]
 
     def get_staff_management_paths():
         '''
