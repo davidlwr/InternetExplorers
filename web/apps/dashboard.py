@@ -857,7 +857,8 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
         modified_date = temp_date + datetime.timedelta(days=1)
         end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
         draw_data = []
-        for r in input_resident:
+        if input_resident:
+            r = input_resident
             r_name = resident_DAO.get_resident_name_by_resident_id(r)
             if input_location:
                 df = input_data.input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
