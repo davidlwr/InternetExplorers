@@ -49,33 +49,30 @@
 			}).parent().addClass('active');
 		});
 	</script>-->
-
-    {% block additional_stylesheets %}{% endblock %}
-	{% block scripts %} 
-	<script>
+    <script>
 		function set_message_count(n) {
 			$('#sysmon_num').text(n);
 		}
 	</script>
-	
+
 	<script>
 		function set_message_dropdown(types, texts, dates) {
 			document.getElementById("sysmon_alerts").innerHTML = ""
 			for (var i = 0; i < types.length; i++) {
 				if (types[i] == "1") {  // Battery
-					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"/sensors\"><div><em class=\"fa fa-battery-quarter\"></em>" + texts[i] + 
+					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"/sensors\"><div><em class=\"fa fa-battery-quarter\"></em>" + texts[i] +
 																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>")
 				} else {
-					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"/sensors\"><div><em class=\"fa fa-feed\"></em>" + texts[i] + 
+					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"/sensors\"><div><em class=\"fa fa-feed\"></em>" + texts[i] +
 																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>")
-					
+
 				}
 			}
 		}
 	</script>
 	<script>
 	function refresh_notifications() {
-				$.ajax("/notifications").done(	//{{ url_for('notifications') }}
+				$.ajax("{{ url_for('notifications') }}").done(	//
 					function(type_txts) {
 						set_message_count(type_txts.length)
 						var types = new Array();
@@ -98,7 +95,8 @@
 			setInterval(refresh_notifications, 10000);	// prev 10000
 		}));
 	</script>
-	
+    {% block additional_stylesheets %}{% endblock %}
+	{% block scripts %}
 	{% endblock %}
 </head>
 <body> <!-- common sidebar -->
