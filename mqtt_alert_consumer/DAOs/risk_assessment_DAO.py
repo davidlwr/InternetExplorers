@@ -1,10 +1,9 @@
 import datetime, os
+from DAOs.connection_manager import connection_manager
 import secrets
 import string
 import sys
 
-if __name__ == '__main__':  sys.path.append("..")
-from DAOs.connection_manager import connection_manager
 from Entities.risk_assessment import Risk_assessment
 
 class risk_assessment_DAO(object):

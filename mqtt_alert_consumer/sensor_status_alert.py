@@ -40,9 +40,10 @@ while 1:
 	minute = current_time.minute
 	second = current_time.second
 	microsecond = current_time.microsecond
-	if((hour ==19) and (minute==58) and (second == 20)):
+	if((hour ==20) and (minute==42) and (second == 0)):
 		downList = []
-		for ss in Sensor_mgmt.get_all_sensor_status():
+		print(Sensor_mgmt.get_all_sensor_status_v2(True))
+		for ss in Sensor_mgmt.get_all_sensor_status_v2(True):
 			if 1 in ss[1]:
 				error = ss[0] + " issue: disconnected" 
 				downList.append(error)
