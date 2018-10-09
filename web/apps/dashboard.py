@@ -3,13 +3,14 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import datetime
 import pandas as pd
+import numpy as np
 
 # internal imports
 from app import app
 from apps import input_data, input_shiftlogs
 from DAOs import resident_DAO
 from DAOs.sensor_DAO import sensor_DAO
-from sensor_mgmt import JuvoAPI
+from sensor_mgmt import JuvoAPI, sensor_mgmt
 
 locationMap = input_data.input_data.get_location_options()
 
@@ -140,15 +141,16 @@ app.layout = html.Div([
         # main body below
     # html.Div([
             html.Div([
-                html.Div([
-                    html.H1('Detailed Graphs')
-                ], className='row'),
+                # html.Div([
+                #     html.H1('Detailed Graphs')
+                # ], className='row'),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s toilet usage numbers')
+                        html.H3('Resident\'s toilet usage')
                     ], className='row'),
                     html.Div([
                         html.Div([
+                            html.B("Residents"),
                             dcc.Dropdown(
                                 id='resident_input_toilet_numbers',
                                 options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
@@ -156,8 +158,9 @@ app.layout = html.Div([
                                 value=[input_data.input_data.get_residents_options()[0] if input_data.input_data.get_residents_options() else None],
                                 multi=True
                             )
-                        ], className='col-md-4'),
+                        ], className='row'),
                         html.Div([
+                            html.B("Day/Night Filter"),
                             dcc.Dropdown(
                                 id='filter_input_toilet_numbers',
                                 options=[{'label': i, 'value': j} for i, j in
@@ -165,8 +168,10 @@ app.layout = html.Div([
                                 value='None',
                                 clearable=False
                             )
-                        ], className='col-md-4'),
+                        ], className='row'),
                         html.Div([
+                            html.B("Date"),
+                            html.Br(),
                             dcc.DatePickerRange(
                                 id='date_picker_toilet_numbers',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
@@ -181,9 +186,11 @@ app.layout = html.Div([
                                 end_date_placeholder_text='Select end date',
                                 minimum_nights=0
                             )
-                        ], className='col-md-4')
-                    ], className='row'),
+                        ], className='row')
+                    ], className='col-md-5 col-xs-12'),
+                    html.Div([], className='col-md-2 col-xs-12'),
                     html.Div([
+                        html.B(html.U("Other options")),
                         html.Div([
                             dcc.Checklist(
                                 id='offset_checkbox_toilet_numbers',
@@ -191,14 +198,14 @@ app.layout = html.Div([
                                           'value': 'offset'}],
                                 values=[],
                             )
-                        ], className='col-md-4 text-center'),
+                        ], className='row'),
                         html.Div([
                             dcc.Checklist(
                                 id='ignore_checkbox_toilet_numbers',
                                 options=[{'label': 'Ignore durations shorter than 3 seconds', 'value': 'ignore'}],
                                 values=[],
                             )
-                        ], className='col-md-4 text-center'),
+                        ], className='row'),
                         html.Div([
                             dcc.Checklist(
                                 id='group_checkbox_toilet_numbers',
@@ -206,34 +213,34 @@ app.layout = html.Div([
                                     {'label': 'Group close toilet motion detected as one visit', 'value': 'group'}],
                                 values=[],
                             )
-                        ], className='col-md-4 text-center')
-                    ], className='row'),
-                    html.Div([
+                        ], className='row'),
                         html.Div([
                             dcc.Checklist(
                                 id='seven_checkbox_toilet_numbers',
                                 options=[{'label': 'Include 7 day moving average (7D MA)', 'value': 'seven'}],
                                 values=['seven'],
                             )
-                        ], className='col-md-6 text-center'),
+                        ], className='row'),
                         html.Div([
                             dcc.Checklist(
                                 id='twentyone_checkbox_toilet_numbers',
                                 options=[{'label': 'Include 21 day moving average (21D MA)', 'value': 'twentyone'}],
                                 values=['twentyone'],
                             )
-                        ], className='col-md-6 text-center')
-                    ], className='row'),
+                        ], className='row')
+                    ], className='col-md-5 col-xs-12'),
                     html.Div([
                         html.Div(id='toilet_numbers_output', className='col-md-12')
                     ], className='row')
                 ], id='toilet_numbers_graph'),
+                html.Hr(),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s activity durations')
+                        html.H3('Resident\'s activity durations')
                     ], className='row'),
                     html.Div([
                         html.Div([
+                            html.B("Residents"),
                             dcc.Dropdown(
                                 id='resident_input_visit_duration',
                                 options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
@@ -243,6 +250,7 @@ app.layout = html.Div([
                             )
                         ], className='col-md-4'),
                         html.Div([
+                            html.B("Location"),
                             dcc.Dropdown(
                                 id='location_input_visit_duration',
                                 options=[{'label': i, 'value': locationMap[i]} for i in locationMap],
@@ -250,6 +258,8 @@ app.layout = html.Div([
                             )
                         ], className='col-md-4'),
                         html.Div([
+                            html.B("Date"),
+                            html.Br(),
                             dcc.DatePickerRange(
                                 id='date_picker_visit_duration',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
@@ -270,12 +280,14 @@ app.layout = html.Div([
                         html.Div(id='visit_duration_output', className='col-md-12')
                     ], className='row')
                 ], id='visit_duration_graph'),
+                html.Hr(),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s logs')
+                        html.H3('Resident\'s logs')
                     ], className='row'),
                     html.Div([
                         html.Div([
+                            html.B("Residents"),
                             dcc.Dropdown(
                                 id='resident_input_logs',
                                 options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_shiftlogs.get_residents_options()],
@@ -285,6 +297,7 @@ app.layout = html.Div([
                             )
                         ], className='col-md-4'),
                         html.Div([
+                            html.B("Day/Night Filter"),
                             dcc.Dropdown(
                                 id='filter_input_day_night',
                                 options=[{'label': i, 'value': j} for i, j in
@@ -294,6 +307,7 @@ app.layout = html.Div([
                             )
                         ], className='col-md-4'),
                         html.Div([
+                            html.B("Shift Log Information"),
                             dcc.Dropdown(
                                 id='filter_input_temp_bp_pulse',
                                 options=[{'label': i, 'value': j} for i, j in
@@ -303,6 +317,8 @@ app.layout = html.Div([
                             )
                         ], className='col-md-4'),
                         html.Div([
+                            html.B("Date"),
+                            html.Br(),
                             dcc.DatePickerRange(
                                 id='date_picker_logs',
                                 min_date_allowed=input_shiftlogs.input_raw_min_date,
@@ -323,12 +339,14 @@ app.layout = html.Div([
                         html.Div(id='logs_output', className='col-md-12')
                     ], className='row')
                 ], id='logs_graph'),
+                html.Hr(),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s sleep vital signs')
+                        html.H3('Resident\'s sleep vital signs')
                     ], className='row'),
                     html.Div([
                         html.Div([
+                            html.B("Residents"),
                             dcc.Dropdown(
                                 id='resident_input_vital_signs',
                                 options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in sensor_DAO.get_juvo_resident_ids()],
@@ -338,6 +356,7 @@ app.layout = html.Div([
                             )
                         ], className='col-md-4'),
                         html.Div([
+                            html.B("Vital Signs"),
                             dcc.Dropdown(
                                 id='vital_sign_selector',
                                 options=[{'label': 'Heart Rate', 'value': 'heart_rate'}, {'label': 'Breathing Rate', 'value': 'breathing_rate'}],
@@ -347,6 +366,8 @@ app.layout = html.Div([
                             )
                         ], className='col-md-4'),
                         html.Div([
+                            html.B("Date"),
+                            html.Br(),
                             dcc.DatePickerRange(
                                 id='date_picker_vital_signs',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
@@ -367,12 +388,14 @@ app.layout = html.Div([
                         html.Div(id='vital_signs_output', className='col-md-12')
                     ], className='row')
                 ], id='vital_signs_graph'),
+                html.Hr(),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s quality of sleep (from juvo)')
+                        html.H3('Resident\'s quality of sleep (from juvo)')
                     ], className='row'),
                     html.Div([
                         html.Div([
+                            html.B("Residents"),
                             dcc.Dropdown(
                                 id='resident_input_qos',
                                 options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in sensor_DAO.get_juvo_resident_ids()],
@@ -382,6 +405,8 @@ app.layout = html.Div([
                             )
                         ], className='col-md-6'),
                         html.Div([
+                            html.B("Date"),
+                            html.Br(),
                             dcc.DatePickerRange(
                                 id='date_picker_qos',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
@@ -402,12 +427,14 @@ app.layout = html.Div([
                         html.Div(id='qos_output', className='col-md-12')
                     ], className='row')
                 ], id='qos_graph'),
+                html.Hr(),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s activity')
+                        html.H3('Resident\'s activity')
                     ], className='row'),
                     html.Div([
                         html.Div([
+                            html.B("Residents"),
                             dcc.Dropdown(
                                 id='resident_input',
                                 options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in input_data.input_data.get_residents_options()],
@@ -415,6 +442,7 @@ app.layout = html.Div([
                             )
                         ], className='col-md-4 col-xs-12'),
                         html.Div([
+                            html.B("Location"),
                             dcc.Dropdown(
                                 id='location_input',
                                 options=[{'label': i, 'value': locationMap[i]} for i in locationMap],
@@ -422,6 +450,8 @@ app.layout = html.Div([
                             )
                         ], className='col-md-4 col-xs-12'),
                         html.Div([
+                            html.B("Date"),
+                            html.Br(),
                             dcc.DatePickerRange(
                                 id='date_picker',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
@@ -455,7 +485,7 @@ app.layout = html.Div([
             ], className='row-fluid')
         # ])
         # this is where the page content goes
-], style={'background-color': '#FFFFFF', 'padding': '15px'})
+], style={'background-color': '#f1f4f7', 'padding': '15px', 'font-family': 'Montserrat'})
 
 
 @app.callback(
@@ -476,7 +506,11 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
         modified_date = temp_date + datetime.timedelta(days=1)
         end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
         # print('debug ' + str(type(end_date)))
-        df = input_data.input_data.get_relevant_data(input_location, start_date, end_date, input_resident, grouped=group_checkbox)
+        df = pd.DataFrame()
+        df['recieved_timestamp'] = []
+        df['event'] = []
+        if input_location and input_resident:
+            df = input_data.input_data.get_relevant_data(input_location, start_date, end_date, input_resident, grouped=group_checkbox)
         # df = input_data.input_raw_data
         return dcc.Graph(id='firstplot',
                          figure={
@@ -489,6 +523,8 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
                                  'fill': 'tozeroy'
                              }],
                              'layout': {
+                                 'paper_bgcolor': 'rgba(0,0,0,0)',
+                                 'plot_bgcolor': 'rgba(0,0,0,0)',
                                  'title': 'Periods with motion detected',
                                  'xaxis': {
                                      'range': [start_date, end_date],
@@ -533,7 +569,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                 r_name = resident_DAO.get_resident_name_by_resident_id(r)
                 df = input_data.input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r,
                                                        ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
-                # print("test 2", df)
+                # print(df)
                 draw_data.append({'x': df['gw_date_only'], 'y': df['event'], 'mode': 'lines+markers', 'name': r_name})
                 if seven_checkbox:
                     # get moving averages
@@ -544,6 +580,33 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                     # filter relevant dates
                     moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (
                             moving_averages_7['gw_date_only'] >= start_date)]
+
+                    # print(moving_averages_7.info())
+                    ### remove dc periods
+                    sdt = start_date
+                    edt = end_date
+                    if isinstance(sdt, str):
+                        sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                    if isinstance(edt, str):
+                        edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                    try:
+                        sdt = start_date.to_pydatetime()
+                        edt = end_date.to_pydatetime()
+                    except:
+                        pass
+                    u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                    dc_list = None
+                    if u:
+                        dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                    if dc_list:
+                        for dc_period in dc_list:
+                            # print(dc_period)
+                            moving_averages_7['moving_average'].loc[(moving_averages_7['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                    ###
+                    # print(moving_averages_7)
                     draw_data.append({'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
                                       'mode': 'lines+markers', 'name': r_name + ' 7D MA'})
                 if twentyone_checkbox:
@@ -555,6 +618,31 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                     # filter relevant dates
                     moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (
                             moving_averages_21['gw_date_only'] >= start_date)]
+
+                    ### remove dc periods
+                    sdt = start_date
+                    edt = end_date
+                    if isinstance(sdt, str):
+                        sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                    if isinstance(edt, str):
+                        edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                    try:
+                        sdt = start_date.to_pydatetime()
+                        edt = end_date.to_pydatetime()
+                    except:
+                        pass
+                    u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                    dc_list = None
+                    if u:
+                        dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                    if dc_list:
+                        for dc_period in dc_list:
+                            # print(dc_period)
+                            moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
+                    ###
                     draw_data.append(
                         {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
                          'mode': 'lines+markers', 'name': r_name + ' 21D MA'})
@@ -578,6 +666,31 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                         # filter relevant dates
                         moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (
                                 moving_averages_7['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_7['moving_average'].loc[(moving_averages_7['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
                         draw_data.append(
                             {'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
                              'mode': 'lines+markers', 'name': r_name + ' 7D MA Day'})
@@ -590,12 +703,38 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                         # filter relevant dates
                         moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (
                                 moving_averages_21['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
                         draw_data.append(
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
                              'mode': 'lines+markers', 'name': r_name + ' 21D MA Day'})
 
             if filter_input != 'Day':  # if not day means have to display for 'Night'
                 for r in input_resident:
+                    r_name = resident_DAO.get_resident_name_by_resident_id(r)
                     df = input_data.input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r, time_period='Night',
                                                            offset=offset_checkbox,
                                                            ignore_short_durations=ignore_checkbox,
@@ -612,6 +751,31 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                         # filter relevant dates
                         moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (
                                 moving_averages_7['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_7['moving_average'].loc[(moving_averages_7['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
                         draw_data.append(
                             {'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
                              'mode': 'lines+markers', 'name': r_name + ' 7D MA Night'})
@@ -626,6 +790,31 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                         # filter relevant dates
                         moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (
                                 moving_averages_21['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
                         draw_data.append(
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
                              'mode': 'lines+markers', 'name': r_name + ' 21D MA Night'})
@@ -634,6 +823,8 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                          figure={
                              'data': draw_data,
                              'layout': {
+                                 'paper_bgcolor': 'rgba(0,0,0,0)',
+                                 'plot_bgcolor': 'rgba(0,0,0,0)',
                                  'title': 'Number of toilet visits',
                                  'xaxis': {
                                      'title': 'Date'
@@ -668,13 +859,16 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
         draw_data = []
         for r in input_resident:
             r_name = resident_DAO.get_resident_name_by_resident_id(r)
-            df = input_data.input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
-            # print(df.head())
-            draw_data.append({'x': df['recieved_timestamp'], 'y': df['visit_duration'], 'mode':'markers', 'name': r_name})
+            if input_location:
+                df = input_data.input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
+                # print(df.head())
+                draw_data.append({'x': df['recieved_timestamp'], 'y': df['visit_duration'], 'mode':'markers', 'name': r_name})
         return dcc.Graph(id = 'visit_duration_plot',
                 figure = {
                     'data':draw_data,
                     'layout': {
+                        'paper_bgcolor': 'rgba(0,0,0,0)',
+                        'plot_bgcolor': 'rgba(0,0,0,0)',
                         'title':'Duration of activity of residents',
                         'xaxis': {
                             'title': 'Start datetime of visit'
@@ -751,6 +945,8 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
                          figure={
                              'data': draw_data,
                              'layout': {
+                                 'paper_bgcolor': 'rgba(0,0,0,0)',
+                                 'plot_bgcolor': 'rgba(0,0,0,0)',
                                  'title': 'Shift Logs',
                                  'xaxis': {
                                      'title': 'Date'
@@ -803,6 +999,8 @@ def update_graph_05(input_residents, input_vital_signs, start_date, end_date):
                 figure = {
                     'data': draw_data,
                     'layout': {
+                        'paper_bgcolor': 'rgba(0,0,0,0)',
+                        'plot_bgcolor': 'rgba(0,0,0,0)',
                         'title':'Vital signs information of elderly',
                         'xaxis': {
                             'title': 'Start datetime of recorded vitals'
@@ -850,6 +1048,8 @@ def update_graph_06(input_residents, start_date, end_date):
                 figure = {
                     'data': draw_data,
                     'layout': {
+                        'paper_bgcolor': 'rgba(0,0,0,0)',
+                        'plot_bgcolor': 'rgba(0,0,0,0)',
                         'title':'Sleep quality information of elderly (Juvo)',
                         'xaxis': {
                             'title': 'Date'

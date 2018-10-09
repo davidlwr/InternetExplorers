@@ -17,12 +17,12 @@ if __name__ == '__main__':
     sys.path.append(".")
     import input_data
     from app import app, server
-    from DAOs import resident_DAO
+    from DAOs import resident_DAO, shift_log_DAO
     from Entities import resident
 else:
     from apps import input_data
     from app import app, server
-    from DAOs import resident_DAO
+    from DAOs import resident_DAO, shift_log_DAO
     from Entities import resident
 
 # settle routing
@@ -39,7 +39,8 @@ def showOverviewResidents():
     '''
     residents_raw = resident_DAO.get_list_of_residents()
     residents = []
-    date_in_use = datetime.datetime.now() # datetime.datetime(2018, 4, 19, 23, 34, 12) # TODO: change to current system time once live data is available
+    date_in_use = datetime.datetime.now()
+    # date_in_use = datetime.datetime(2018, 4, 19, 23, 34, 12) # TODO: change to current system time once live data is available
     juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 22, 34, 12) # TODO: change to current system time once live data is available
     for resident in residents_raw:
         r = {}
@@ -80,6 +81,8 @@ def showOverviewResidents():
         if r_dict['alert_highest'] == 0:
             num_good_health += 1
     information['health_percentage'] = num_good_health / information['num_residents'] * 100 # in percentage
+    sldao = shift_log_DAO.shift_log_DAO()
+    information['num_shift_forms'] = sldao.get_today_logs()
     return render_template('overview_residents.html', residents=residents, information=information)
 
 # layer 2 routing
@@ -87,7 +90,8 @@ def showOverviewResidents():
 @flask_login.login_required
 def detailedLayerTwoOverviewResidents(resident_id):
     try:
-        date_in_use = datetime.datetime.now() # datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
+        date_in_use = datetime.datetime.now()
+        # date_in_use = datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
         juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
         resident = resident_DAO.get_resident_by_resident_id(resident_id)
         if resident['dob']:
@@ -98,7 +102,7 @@ def detailedLayerTwoOverviewResidents(resident_id):
         if resident is None:
             return 'Resident not found<a href="/overview">Go Back</a>'
         # parameters
-        resident['para_ratio_threshold'] = input_data.input_data.get_para_ratio_threshold()
+        resident['para_ratio_threshold'] = input_data.input_data.get_para_ratio_threshold(resident_id, date_in_use)
 
         # sleep alerts
         resident['sleep_alerts'], resident['average_motion_during_sleep'], resident['average_motion_during_sleep_difference'], resident['average_longest_uninterrupted_sleep'], resident['average_longest_uninterrupted_sleep_difference'], resident['qos_mean'], qos_df = input_data.input_data.get_nightly_sleep_indicator(resident_id, date_in_use)
@@ -135,7 +139,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = night_toilet_MA_graph_df_last_week['event'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk no.',
+                        text = 'Last week no.',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -146,7 +151,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = night_toilet_MA_graph_df_last_week['latest_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg',
+                        text = 'Last week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, .5)'
@@ -157,7 +163,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = night_toilet_MA_graph_df_last_week['past_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'prev 3 wk avg',
+                        text = 'Previous 3 week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(0, 128, 0)'
@@ -165,10 +172,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Night toilet usage in past week',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Night toilet usage in past week',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -215,7 +222,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = sleeping_motion_df['values'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk duration',
+                        text = 'Last week duration',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -226,7 +234,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = sleeping_motion_df['latest_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg',
+                        text = 'Last week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, .5)'
@@ -237,7 +246,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = sleeping_motion_df['past_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'prev 3 wk avg',
+                        text = 'Previous 3 week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(0, 128, 0)'
@@ -245,10 +255,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Sleep motion (mins) in past week',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Sleep motion (mins) in past week',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -293,7 +303,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = uninterrupted_sleep_df['values'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk duration',
+                        text = 'Last week duration',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -304,7 +315,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = uninterrupted_sleep_df['latest_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg',
+                        text = 'Last week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, .5)'
@@ -315,7 +327,7 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = uninterrupted_sleep_df['past_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'prev 3 wk avg',
+                        text = 'Previous 3 week average',
                         line = dict(
                             width = 2,
                             color = 'rgb(0, 128, 0)'
@@ -323,10 +335,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Uninterrupted slp (hrs) in past wk',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Uninterrupted slp (hrs) in past wk',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -397,7 +409,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = breathing_graph_df['breathing_rate'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk daily RR',
+                        text = 'Last week daily respiratory rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -408,7 +421,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = breathing_graph_df['past_week_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg RR',
+                        text = 'Last week average respiratory rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, 0.5)'
@@ -419,7 +433,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = breathing_graph_df['normal_lower_bound_rr'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'min normal RR',
+                        text = 'Min normal respiratory rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(191, 0, 0, 0.5)'
@@ -430,7 +445,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = breathing_graph_df['normal_upper_bound_rr'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'max normal RR',
+                        text = 'Max normal respiratory rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(191, 0, 0, 0.5)'
@@ -441,7 +457,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = breathing_graph_df['previous_weeks_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'prev 3 wk avg',
+                        text = 'Previous 3 week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(0, 128, 0)'
@@ -449,10 +466,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Sleep RR in past week',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Sleep RR in past week',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -518,7 +535,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = heartbeat_graph_df['heart_rate'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk daily pulse rate',
+                        text = 'Last week daily pulse rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -529,7 +547,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = heartbeat_graph_df['normal_upper_bound_hb'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'max normal pulse rate',
+                        text = 'Max normal pulse rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(191, 0, 0, 0.5)'
@@ -540,7 +559,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = heartbeat_graph_df['past_week_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg RR',
+                        text = 'Last week average respiratory rate',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, 0.5)'
@@ -551,7 +571,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = heartbeat_graph_df['previous_weeks_mean'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'prev 3 wk avg',
+                        text = 'Previous 3 week average',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(0, 128, 0)'
@@ -559,10 +580,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Sleep pulse rate in past wk',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Sleep pulse rate in past wk',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -603,6 +624,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
         # print(qos_df.info())
         # print(qos_df)
 
+        resident['check_qos_too_low'] =  any('Quality of sleep lower than' in s for s in resident['sleep_alerts'])
+
         qos_graph = dict(
                 data=[
                     dict(
@@ -610,7 +633,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = qos_df['qos'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk nightly sleep quality',
+                        text = 'Last week nightly sleep quality',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgb(55, 128, 191)'
@@ -621,7 +645,8 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         y = qos_df['past_week_average'],
                         type = 'scatter',
                         mode = 'lines',
-                        name = 'last wk avg sleep quality',
+                        text = 'Last week average sleep quality',
+                        name = '',
                         line = dict(
                             width = 2,
                             color = 'rgba(55, 128, 191, 0.5)'
@@ -629,10 +654,10 @@ def detailedLayerTwoOverviewResidents(resident_id):
                     )
                 ],
                 layout = dict(
-                    title = 'Quality of sleep in past wk',
-                    titlefont = dict(
-                        size = 14
-                    ),
+                    # title = 'Quality of sleep in past wk (%)',
+                    # titlefont = dict(
+                    #     size = 14
+                    # ),
                     autosize = True,
                     height = 200,
                     showlegend = False,
@@ -644,7 +669,7 @@ def detailedLayerTwoOverviewResidents(resident_id):
                         pad = 5
                     ),
                     yaxis = dict(
-                        title = '%',
+                        title = "",#'%',
                         scaleanchor = 'x',
                         scaleratio = 0.5,
                         hoverformat = '.2f'
@@ -666,7 +691,7 @@ def detailedLayerTwoOverviewResidents(resident_id):
                 night_toilet_MA_graph_json=night_toilet_MA_graph_json, sleeping_motion_graph_json=sleeping_motion_graph_json, uninterrupted_sleep_graph_json=uninterrupted_sleep_graph_json,
                 breathing_rates_json=breathing_rates_json, heartbeat_rates_json=heartbeat_rates_json, qos_json=qos_json)
     except Exception as e:
-        print(sys.exc_info()[0])
+        print(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
         return "An Error Occurred!"
 
 if __name__ == '__main__':

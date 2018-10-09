@@ -6,6 +6,7 @@ from DAOs.connection_manager import connection_manager
 
 sys.path.append('../Entities')
 from Entities.shift_log import Shift_log
+from datetime import datetime, date, time, timedelta
 
 
 class shift_log_DAO(object):
@@ -23,7 +24,6 @@ class shift_log_DAO(object):
         self.max_datetime = None
         self.set_min_max_datetime()
 
-
     def set_min_max_datetime(self):
         '''
         Sets obj vars and returns max_datetime and min_datetime found in the database
@@ -33,10 +33,10 @@ class shift_log_DAO(object):
         '''
         query = """SELECT MAX({}) as 'max' ,
                           MIN({}) as 'min'
-                          FROM {};"""                    \
-                    .format(Shift_log.datetime_tname,    \
-                            Shift_log.datetime_tname,    \
-                            shift_log_DAO.table_name)
+                          FROM {};""" \
+            .format(Shift_log.datetime_tname, \
+                    Shift_log.datetime_tname, \
+                    shift_log_DAO.table_name)
 
         # Get connection
         factory = connection_manager()
@@ -47,18 +47,18 @@ class shift_log_DAO(object):
             cursor.execute(query)
             result = cursor.fetchone()
 
-            #set class vars
+            # set class vars
             if result != None:
                 self.max_datetime = result['max']
                 self.min_datetime = result['min']
                 return result['max'], result['min']
-            else: return None, None
+            else:
+                return None, None
 
         except:
             print("error")
         finally:
             factory.close_all(cursor=cursor, connection=connection)
-
 
     def insert_shift_log(self, shift_log):
         '''
@@ -68,9 +68,9 @@ class shift_log_DAO(object):
         shift_log -- Entities.shift_log, class vars used to create a new DB row
         '''
         query = """INSERT INTO {} VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""" \
-                    .format(shift_log_DAO.table_name)
+            .format(shift_log_DAO.table_name)
 
-         # Get connection
+        # Get connection
         factory = connection_manager()
         connection = factory.connection
         cursor = connection.cursor()
@@ -95,6 +95,26 @@ class shift_log_DAO(object):
 
         return pd.read_sql_query(query, connection)
 
+    def get_today_logs(self):
+        current_datetime = datetime.today()
+        reset_datetime = datetime.combine(date.today(), time(10))
+        query_date = datetime.combine(date.today(), time(0))
+        if current_datetime < reset_datetime:
+            query_date = datetime.combine(date.today() - timedelta(1), time(0))
+
+        query = "SELECT count(*) FROM {} where `datetime` > '{}'".format(shift_log_DAO.table_name, query_date)
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query)
+            result = cursor.fetchone()
+            return result['count(*)']
+        except:
+            print("error")
+        finally:
+            factory.close_all(cursor=cursor, connection=connection)
 
 # # TEST-1 insert
 # sl_dao = shift_log_DAO()

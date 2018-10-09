@@ -14,12 +14,12 @@ if __name__ == '__main__':  # we want to import from same directory if using thi
     sys.path.append(".")
     import input_sysmon
     from DAOs.sensor_log_DAO import sensor_log_DAO
-    from sensor_mgmt import JuvoAPI
+    from sensor_mgmt import JuvoAPI, sensor_mgmt
     from DAOs.sensor_DAO import sensor_DAO
 else:  # if called from index.py
     from apps import input_sysmon
     from DAOs.sensor_log_DAO import sensor_log_DAO
-    from sensor_mgmt import JuvoAPI
+    from sensor_mgmt import JuvoAPI, sensor_mgmt
     from DAOs.sensor_DAO import sensor_DAO
 
 # specify file parameters
@@ -125,8 +125,12 @@ class input_data(object):
                                         # can be customised based on different patients and estimated nocturnal bladder capacity
 
     @staticmethod
-    def get_para_ratio_threshold():
-        return input_data.para_ratio_threshold_default
+    def get_para_ratio_threshold(resident_id=None, current_sys_time=None):
+        if not resident_id:
+            return input_data.para_ratio_threshold_default
+        else:
+            # get past three weeks' average percentage
+            return input_data.get_percentage_of_night_toilet_usage(resident_id, current_sys_time, average_over='month')[0]
 
     # replace date to be date only
     @staticmethod
@@ -227,7 +231,29 @@ class input_data(object):
 
 
         # TODO: for sensors that are still active at the end of the query period, make it inactive at the end date
-        relevant_data = input_sysmon.remove_disconnected_periods(relevant_data)
+
+        if 'm' in input_location:
+            uuid_list = relevant_data['uuid'].unique().tolist() # should only have 1 element
+            for u in uuid_list:
+                if isinstance(start_date, str):
+                    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+                if isinstance(end_date, str):
+                    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+
+                try:
+                    start_date = start_date.to_pydatetime()
+                    end_date = end_date.to_pydatetime()
+                except:
+                    pass
+
+                # print(u)
+                # print(isinstance(start_date, datetime.datetime))
+                # print(type(start_date))
+                dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, start_date, end_date)
+                # print("HEREHRERERE")
+                relevant_data = input_sysmon.remove_disconnected_periods(relevant_data, dc_list)
+        else:
+            relevant_data = input_sysmon.remove_disconnected_periods(relevant_data)
 
         # TODO: make grouping applicable for bedroom motion as well
         if grouped and ('m-02' in input_location):
@@ -681,13 +707,16 @@ class input_data(object):
 
         # now check for ratio of night to day toilet usage | can be split to new method
         # NOTE: we use 4 weeks approx. equal to a month and ~30 (28) for good sample size
-        para_ratio_threshold = input_data.get_para_ratio_threshold()
+        para_ratio_threshold = input_data.get_para_ratio_threshold(resident_id, current_sys_time)
         # get night usage
         past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
         # print("past_month_data_night", past_month_data_night)
         # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
         past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=resident_id, offset=True, grouped=True)
         try:
+            # past_month_data_both['event'] = past_month_data_both['event'].astype(float)
+            # print(past_month_data_both.head())
+            # print(para_ratio_threshold)
             past_month_data_both['threshold_cmp_value'] = past_month_data_both.apply(lambda row: row['event'] * para_ratio_threshold, axis=1)
             # print("past_month_data_both", past_month_data_both)
             # alert if difference in average over the past week is statistically significant beyond the para_ratio_threshold, 95% confidence interval
@@ -704,25 +733,41 @@ class input_data(object):
         return alerts_of_interest, current_MA
 
     @staticmethod
-    def get_percentage_of_night_toilet_usage(resident_id, current_sys_time=None):
+    def get_percentage_of_night_toilet_usage(resident_id, current_sys_time=None, average_over='week'):
         '''
-        Returns the percentage of night toilet usage divided by total usage in a day, averaged over a month (as first value in tuple)
+        Returns the percentage of night toilet usage divided by total usage in a day, averaged over a period of time (average_over = 'week' or 'month')(as first value in tuple)
         Also returns standard deviation (as the second value in the tuple)
         '''
-        if current_sys_time is None: # used in testing - pass in a different time for simulation
-            current_sys_time = datetime.datetime.now()
-        four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
-        # get night usage
-        past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
-        # print("past_month_data_night", past_month_data_night)
-        # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
-        past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=current_sys_time, resident_id=resident_id, offset=True, grouped=True)
+        if average_over == 'month': # actually means 3 previous weeks
+            if current_sys_time is None: # used in testing - pass in a different time for simulation
+                current_sys_time = datetime.datetime.now()
+            four_weeks_ago = current_sys_time + datetime.timedelta(days=-28)
+            # get night usage
+            past_month_data_night = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=(current_sys_time + datetime.timedelta(days=-7)), resident_id=resident_id, time_period='Night', offset=True, grouped=True)
+            # print("past_month_data_night", past_month_data_night)
+            # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
+            past_month_data_both = input_data.get_num_visits_by_date(start_date=four_weeks_ago, end_date=(current_sys_time + datetime.timedelta(days=-7)), resident_id=resident_id, offset=True, grouped=True)
 
-        # calculate percentage for each night
-        ratio_series = past_month_data_night['event'] / past_month_data_both['event']
-        # print(ratio_series)
+            # calculate percentage for each night
+            ratio_series = past_month_data_night['event'] / past_month_data_both['event']
+            # print(ratio_series)
 
-        return ratio_series.mean(), ratio_series.std()
+            return ratio_series.mean(), ratio_series.std()
+        else:
+            if current_sys_time is None: # used in testing - pass in a different time for simulation
+                current_sys_time = datetime.datetime.now()
+            one_week_ago = current_sys_time + datetime.timedelta(days=-7)
+            # get night usage
+            past_week_data_night = input_data.get_num_visits_by_date(start_date=one_week_ago, end_date=current_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
+            # print("past_month_data_night", past_month_data_night)
+            # get day usage (and then get para_ratio_threshold * the day, which will be used in statistical test against night)
+            past_week_data_both = input_data.get_num_visits_by_date(start_date=one_week_ago, end_date=current_sys_time, resident_id=resident_id, offset=True, grouped=True)
+
+            # calculate percentage for each night
+            ratio_series = past_week_data_night['event'] / past_week_data_both['event']
+            # print(ratio_series)
+
+            return ratio_series.mean(), ratio_series.std()
 
     # handle the information retrieval for vital signs
     @staticmethod

@@ -51,7 +51,7 @@ def update_input_sysmon():
     sysmon_data = sysmon_log_DAO.get_all_logs(format='pd')
 
 # get inactive period within time
-def remove_disconnected_periods(current_data):
+def remove_disconnected_periods(current_data, dc_list=None):
     '''
     Takes in data (from main readings) to be used and removes readings affected by disconnected periods
     Data should already filtered to one user, and one location (for now, could be extended in the future)
@@ -65,13 +65,25 @@ def remove_disconnected_periods(current_data):
         return current_data
 
     current_data.reset_index(drop=True)
+
+    # drop readings within the periods first
+    if dc_list:
+        for dc_period in dc_list:
+            # print(dc_period)
+            current_data = current_data.loc[(current_data['recieved_timestamp'] < dc_period[0]) | (current_data['recieved_timestamp'] > dc_period[1])]
+
+        dc_list = [d[0] for d in dc_list]
+
     # filter out sysmon data for what is relevant in the current data first (by time and location)
     current_user = current_data['node_id'].iloc[0]
-    sysmon_relevant_data = sysmon_disconnected_data[(sysmon_disconnected_data['node_id'] == current_user)
-                                                    & (sysmon_disconnected_data['recieved_timestamp'] > current_data[
-        'recieved_timestamp'].min())
-                                                    & (sysmon_disconnected_data['recieved_timestamp'] < current_data[
-        'recieved_timestamp'].max())]
+    if not dc_list:
+        sysmon_relevant_data = sysmon_disconnected_data[(sysmon_disconnected_data['node_id'] == current_user)
+                                                        & (sysmon_disconnected_data['recieved_timestamp'] > current_data[
+            'recieved_timestamp'].min())
+                                                        & (sysmon_disconnected_data['recieved_timestamp'] < current_data[
+            'recieved_timestamp'].max())]
+    else:
+        sysmon_relevant_data = pd.DataFrame({'recieved_timestamp': dc_list})
 
     # issue where motion is considered active when sensor is disconnected
     previous_disconnection = current_data['recieved_timestamp'].min()

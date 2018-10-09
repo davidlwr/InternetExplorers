@@ -12,6 +12,8 @@ from DAOs.sensor_DAO import sensor_DAO
 # WARNING: Datetime objects returned by the functions tend to have UTC timezone.
 # This is not an error, API returns SGT time but in UTC format for some retarded reason.
  
+# Sleep periods: Juvo considers sleep period for i.e. 12th to be: 12th noon - 13th noon
+
 class JuvoAPI(object):
     
     UTC_TZ = tz.gettz('UTC')
@@ -272,7 +274,7 @@ class JuvoAPI(object):
         # Failed call
         if r.status_code != 200: return None
         
-        # Successfull call
+        # Successfull call 
         return r.json()
     
     
@@ -618,7 +620,7 @@ class JuvoAPI(object):
 
 # Testing user defined methods- Checked against postman ================================================================
 if __name__ == "__main__":
-    # start_date = parser.parse('2018-08-07 12:00') 
+    # start_date = parser.parse('2018-08-07 12:00')
     # end_date   = parser.parse('2018-08-09 12:00')
     # target = 460
     # print("start date: ", start_date, "  end date: ", end_date, "  target: ", target)
@@ -646,8 +648,19 @@ if __name__ == "__main__":
 
 
     # Testing getting of unregistered targets
-    print(JuvoAPI.get_unregistered_sensors())
+    # print(JuvoAPI.get_unregistered_sensors())
 
+    target = 583
+    edt = datetime.now()
+    sdt = edt - timedelta(hours=1)
+    result = JuvoAPI.get_target_environ_stats(target=target, start_time=sdt, end_time=edt)
+    stats = result['data']['stats']
+    for log in stats: print(log['local_start_time'], log['local_end_time'])
 
-
-
+# 460
+# 2018-10-08T12:40:00Z 2018-10-08T12:45:00Z
+# 2018-10-08T12:35:00Z 2018-10-08T12:40:00Z
+# 2018-10-08T12:30:00Z 2018-10-08T12:35:00Z
+# 2018-10-08T12:25:00Z 2018-10-08T12:30:00Z
+# 2018-10-08T12:20:00Z 2018-10-08T12:25:00Z
+# 2018-10-08T12:15:00Z 2018-10-08T12:20:00Z

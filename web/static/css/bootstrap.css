@@ -1097,12 +1097,12 @@ textarea {
   line-height: inherit;
 }
 a {
-  color: #ffffff;
+  color: #337ab7;
   text-decoration: none;
 }
 a:hover,
 a:focus {
-  color: #ffffff;
+  color: #23527c;
   text-decoration: underline;
 }
 a:focus {
@@ -3988,7 +3988,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 .nav > li > a:hover,
 .nav > li > a:focus {
   text-decoration: none;
-  background-color: #222d32;
+  background-color: #eee;
 }
 .nav > li.disabled > a {
   color: #777;
@@ -4003,7 +4003,7 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
 .nav .open > a,
 .nav .open > a:hover,
 .nav .open > a:focus {
-  background-color: #222d32;
+  background-color: #eee;
   border-color: #337ab7;
 }
 .nav .nav-divider {
@@ -4493,15 +4493,15 @@ select[multiple].input-group-sm > .input-group-btn > .btn {
   }
 }
 .navbar-default {
-  background-color: #101010;
+  background-color: #f8f8f8;
   border-color: #e7e7e7;
 }
 .navbar-default .navbar-brand {
-  color: #ffffff;
+  color: #777;
 }
 .navbar-default .navbar-brand:hover,
 .navbar-default .navbar-brand:focus {
-  color: #bbbbbb;
+  color: #5e5e5e;
   background-color: transparent;
 }
 .navbar-default .navbar-text {
@@ -5460,6 +5460,7 @@ button.list-group-item-danger.active:focus {
 }
 .panel-heading {
   padding: 10px 15px;
+  height: 250px;
   border-bottom: 1px solid transparent;
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
@@ -5991,7 +5992,7 @@ button.close {
   z-index: 1070;
   display: block;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-style: normal;
   font-weight: normal;
   line-height: 1.42857143;
@@ -6010,6 +6011,32 @@ button.close {
 
   line-break: auto;
 }
+/*added new here*/
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -60px;
+    
+    /* Fade in tooltip - takes 1 second to go from 0% to 100% opac: */
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+/* end */
+
 .tooltip.in {
   filter: alpha(opacity=90);
   opacity: .9;
@@ -6754,23 +6781,20 @@ button.close {
     display: none !important;
   }
 }
-
-.DateInput {
-    font-weight: bold;
-    font-size: 14px;
-}
-
-._dash-loading-callback {
-    border: 16px solid #f3f3f3; /* Light grey */
-    border-top: 16px solid #3498db; /* Blue */
-    border-radius: 50%;
-    width: 120px;
-    height: 120px;
-    animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
 /*# sourceMappingURL=bootstrap.css.map */
+
+/*newly added*/
+
+pdnew{
+	margin-top:50px;
+	padding-top: 50px;
+	padding-left: 25px;
+	padding-bottom:50px
+}
+
+buff{
+	height:200px;
+	width:100%;
+}
+
+huge{font-size:40px}
