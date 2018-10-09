@@ -635,7 +635,7 @@ class input_data(object):
             if qos_mean < qos_threshold:
                 alerts_of_interest.append(f"Quality of sleep lower than {qos_threshold}%")
         else:
-            print('resident has no vital signs info from juvo')
+            # print('resident has no vital signs info from juvo')
             qos_df['qos'] = []
             qos_df['date_timestamp'] = []
 
@@ -787,7 +787,7 @@ class input_data(object):
         target = sensor_DAO.get_juvo_target_from_resident_id(resident_id)
 
         if not target:
-            print('resident has no vital signs info from juvo')
+            # print('resident has no vital signs info from juvo')
             return ''
         # Get all the relevant data from the past week
         one_week_ago = date_in_use + datetime.timedelta(days=-7)
@@ -868,7 +868,7 @@ class input_data(object):
         target = sensor_DAO.get_juvo_target_from_resident_id(resident_id)
 
         if not target:
-            print('resident has no vital signs info from juvo')
+            # print('resident has no vital signs info from juvo')
             return ''
         # Get all the relevant data from the past week
         one_week_ago = date_in_use + datetime.timedelta(days=-7)
@@ -908,7 +908,7 @@ class input_data(object):
         heartbeat_sd = heart_rate_df[['heart_rate']].std().values[0]
         heartbeat_mean = heart_rate_df[['heart_rate']].mean().values[0]
 
-        print(f"DEBUG: heartbeat mean and sd is {heartbeat_mean} and {heartbeat_sd}")
+        # print(f"DEBUG: heartbeat mean and sd is {heartbeat_mean} and {heartbeat_sd}")
 
         heart_rate_filtered_df = heart_rate_df[(heart_rate_df['heart_rate'] < (heartbeat_mean + 3 * heartbeat_sd))
                 & (heart_rate_df['heart_rate'] > (heartbeat_mean - 3 * heartbeat_sd))]
@@ -1006,8 +1006,8 @@ class input_data(object):
             heart_mean = np.mean(heartbeats)
             heart_se = scipy.stats.sem(heartbeats)
             heart_h = heart_se * scipy.stats.t.pdf((1 + confidence) / 2., heart_n-1)
-            print(f"DEBUG: heart_h {heart_h}")
-            print(f"DEBUG: heart statistic for comparison {heart_mean - heart_h}")
+            # print(f"DEBUG: heart_h {heart_h}")
+            # print(f"DEBUG: heart statistic for comparison {heart_mean - heart_h}")
             if (heart_mean - heart_h) > input_data.normal_upper_bound_hb:
                 alerts_of_interest.append(f"Pulse rate during sleep from previous week significantly higher than normal (>{input_data.normal_upper_bound_hb})")
 
