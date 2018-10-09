@@ -138,7 +138,7 @@
 	<div id="sidebar-collapse" class="col-sm-3 col-lg-2 sidebar" seamless="seamless">
 		<div class="profile-sidebar">
 			<div class="profile-userpic">
-				<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvCcS2NFhx13xAQuIC2Hx0Lp3vbTrAEGursEJDy5trbzoYDgqi" class="img-responsive" alt="">
+				<img src="{{ url_for('static', filename='heartbeat.png') }}" class="img-responsive" alt="">
 			</div>
 			<div class="profile-usertitle">
 				<div class="profile-usertitle-name" style="color:#ffffff">{{ current_user.username }}</div>
