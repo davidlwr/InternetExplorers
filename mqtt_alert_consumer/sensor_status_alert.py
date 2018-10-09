@@ -40,7 +40,7 @@ while 1:
 	minute = current_time.minute
 	second = current_time.second
 	microsecond = current_time.microsecond
-	if((hour ==19) and (minute==34) and (second == 0)):
+	if((hour ==19) and (minute==58) and (second == 20)):
 		downList = []
 		for ss in Sensor_mgmt.get_all_sensor_status():
 			if 1 in ss[1]:

@@ -13,7 +13,7 @@ class sensor_log_DAO(object):
     """
 
     table_name = "stbern.sensor_log"
-    TIMEPERIOD_DAY   = 'Day'
+    TIMEPERIOD_DAY = 'Day'
     TIMEPERIOD_NIGHT = 'Night'
 
     def __init__(self):
@@ -33,8 +33,8 @@ class sensor_log_DAO(object):
         (max_datetime, min_datetime) or (None, None) if nothing found
         """
 
-        query = """SELECT MAX({}) as 'max' , 
-                          MIN({}) as 'min' 
+        query = """SELECT MAX({}) as 'max' ,
+                          MIN({}) as 'min'
                           FROM {};""" \
             .format(Sensor_Log.recieved_timestamp_tname, \
                     Sensor_Log.recieved_timestamp_tname, \
@@ -94,25 +94,25 @@ class sensor_log_DAO(object):
         end_datetime (datetime)
         """
 
-        query = """
-                SELECT * FROM {}
-                WHERE '{}' = %s
-                AND `{}` > %s
-                AND `{}` < %s
-                ORDER BY `{}`
+        query = f"""
+                SELECT * FROM {sensor_log_DAO.table_name}
+                WHERE `{Sensor_Log.uuid_tname}` = %s
+                AND `{Sensor_Log.recieved_timestamp_tname}` > %s
+                AND `{ Sensor_Log.recieved_timestamp_tname}` < %s
+                ORDER BY `{Sensor_Log.recieved_timestamp_tname}`
                 DESC
-                """.format(sensor_log_DAO.table_name, Sensor_Log.uuid_tname, Sensor_Log.recieved_timestamp_tname,
-                           Sensor_Log.recieved_timestamp_tname, Sensor_Log.recieved_timestamp_tname)
-
+                """
         # Get connection
         factory = connection_manager()
         connection = factory.connection
         cursor = connection.cursor()
 
         try:
-            cursor.execute(query, [uuid, start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
-                                   end_datetime.strftime('%Y-%m-%d %H:%M:%S')])
+            # cursor.execute(query, [uuid, start_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+                                #    end_datetime.strftime('%Y-%m-%d %H:%M:%S')])
+            cursor.execute(query, [uuid, start_datetime, end_datetime])
             result = cursor.fetchall()
+            
 
             logs = []
             if result != None:
@@ -186,6 +186,59 @@ class sensor_log_DAO(object):
 
 
     @staticmethod
+    def get_enclosing_logs(start_dt, end_dt, target_dt):
+        '''
+        Given a target datetime, returns...
+        Last record before the target and first record after the target 
+        
+        Inputs:
+        start_dt  (datetime)
+        end_dt    (datetime)
+        target_dt (datetime)
+
+        Returns:
+        records as returned by pymysql
+        NOTE: Can have 0, 1, or 2 records. Sorted in ascending datetime
+        '''
+        feed_dict = [target_dt, start_dt, end_dt, target_dt, start_dt, end_dt]
+        query = f"""SELECT * FROM 
+                        (SELECT * FROM {sensor_log_DAO.table_name} 
+                        WHERE {Sensor_Log.recieved_timestamp_tname} < %s
+                        AND {Sensor_Log.recieved_timestamp_tname} >= %s
+                        AND {Sensor_Log.recieved_timestamp_tname} <= %s
+                        ORDER BY {Sensor_Log.recieved_timestamp_tname} ASC
+                        LIMIT 1) as a
+                        union
+                        (SELECT * FROM {sensor_log_DAO.table_name} 
+                        WHERE {Sensor_Log.recieved_timestamp_tname} > %s
+                        AND {Sensor_Log.recieved_timestamp_tname} >= %s
+                        AND {Sensor_Log.recieved_timestamp_tname} <= %s
+                        ORDER BY {Sensor_Log.recieved_timestamp_tname} DESC
+                        LIMIT 1)
+                    ORDER BY {Sensor_Log.recieved_timestamp_tname} ASC
+                """
+        
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query, feed_dict)
+            result = cursor.fetchall()
+
+            enclosing_logs = [None, None]
+            if result != None: 
+                for r in result:
+                    r_ts = r[Sensor_Log.recieved_timestamp_tname]
+                    if r_ts < target_dt: enclosing_logs[0] = r_ts
+                    else: enclosing_logs[1] = r_ts
+            return enclosing_logs
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+
+
+    @staticmethod
     def get_last_logs(uuid, limit=1):
         """
         Returns a list of logs found in the database according to the parameters given
@@ -198,7 +251,7 @@ class sensor_log_DAO(object):
         query = f"""
                 SELECT * FROM {sensor_log_DAO.table_name}
                 WHERE {Sensor_Log.uuid_tname} = "{uuid}"
-                ORDER BY `{Sensor_Log.recieved_timestamp_tname}` 
+                ORDER BY `{Sensor_Log.recieved_timestamp_tname}`
                 DESC LIMIT {limit}
                 """
 
@@ -254,8 +307,8 @@ class sensor_log_DAO(object):
 
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
-            
+
 
 # TESTS ======================================================================================
-if __name__ == '__main__': 
+if __name__ == '__main__':
     print(sensor_log_DAO.get_all_uuids())
