@@ -11,7 +11,7 @@ from DAOs.sysmon_log_DAO import sysmon_log_DAO
 
 
 pd.options.mode.chained_assignment = None
-file_folder = '../stbern-20180302-20180523-csv/'
+file_folder = 'D:/FYP/DevBackUp/stbern-20180523-20180801/'
 
 # initialize empty dateframe to contain all row logs
 input_raw_data = pd.DataFrame()
@@ -28,6 +28,8 @@ for filename in os.listdir(file_folder):
 # convert datetime format
 input_raw_data['gw_timestamp'] = pd.to_datetime(input_raw_data['gw_timestamp'], format='%Y-%m-%dT%H:%M:%S')
 
+input_raw_data.drop_duplicates(subset=['gw_timestamp'], inplace=True)
+
 # consoludate logs
 logs = []
 for row in tqdm(input_raw_data.itertuples(index=True, name='Pandas')):
@@ -35,7 +37,7 @@ for row in tqdm(input_raw_data.itertuples(index=True, name='Pandas')):
     gw_device    = getattr(row, 'gw_device')        # i.e. "2005"
     value        = getattr(row, 'value')            # some int or float
     reading_type = getattr(row, 'reading_type')     # "battery_percent" or some other random shit that have no link to the date we get currently
-    gw_timestamp = getattr(row, 'gw_timestamp')     
+    gw_timestamp = getattr(row, 'gw_timestamp')
 
     # Conversion of battery level from CSV to current messages gotten from mqtt
     if reading_type == "battery_percent": reading_type = "Battery Level"
@@ -49,4 +51,5 @@ dao = sysmon_log_DAO()
 try:
     dao.insert_many(logs)
 except pymysql.err.IntegrityError as err:
+    raise
     pass

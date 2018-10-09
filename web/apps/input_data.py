@@ -250,7 +250,6 @@ class input_data(object):
                 # print(isinstance(start_date, datetime.datetime))
                 # print(type(start_date))
                 dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, start_date, end_date)
-                dc_list = [d[0] for d in dc_list]
                 # print("HEREHRERERE")
                 relevant_data = input_sysmon.remove_disconnected_periods(relevant_data, dc_list)
         else:
