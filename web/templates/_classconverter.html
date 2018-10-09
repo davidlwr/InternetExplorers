@@ -34,3 +34,12 @@
 {%+ if _length == 2 -%}#FF6347{%+ endif -%}
 {%+ if _length == 3 -%}#FF6347{%+ endif -%}
 {% endmacro %}
+
+{% macro getPanelColorFromDownCountLength(_length) %}
+{# the + and - signs are used to remove whitespaces #}
+{%+ if _length == 0 -%}green{%+ endif -%}
+{%+ if _length == 1 -%}red{%+ endif -%}
+{%+ if _length == 2 -%}red{%+ endif -%}
+{%+ if _length == 3 -%}red{%+ endif -%}
+{%+ if _length == 4 -%}red{%+ endif -%}
+{% endmacro %}

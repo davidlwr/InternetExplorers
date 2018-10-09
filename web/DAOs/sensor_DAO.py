@@ -30,7 +30,22 @@ class sensor_DAO(object):
             else: return []
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
+    @staticmethod
+    def get_type_by_node_id(node_id):
+        query = f"SELECT type FROM {sensor_DAO.table_name} where uuid = %s"
+  
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
 
+        try:
+            cursor.execute(query, (node_id, ))
+            results = cursor.fetchall()
+            if results: return results
+            else: return []
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
 
     @staticmethod
     def get_sensors(type=None, location=None, facility=None, uuid=None):
