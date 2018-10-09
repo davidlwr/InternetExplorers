@@ -159,9 +159,9 @@ class Sensor_mgmt(object):
     @classmethod
     def get_sensor_status_v2(cls, uuid, retBatteryLevel=False):
         '''
-        Returns 'up' | 'down' status of sensors. 
+        Returns 'up' | 'down' status of sensors.
         For new sensors, Im assuming that at least a single record is sent and thus will trigger true.
-        
+
         Inputs:
         uuid (str)
         retBatteryLevel (boolean)
@@ -169,10 +169,10 @@ class Sensor_mgmt(object):
         Return:
         1. A List of status codes: See class variables
         2. A list of Battery level
-            - None if Juvo 
+            - None if Juvo
             - Empty if no records found. e.g. Door sensors only send battery level logs when on low battery
             - Single value in %
-        i.e. ([1,3], [75])    
+        i.e. ([1,3], [75])
         i.e. ([1]  , [])        // Battery or newly installed sensor
         i.e. ([0]  , [None]])   // Juvo
         '''
@@ -192,7 +192,7 @@ class Sensor_mgmt(object):
             return ret_codes
         uuid = sensor.uuid
         type = sensor.type
-        
+
         isDoor   = True if type == "door" else False
         isMotion = True if type == "motion" else False
         isBed    = True if type == "bed sensor" else False
@@ -211,41 +211,41 @@ class Sensor_mgmt(object):
         elif isBed:     # BED SENSOR (JUVO)
             return cls.get_curr_status_juvo(target=sensor.juvo_target)
 
-        else: 
+        else:
            ret_codes.append(cls.INVALID_SENSOR)
            return ret_codes
-    
-    
+
+
     @classmethod
     def get_all_sensor_status_v2(cls, retBatteryLevel=False):
         '''
-        Returns 'up' | 'down' status of ALL sensors. 
+        Returns 'up' | 'down' status of ALL sensors.
 
         Inputs:
         retBatteryLevel -- True, return battery level if exists. Default false
 
         Return:
-            list of sensors, status codes, and optionally battery levels: 
+            list of sensors, status codes, and optionally battery levels:
             NOTE: Battery level can be 'None' if no records are found
 
             [ [Sensor.Entity, [Status, Codes, battLVL]],
               [Sensor.Entity, [Status, Codes, None]]...
             ]
-        
-            See list of status codes 
+
+            See list of status codes
         '''
         # Ret list in form: [[uuid, [status codes], [uuid, [status codes]]]]
         sensor_status = []
 
         # List of all Sensors
         sensors = sensor_DAO.get_sensors()
-        
+
         # Iterate all sensors and get statuss
         for sensor in sensors:
             uuid   = sensor.uuid
             status = cls.get_sensor_status_v2(uuid=uuid, retBatteryLevel=retBatteryLevel)
             if retBatteryLevel: sensor_status.append([uuid, status[0], status[1]])
-            else: sensor_status.append([uuid, status]) 
+            else: sensor_status.append([uuid, status])
 
         return sensor_status
 
@@ -329,23 +329,23 @@ class Sensor_mgmt(object):
         # Get down periods
         now = datetime.datetime.now()
         down_periods = cls.get_down_periods_motion(uuid=uuid, start_dt=now, end_dt=now)
-        
+
         ret_codes = []
         down = False
         for p in down_periods:          # Check if current time is within a down period
-            if p[0] < now and now < p[1]: 
+            if p[0] < now and now < p[1]:
                 down = True
                 break
         ret_codes.append(cls.CHECK_WARN if down else cls.OK)
 
         # Battery level?
         if retBatteryLevel == False: return ret_codes
-        else: 
+        else:
             batt_lvl = []
             last_batt = sysmon_log_DAO.get_last_battery_level(uuid=uuid)
             if last_batt != None:       # Sysmon batt event found
                 batt_lvl.append(last_batt.event)
-                if last_batt.event < cls.batt_thresh: 
+                if last_batt.event < cls.batt_thresh:
                     ret_codes.append(cls.LOW_BATT)
             return ret_codes, batt_lvl
 
@@ -400,25 +400,25 @@ class Sensor_mgmt(object):
 
         # No readings, therefore all down
         if readings == None: return [[start_dt, end_dt]]
-        
+
         logs = readings['data']['stats']
         logs.sort(key=lambda x:  parser.parse(x['local_start_time'])) # Sorted in increasing time order
 
         down_periods = []
         prev_sdt = None
         prev_edt = None
-        for log in logs: 
+        for log in logs:
             curr_sdt = parser.parse(log['local_start_time']).replace(tzinfo=None)
             curr_edt = parser.parse(log['local_end_time']).replace(tzinfo=None)
 
             # Inital assignment
-            if prev_sdt==None and prev_edt==None: 
+            if prev_sdt==None and prev_edt==None:
                 prev_sdt = curr_sdt
                 prev_edt = curr_edt
                 continue
 
             # Periods not continuous
-            if (curr_sdt - prev_edt) > timedelta(minutes=10): 
+            if (curr_sdt - prev_edt) > timedelta(minutes=10):
                 down_periods.append([prev_edt, curr_sdt])
 
             prev_sdt = curr_sdt
@@ -430,7 +430,7 @@ class Sensor_mgmt(object):
         edt = edt.replace(minute=(math.floor(edt.minute / 5) * 5), second=0, microsecond=0)
         cutoff = edt - timedelta(minutes=cls.juvo_thresh)           # lag between data reading and availablity on API
         if cutoff - prev_edt > timedelta(minutes=cls.juvo_thresh):  # Difference > Lag thresh. Therefore is down not lagged
-            down_periods.append([prev_edt, cutoff]) 
+            down_periods.append([prev_edt, cutoff])
 
         return down_periods
 
@@ -441,7 +441,7 @@ class Sensor_mgmt(object):
         Returns status of Juvo Bed sensor based on last received environment statistic
         if last received was > threshold mins, then return down.
 
-        target (int) 
+        target (int)
         '''
         # Get all environ readings for past 1 hour
         end_dt   = datetime.datetime.now()      # Also the current time
@@ -450,7 +450,7 @@ class Sensor_mgmt(object):
 
         ret_codes = []
         if readings == None: ret_codes.append(cls.CHECK_WARN)        # No readings, therefore down
-        else:   
+        else:
             # Compare last reading with current time, against threshold
             logs = readings['data']['stats']
             logs.sort(key=lambda x:  parser.parse(x['local_start_time'])) # Sorted in increasing time order
@@ -478,7 +478,7 @@ class Sensor_mgmt(object):
         Return
         List of down time: [[start,end]...]
         '''
-        
+
         # Split into periods whereby the 10th would refer to 12pm 9th, to 12pm 10th
         start_date = start_dt.replace(hour=0, minute=0, second=0)
         end_date   = end_dt.replace(hour=0, minute=0, second=0)  + timedelta(days=1)     # Expand by 1 day, in case start and end are the same day
@@ -488,7 +488,7 @@ class Sensor_mgmt(object):
         logs.sort(key = lambda x: x.recieved_timestamp) # ASC
 
         # if no records, consider down
-        if len(logs) == 0: 
+        if len(logs) == 0:
             missing_dates = [start_date]
         else:
             # Find dates without logs
@@ -507,7 +507,7 @@ class Sensor_mgmt(object):
 
             ownerless = []
             if min_dt > start_dt: ownerless += [start_dt + timedelta(x) for x in range((min_dt - start_dt).days)]
-            if max_dt < end_dt:   ownerless += [max_dt + timedelta(x) for x in range((end_dt - max_dt).days)] 
+            if max_dt < end_dt:   ownerless += [max_dt + timedelta(x) for x in range((end_dt - max_dt).days)]
             missing_dates = sorted(set(missing_dates) - set(ownerless))
 
         # Fine tune periods without logs, it may just be the case where no one uses the door at all
@@ -525,16 +525,16 @@ class Sensor_mgmt(object):
             juvo_ownership = sensor_DAO.get_ownership_hist(start_dt=missing_start, end_dt=missing_end, type="bed sensor")
             juvo_uuid = None
             for k,v in juvo_ownership.items():
-                if v[0][0] in rid_owners: 
+                if v[0][0] in rid_owners:
                     juvo_uuid = k
                     break
 
             if juvo_uuid != None:   # Attempt to find if owner slept this period
-                target = None       
+                target = None
                 for s in sensor_DAO.get_sensors(uuid=juvo_uuid):
                     target = s.juvo_target
                     break
-                
+
                 if target == None: continue     # This resident didnt own a bed sensor this day
 
                 # Check if sleep was detected
@@ -547,7 +547,7 @@ class Sensor_mgmt(object):
         return down_periods
 
 
-    @ classmethod
+    @classmethod
     def get_curr_status_door(cls, uuid, retBatteryLevel=False):
         '''
         Returns list of status codes. See class vars
@@ -558,23 +558,23 @@ class Sensor_mgmt(object):
         # Get down periods
         now = datetime.datetime.now()
         down_periods = cls.get_down_periods_door(uuid=uuid, start_dt=now, end_dt=now)
-        
+
         ret_codes = []
         down = False
         for p in down_periods:          # Check if current time is within a down period
-            if p[0] < now and now < p[1]: 
+            if p[0] < now and now < p[1]:
                 down = True
                 break
         ret_codes.append(cls.CHECK_WARN if down else cls.OK)
 
         # Battery level?
         if retBatteryLevel == False: return ret_codes
-        else: 
+        else:
             batt_lvl = []
             last_batt = sysmon_log_DAO.get_last_battery_level(uuid=uuid)
             if last_batt != None:       # Sysmon batt event found
                 batt_lvl.append(last_batt.event)
-                if last_batt.event < cls.batt_thresh: 
+                if last_batt.event < cls.batt_thresh:
                     ret_codes.append(cls.LOW_BATT)
             return ret_codes, batt_lvl
 
@@ -609,7 +609,27 @@ class Sensor_mgmt(object):
         elif len(down_periods) == 0: return cls.JUVO_NOONE      # C2: If no sleep summaries found, AND  0 down periods, then JUVO_NOONE
         else: return cls.JUVO_DOWN                              # C3: If no sleep summaries found, AND any down period: JUVO DOWN
 
+    @classmethod
+    def get_toilet_uuid(cls, resident_id):
+        '''
+        WARNING: ghetto method for mid terms quick fix
+        returns the active uuid (str) for the current input resident_id (int)
+        '''
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+        output = None
+        query = f"SELECT uuid FROM stbern.sensor_ownership_hist WHERE resident_id = {resident_id} AND period_end IS NULL AND uuid LIKE '%m-02'"
+        try:
+            cursor.execute(query)
+            result = cursor.fetchone()
 
+            if result:
+                output = result['uuid']
+        except Exceptio as e:
+            print(e)
+
+        return output
 
 # TESTS ======================================================================================
 if __name__ == '__main__':
@@ -686,11 +706,11 @@ if __name__ == '__main__':
     # for ss in Sensor_mgmt.get_all_sensor_status(retBatteryLevel=False):
     #     print(ss)
 
-    # ================== UP / DOWN ================== 
+    # ================== UP / DOWN ==================
     uuid = "2005-m-02"
     target = 460
-    sdt = datetime.datetime(year=2018, month=3, day=2)     
-    edt = datetime.datetime(year=2018, month=10, day=5)  
+    sdt = datetime.datetime(year=2018, month=3, day=2)
+    edt = datetime.datetime(year=2018, month=10, day=5)
 
     # # MOTION =======================================
     # print("MOTION ===================================")

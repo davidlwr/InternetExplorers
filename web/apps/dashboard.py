@@ -3,13 +3,14 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import datetime
 import pandas as pd
+import numpy as np
 
 # internal imports
 from app import app
 from apps import input_data, input_shiftlogs
 from DAOs import resident_DAO
 from DAOs.sensor_DAO import sensor_DAO
-from sensor_mgmt import JuvoAPI
+from sensor_mgmt import JuvoAPI, sensor_mgmt
 
 locationMap = input_data.input_data.get_location_options()
 
@@ -537,7 +538,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                 r_name = resident_DAO.get_resident_name_by_resident_id(r)
                 df = input_data.input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r,
                                                        ignore_short_durations=ignore_checkbox, grouped=group_checkbox)
-                # print("test 2", df)
+                # print(df)
                 draw_data.append({'x': df['gw_date_only'], 'y': df['event'], 'mode': 'lines+markers', 'name': r_name})
                 if seven_checkbox:
                     # get moving averages
@@ -548,6 +549,33 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                     # filter relevant dates
                     moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (
                             moving_averages_7['gw_date_only'] >= start_date)]
+
+                    # print(moving_averages_7.info())
+                    ### remove dc periods
+                    sdt = start_date
+                    edt = end_date
+                    if isinstance(sdt, str):
+                        sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                    if isinstance(edt, str):
+                        edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                    try:
+                        sdt = start_date.to_pydatetime()
+                        edt = end_date.to_pydatetime()
+                    except:
+                        pass
+                    u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                    dc_list = None
+                    if u:
+                        dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                    if dc_list:
+                        for dc_period in dc_list:
+                            # print(dc_period)
+                            moving_averages_7['moving_average'].loc[(moving_averages_7['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                    ###
+                    # print(moving_averages_7)
                     draw_data.append({'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
                                       'mode': 'lines+markers', 'name': r_name + ' 7D MA'})
                 if twentyone_checkbox:
@@ -559,6 +587,31 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                     # filter relevant dates
                     moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (
                             moving_averages_21['gw_date_only'] >= start_date)]
+
+                    ### remove dc periods
+                    sdt = start_date
+                    edt = end_date
+                    if isinstance(sdt, str):
+                        sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                    if isinstance(edt, str):
+                        edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                    try:
+                        sdt = start_date.to_pydatetime()
+                        edt = end_date.to_pydatetime()
+                    except:
+                        pass
+                    u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                    dc_list = None
+                    if u:
+                        dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                    if dc_list:
+                        for dc_period in dc_list:
+                            # print(dc_period)
+                            moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                    ###
                     draw_data.append(
                         {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
                          'mode': 'lines+markers', 'name': r_name + ' 21D MA'})
@@ -582,6 +635,31 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                         # filter relevant dates
                         moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (
                                 moving_averages_7['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_7['moving_average'].loc[(moving_averages_7['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
                         draw_data.append(
                             {'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
                              'mode': 'lines+markers', 'name': r_name + ' 7D MA Day'})
@@ -594,6 +672,31 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                         # filter relevant dates
                         moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (
                                 moving_averages_21['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
                         draw_data.append(
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
                              'mode': 'lines+markers', 'name': r_name + ' 21D MA Day'})
@@ -617,6 +720,31 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                         # filter relevant dates
                         moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (
                                 moving_averages_7['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_7['moving_average'].loc[(moving_averages_7['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
                         draw_data.append(
                             {'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
                              'mode': 'lines+markers', 'name': r_name + ' 7D MA Night'})
@@ -631,6 +759,31 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                         # filter relevant dates
                         moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (
                                 moving_averages_21['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_21['moving_average'].loc[(moving_averages_21['gw_date_only'] > dc_period[0]) & (moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
                         draw_data.append(
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
                              'mode': 'lines+markers', 'name': r_name + ' 21D MA Night'})
