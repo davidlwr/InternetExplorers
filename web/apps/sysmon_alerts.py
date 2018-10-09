@@ -5,6 +5,7 @@ from app import app, server
 from DAOs.connection_manager import connection_manager
 
 LOW_BATT_SUBSTR = "Battery Low"
+SENSOR_SUBSTR = "Sensor Issue"
 TYPE_BATT   = 1
 TYPE_SENSOR = 2
 
@@ -22,9 +23,11 @@ def notifications():
         if result != None:
             for r in result:
                 alerttext  = r['alert_text']
-                alert_type = TYPE_BATT if LOW_BATT_SUBSTR in alerttext else TYPE_SENSOR
-                type_texts.append([alert_type, alerttext])
-        
+                # alert_type = TYPE_BATT if LOW_BATT_SUBSTR in alerttext else TYPE_SENSOR
+                # type_texts.append([alert_type, alerttext])
+                if alerttext.startswith(SENSOR_SUBSTR):
+                    type_texts.append([TYPE_SENSOR, alerttext[len(SENSOR_SUBSTR):]])
+
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
 
@@ -40,11 +43,11 @@ def notifications_count():
     cursor = connection.cursor()
 
     try:
-        cursor.execute('SELECT * FROM stbern.alert_log')
+        cursor.execute(f"SELECT * FROM stbern.alert_log WHERE alert_text LIKE '{SENSOR_SUBSTR}%'")
         result = cursor.fetchall()
 
         if result == None: return 0
         else: return len(result)
-        
+
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)

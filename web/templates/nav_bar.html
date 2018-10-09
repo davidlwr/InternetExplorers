@@ -63,8 +63,8 @@
 					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div><em class=\"fa fa-battery-quarter\"></em>" + texts[i] +
 																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>")
 				} else {
-					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div><em class=\"fa fa-feed\"></em>" + texts[i] +
-																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>")
+					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div style=\"white-space:normal;\"><em class=\"fa fa-feed\"></em>" + texts[i] + "</div></a></li>") // +
+																			// "<span class=\"pull-right text-muted small\">" + dates[i] + "</span>")
 
 				}
 			}
@@ -81,8 +81,8 @@
 						for (var i = 0; i < type_txts.length; i++) {
 							types.push(type_txts[i].type)
 							txt = type_txts[i].text
-							texts.push(txt.substring(0, txt.length - 19))
-							dates.push(txt.substring(txt.length - 19))
+							texts.push(txt) // .substring(0, txt.length - 19))
+							dates.push("") //txt.substring(txt.length - 19))
 						}
 						set_message_dropdown(types, texts, dates);
 					}
