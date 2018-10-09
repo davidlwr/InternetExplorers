@@ -441,7 +441,7 @@ class Sensor_mgmt(object):
         Returns status of Juvo Bed sensor based on last received environment statistic
         if last received was > threshold mins, then return down.
 
-        target (int)
+        target (int) 
         '''
         # Get all environ readings for past 1 hour
         end_dt   = datetime.datetime.now()      # Also the current time
@@ -450,19 +450,22 @@ class Sensor_mgmt(object):
 
         ret_codes = []
         if readings == None: ret_codes.append(cls.CHECK_WARN)        # No readings, therefore down
-        else:
+        
+        else:   
             # Compare last reading with current time, against threshold
             logs = readings['data']['stats']
-            logs.sort(key=lambda x:  parser.parse(x['local_start_time'])) # Sorted in increasing time order
-            last_log = logs[-1]
-            last_log_edt = parser.parse(last_log['local_end_time']).replace(tzinfo=None)
+            if(len(logs) > 0):
+                logs.sort(key=lambda x:  parser.parse(x['local_start_time'])) # Sorted in increasing time order
+                last_log = logs[-1]
+                last_log_edt = parser.parse(last_log['local_end_time']).replace(tzinfo=None)
 
-            time_since_update = end_dt - last_log_edt
-            if time_since_update > timedelta(minutes=cls.juvo_thresh): ret_codes.append(cls.CHECK_WARN)
-            else: ret_codes.append(cls.OK)
+                time_since_update = end_dt - last_log_edt
+                if time_since_update > timedelta(minutes=cls.juvo_thresh): ret_codes.append(cls.CHECK_WARN)
+                else: ret_codes.append(cls.OK)
+            else:
+                ret_codes.append(cls.CHECK_WARN)
 
         return ret_codes, []
-
 
     @classmethod
     def get_down_periods_door(cls, uuid, start_dt, end_dt):

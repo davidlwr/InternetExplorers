@@ -59,6 +59,27 @@ def get_resident_name_by_resident_id(resident_id):
 
     return resident['name']
 
+def get_resident_id_by_resident_name(resident_name):
+    '''
+    Returns the name of the resident based on current node_id
+    '''
+    query = 'SELECT resident_id  FROM {} WHERE name = %s'.format(table_name)
+
+    # Get connection
+    factory = connection_manager()
+    connection = factory.connection
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(query, (resident_name,))
+        result = cursor.fetchone()
+        return result
+    except:
+        raise
+    finally:
+        factory.close_all(cursor=cursor, connection=connection)
+
+
 
 def get_list_of_residents(filter_active=True, location_filter=None):
     '''

@@ -14,6 +14,38 @@ class sensor_DAO(object):
     This class handles the connection between the app and the datebase table
     """
     table_name = "stbern.sensor"
+    @staticmethod
+    def get_location_by_node_id(node_id):
+        query = f"SELECT location FROM {sensor_DAO.table_name} where uuid = %s"
+  
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query, (node_id, ))
+            results = cursor.fetchall()
+            if results: return results
+            else: return []
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
+    @staticmethod
+    def get_type_by_node_id(node_id):
+        query = f"SELECT type FROM {sensor_DAO.table_name} where uuid = %s"
+  
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query, (node_id, ))
+            results = cursor.fetchall()
+            if results: return results
+            else: return []
+        except: raise
+        finally: factory.close_all(cursor=cursor, connection=connection)
 
     @staticmethod
     def get_sensors(type=None, location=None, facility=None, uuid=None):
