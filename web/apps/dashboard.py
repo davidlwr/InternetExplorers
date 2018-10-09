@@ -141,12 +141,12 @@ app.layout = html.Div([
         # main body below
     # html.Div([
             html.Div([
-                html.Div([
-                    html.H1('Detailed Graphs')
-                ], className='row'),
+                # html.Div([
+                #     html.H1('Detailed Graphs')
+                # ], className='row'),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s toilet usage numbers')
+                        html.H3('Resident\'s toilet usage')
                     ], className='row'),
                     html.Div([
                         html.Div([
@@ -233,9 +233,10 @@ app.layout = html.Div([
                         html.Div(id='toilet_numbers_output', className='col-md-12')
                     ], className='row')
                 ], id='toilet_numbers_graph'),
+                html.Hr(),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s activity durations')
+                        html.H3('Resident\'s activity durations')
                     ], className='row'),
                     html.Div([
                         html.Div([
@@ -279,9 +280,10 @@ app.layout = html.Div([
                         html.Div(id='visit_duration_output', className='col-md-12')
                     ], className='row')
                 ], id='visit_duration_graph'),
+                html.Hr(),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s logs')
+                        html.H3('Resident\'s logs')
                     ], className='row'),
                     html.Div([
                         html.Div([
@@ -337,9 +339,10 @@ app.layout = html.Div([
                         html.Div(id='logs_output', className='col-md-12')
                     ], className='row')
                 ], id='logs_graph'),
+                html.Hr(),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s sleep vital signs')
+                        html.H3('Resident\'s sleep vital signs')
                     ], className='row'),
                     html.Div([
                         html.Div([
@@ -385,9 +388,10 @@ app.layout = html.Div([
                         html.Div(id='vital_signs_output', className='col-md-12')
                     ], className='row')
                 ], id='vital_signs_graph'),
+                html.Hr(),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s quality of sleep (from juvo)')
+                        html.H3('Resident\'s quality of sleep (from juvo)')
                     ], className='row'),
                     html.Div([
                         html.Div([
@@ -423,9 +427,10 @@ app.layout = html.Div([
                         html.Div(id='qos_output', className='col-md-12')
                     ], className='row')
                 ], id='qos_graph'),
+                html.Hr(),
                 html.Div([
                     html.Div([
-                        html.H3('View resident\'s activity')
+                        html.H3('Resident\'s activity')
                     ], className='row'),
                     html.Div([
                         html.Div([
@@ -480,7 +485,7 @@ app.layout = html.Div([
             ], className='row-fluid')
         # ])
         # this is where the page content goes
-], style={'background-color': '#FFFFFF', 'padding': '15px'})
+], style={'background-color': '#f1f4f7', 'padding': '15px', 'font-family': 'Montserrat'})
 
 
 @app.callback(
@@ -518,6 +523,8 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
                                  'fill': 'tozeroy'
                              }],
                              'layout': {
+                                 'paper_bgcolor': 'rgba(0,0,0,0)',
+                                 'plot_bgcolor': 'rgba(0,0,0,0)',
                                  'title': 'Periods with motion detected',
                                  'xaxis': {
                                      'range': [start_date, end_date],
@@ -816,6 +823,8 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                          figure={
                              'data': draw_data,
                              'layout': {
+                                 'paper_bgcolor': 'rgba(0,0,0,0)',
+                                 'plot_bgcolor': 'rgba(0,0,0,0)',
                                  'title': 'Number of toilet visits',
                                  'xaxis': {
                                      'title': 'Date'
@@ -858,6 +867,8 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
                 figure = {
                     'data':draw_data,
                     'layout': {
+                        'paper_bgcolor': 'rgba(0,0,0,0)',
+                        'plot_bgcolor': 'rgba(0,0,0,0)',
                         'title':'Duration of activity of residents',
                         'xaxis': {
                             'title': 'Start datetime of visit'
@@ -934,6 +945,8 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
                          figure={
                              'data': draw_data,
                              'layout': {
+                                 'paper_bgcolor': 'rgba(0,0,0,0)',
+                                 'plot_bgcolor': 'rgba(0,0,0,0)',
                                  'title': 'Shift Logs',
                                  'xaxis': {
                                      'title': 'Date'
@@ -986,6 +999,8 @@ def update_graph_05(input_residents, input_vital_signs, start_date, end_date):
                 figure = {
                     'data': draw_data,
                     'layout': {
+                        'paper_bgcolor': 'rgba(0,0,0,0)',
+                        'plot_bgcolor': 'rgba(0,0,0,0)',
                         'title':'Vital signs information of elderly',
                         'xaxis': {
                             'title': 'Start datetime of recorded vitals'
@@ -1033,6 +1048,8 @@ def update_graph_06(input_residents, start_date, end_date):
                 figure = {
                     'data': draw_data,
                     'layout': {
+                        'paper_bgcolor': 'rgba(0,0,0,0)',
+                        'plot_bgcolor': 'rgba(0,0,0,0)',
                         'title':'Sleep quality information of elderly (Juvo)',
                         'xaxis': {
                             'title': 'Date'

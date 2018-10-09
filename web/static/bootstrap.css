@@ -6754,4 +6754,9 @@ button.close {
     display: none !important;
   }
 }
+
+.DateInput {
+    font-weight: bold;
+    font-size: 14px;
+}
 /*# sourceMappingURL=bootstrap.css.map */
