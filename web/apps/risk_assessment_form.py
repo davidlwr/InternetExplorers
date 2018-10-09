@@ -64,8 +64,8 @@ class RiskAssessmentForm(Form):
                             choices=[(0, 'Totally Dependent'), (1, 'Needs assistance with Toileting'),
                                      (2, 'Frequent toileting habits/ Independent with frequency'),
                                      (3, 'Independent with Incontinence ')], coerce=int, default=2)
-    dependency = TextField(
-        'If dependency is increasing, please describe what type (Example, toilet usage assistance, mobility assistance, daily activities, etc). ')
+    dependency = StringField(
+        'If dependency is increasing, please describe what type', render_kw={"placeholder": "E.g. toilet usage assistance, mobility assistance, daily activities, etc. "})
     submit = SubmitField('Submit')
 
 
