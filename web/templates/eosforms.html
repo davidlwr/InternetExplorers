@@ -46,7 +46,7 @@
 	<!--<button type="button" class="close" data-dismiss="alert">&times;</button>-->
 </div>
 {% endfor %}
- 
+
 <div class="panel panel-default" style="background-color:#f1f4f7" >
     <div class="panel-body"><br>
 	<div class="panel-heading">End of Shift Form
@@ -54,7 +54,7 @@
 		<form role="form" method="POST" action="/eosforms">
 			<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
                 {{ form.csrf_token }}
-				<br><br>
+				<br>
                 {{ render_name_field(form.resident) }}
                 <br>{{ render_field(form.falls) }}
                 <br>{{ render_field(form.near_falls) }}
