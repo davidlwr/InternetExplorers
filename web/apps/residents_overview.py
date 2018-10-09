@@ -19,11 +19,13 @@ if __name__ == '__main__':
     from app import app, server
     from DAOs import resident_DAO, shift_log_DAO
     from Entities import resident
+    from sensor_mgmt import sensor_mgmt
 else:
     from apps import input_data
     from app import app, server
     from DAOs import resident_DAO, shift_log_DAO
     from Entities import resident
+    from sensor_mgmt import sensor_mgmt
 
 # settle routing
 @server.route("/overview", methods=['GET', 'POST'])
@@ -83,6 +85,13 @@ def showOverviewResidents():
     information['health_percentage'] = num_good_health / information['num_residents'] * 100 # in percentage
     sldao = shift_log_DAO.shift_log_DAO()
     information['num_shift_forms'] = sldao.get_today_logs()
+    sensor_statuses = sensor_mgmt.Sensor_mgmt.get_all_sensor_status_v2(retBatteryLevel=True)
+    # print(sensor_statuses)
+    sensor_down_count = 0
+    for _sensor in sensor_statuses:
+        if _sensor[1][0] > 0:
+            sensor_down_count += 1
+    information['sensors_down'] = sensor_down_count
     return render_template('overview_residents.html', residents=residents, information=information)
 
 # layer 2 routing
