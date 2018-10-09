@@ -66,6 +66,8 @@ def showOverviewSensors():
             infoList.append(info)
         r['infoList'] = infoList
         residents.append(r)
+        for ss in sensor_mgmt.get_all_sensor_status():
+            print(ss)
     return render_template('sensor_mgmt.html', residents = residents)
 
 
