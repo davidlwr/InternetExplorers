@@ -18,14 +18,14 @@ if __name__ == '__main__':
     import input_data
     from app import app, server
     from DAOs import resident_DAO, sensor_hist_DAO
-    from sensor_mgmt import sensor_mgmt, JuvoAPI
+    from sensor_mgmt.sensor_mgmt import Sensor_mgmt, JuvoAPI
     from DAOs.sensor_DAO import sensor_DAO
     from Entities import resident
 else:
     from apps import input_data
     from app import app, server
     from DAOs import resident_DAO, sensor_hist_DAO
-    from sensor_mgmt import sensor_mgmt, JuvoAPI
+    from sensor_mgmt.sensor_mgmt import Sensor_mgmt, JuvoAPI
     from DAOs.sensor_DAO import sensor_DAO
     from Entities import resident
 
@@ -40,7 +40,13 @@ def showOverviewSensors():
             List of Sleep Alerts (WIP), Overall Alert Level ('alert_highest')
     NOTE: jinja templates do not allow for import of python modules, so all calculation will be done here
     '''
-    
+     # RETURN STATUS CODES
+    INVALID_SENSOR = -1
+    OK             = 0     # Can be OK and LOW_BATT at the same time
+    DISCONNECTED   = 1
+    LOW_BATT       = 2
+    CHECK_WARN     = 3    # Potentially down
+   
     
     residents_raw = resident_DAO.get_list_of_residents()
     
@@ -60,14 +66,26 @@ def showOverviewSensors():
         for uuid in uuids:
             
             id = uuid['uuid']
+            statusNumList = Sensor_mgmt.get_sensor_status_v2(id, True)[0]
+            batterystatusList = Sensor_mgmt.get_sensor_status_v2(id, True)[1]
+            print(statusNumList)
+            print(batterystatusList)
+            statusNum = statusNumList[0]
+            batterystatus = '-'
+            if(len(batterystatusList) > 0):
+                batterystatus = batterystatusList[0]
+            status = ""
+            if statusNum == 0: 
+                status = "Up"
+            else: 
+                status = "Down"
             loc = sensor_DAO.get_location_by_node_id(id)
             location = loc[0]['location']
-            info = (id,location)
+            info = (id,location, batterystatus, status)
             infoList.append(info)
         r['infoList'] = infoList
         residents.append(r)
-        for ss in sensor_mgmt.get_all_sensor_status():
-            print(ss)
+
     return render_template('sensor_mgmt.html', residents = residents)
 
 
