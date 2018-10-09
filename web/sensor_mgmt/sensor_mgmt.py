@@ -461,6 +461,7 @@ class Sensor_mgmt(object):
             if time_since_update > timedelta(minutes=cls.juvo_thresh): ret_codes.append(cls.CHECK_WARN)
             else: ret_codes.append(cls.OK)
 
+			
         return ret_codes, []
 
 

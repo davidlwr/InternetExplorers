@@ -17,12 +17,16 @@ if __name__ == '__main__':
     sys.path.append(".")
     import input_data
     from app import app, server
-    from DAOs import resident_DAO, sensor_hist_DAO, sensor_DAO
+    from DAOs import resident_DAO, sensor_hist_DAO
+    from sensor_mgmt import sensor_mgmt, JuvoAPI
+    from DAOs.sensor_DAO import sensor_DAO
     from Entities import resident
 else:
     from apps import input_data
     from app import app, server
-    from DAOs import resident_DAO, sensor_hist_DAO, sensor_DAO
+    from DAOs import resident_DAO, sensor_hist_DAO
+    from sensor_mgmt import sensor_mgmt, JuvoAPI
+    from DAOs.sensor_DAO import sensor_DAO
     from Entities import resident
 
 # settle routing
@@ -41,7 +45,7 @@ def showOverviewSensors():
     residents_raw = resident_DAO.get_list_of_residents()
     
     
-    
+
     residents = []
     date_in_use = datetime.datetime.now() # datetime.datetime(2018, 4, 19, 23, 34, 12) # TODO: change to current system time once live data is available
     juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 22, 34, 12) # TODO: change to current system time once live data is available
@@ -62,7 +66,6 @@ def showOverviewSensors():
             infoList.append(info)
         r['infoList'] = infoList
         residents.append(r)
-        print(residents)
     return render_template('sensor_mgmt.html', residents = residents)
 
 
