@@ -25,16 +25,31 @@ csspath2 = ''
 csspath3 = ''
 jspath1 = ''
 jspath2 = ''
+csspath4 = ''
 
 with server.test_request_context():
     csspath1 = url_for('static', filename='bootstrap.css')
     csspath2 = url_for('static', filename='sb-admin-2.css')
     csspath3 = url_for('static', filename='metis-menu.min.css')
+    ### uncomment in deployed app, comment for local 
+    # csspath4 = """">
+    # <!-- Global site tag (gtag.js) - Google Analytics -->
+    # <script async src="https://www.googletagmanager.com/gtag/js?id=UA-125800418-1"></script>
+    # <script>
+    #   window.dataLayer = window.dataLayer || [];
+    #   function gtag(){dataLayer.push(arguments);}
+    #   gtag('js', new Date());
+    #
+    #   gtag('config', 'UA-125800418-1');
+    # </script>
+    # <"
+    # """
     jspath1 = url_for('static', filename='metis-menu.min.js')
     jspath2 = url_for('static', filename='sb-admin-2.js')
+    # jspath3 = url_for('static', filename='googleanalytics.js')
 
 # Bootstrap sample template for css
-css_source = ['https://fonts.googleapis.com/icon?family=Material+Icons', csspath1, csspath2, csspath3, 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css']
+css_source = [csspath4, 'https://fonts.googleapis.com/icon?family=Material+Icons', csspath1, csspath2, csspath3, 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css']
 for css in css_source:
     app.css.append_css({'external_url': css})
 

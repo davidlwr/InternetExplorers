@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<![endif]-->
+{% extends 'nav_bar.html' %}
+{% from "_classconverter.html" import getSWDFromAlertLength %}
+{% from "_classconverter.html" import getPanelColorFromAlertLength %}
+{% from "_classconverter.html" import getGMHFromAlertLength %}
+{% from "_classconverter.html" import getFooterFromAlertLength %}
+{% block title %}{{ resident['name'] }} - Detailed Overview{% endblock %}
+{% block additional_stylesheets %}
+<!--
+<script type="text/javascript" src="{{ url_for('static', filename='overview.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='overview.css') }}">
+-->
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+<style>
+a.deco-none {
+    color: inherit;
+    text-decoration: inherit;
+}
+div.sticky {
+    position: -webkit-fixed;
+    position: fixed;
+    top: 0;
+    background-color: white;
+    padding: 50px;
+    font-size: 20px;
+}
+
+.sticktop {
+  position: -webkit-sticky;
+  position: sticky;
+  background-color: white;
+  top: 0.25rem;
+}
+</style>
+</head>
+{% endblock %}
+{% block scripts %}
+{% endblock %}
+{% block content %}
+<div class="col-sm-push-0"> <!--overall-->
+	<div class="row">
+		<ol class="breadcrumb">
+			<li><a href="/overview">
+				<em class="fa fa-home"></em>
+			</a></li>
+			<li class="active">Resident Details</li>
+		</ol>
+	</div><!--/.row-->
+	<div class="row">
+		<div class="col-lg-12">
+			<h1 class="page-header"></h1>
+		</div>
+	</div><!--/.row-->
+<div class="row" style="font-family:Montserrat">
+	<div class="sticktop">Person 1 2 3 </div>
+	<div class="row"> 
+		<div class="col-lg-2 col-md-2 col-s-2">
+			<div class="panel panel-default" align="center">
+				<div class="panel-body" align="center">
+					<img src="https://i.imgur.com/2wNEgzW.jpg" alt="resident image" style="width:100%;height:100%;" vertical-align: "baseline">
+				</div>
+				<a class="btn btn-primary btn-xs" role="button">Upload Photo</a><br>
+			</div>
+        </div>
+		<div class="col-lg-8 col-md-8">
+			<div class="well">
+				<h1>Resident: <b>{{ resident['name'] }}<br/>
+				</h1>
+				Age: {{ resident['age'] }}
+				<br>Date of Birth:  {{ resident['dob'] }}
+				<br>Admission Date:  31 Mar 2018
+				<br>Medical Information: Diabetes, Dementia, Prone to falling
+				<br>Fall risks: {{ resident['fall_risk'] }}
+				<br>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="row"> {# edit here for night toilet usage #}
+    <div class="col-lg-12">
+        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['toilet_alerts']|length) }}"> <!--Toilet Panel-->
+            <div class="panel-heading">
+                Night Toilet Usage Details
+            </div>
+            <div class="panel-footer" style="height:420px">
+				<div class="row">
+                <div class="col-lg-6 col-md-6 col-xs-12"><!--first night toilet usage graph-->
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-center">
+                                    Percentage of Night Toilet Usage<br/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <div id="night_toilet_ratio_chart" class="night_toilet_ratio_chart_class svg_container container-fluid"><!-- Plotly chart will be drawn inside this DIV --></div>
+                                    <script>
+
+                                    var xValue = [100 - {{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];
+                                    var xValue2 = [{{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}];;
+
+                                    var yValue = ["% of Night Toilet Usage in a Day"]
+
+                                    var trace1 = {
+                                        x: xValue2,
+                                        y: yValue,
+                                        width: 0.5,
+                                        name: 'Night',
+                                        orientation: 'h',
+                                        marker: {
+                                            color: 'rgb(100, 250, 96)',
+                                            width: 1
+                                        },
+                                        type: 'bar'
+
+                                    };
+
+                                    var trace2 = {
+                                        x: xValue,
+                                        y: yValue,
+                                        width: 0.5,
+                                        name: 'Day',
+                                        orientation: 'h',
+                                        type: 'bar',
+
+                                        marker: {
+                                            color: 'rgb(200,230,255)',
+                                            width: 1
+                                        }
+                                    };
+
+                                    var data = [trace1, trace2];
+
+                                    var layout = {
+										title: '% of Toilet Usage at Night',
+                                        titlefont: {
+                                            size: 14
+                                        },
+                                        shapes: [
+                                            {
+                                                type: 'line',
+                                                xref: 'paper',
+                                                x0: {{ resident['para_ratio_threshold'] }},
+                                                y0: -0.3,
+                                                x1: {{ resident['para_ratio_threshold'] }},
+                                                y1: 0.3,
+                                                line:{
+                                                    color: 'rgb(255, 0, 0)',
+                                                    width: 3,
+                                                    dash:'dot'
+                                                }
+                                            },
+
+
+                                        ],
+                                        barmode: 'stack',
+                                        autosize: true,
+										height:200,
+                                        xaxis: {
+                                            autorange: true,
+                                            showgrid: true,
+                                            zeroline: false,
+                                            showline: true,
+                                            autotick: true,
+                                            ticks: '',
+                                            showticklabels: true
+                                        },
+										yaxis: {
+											showticklabels: false
+										},
+                                        margin: {
+                                            t: 40, //top margin
+                                            l: 10, //left margin
+                                            r: 10,
+                                            pad: 0
+                                        },
+                                        showlegend: true,
+                                        legend: {"orientation": "h",y:-0.2}
+                                    };
+
+                                    Plotly.newPlot('night_toilet_ratio_chart', data, layout, {displayModeBar: false});
+                                    </script>
+
+                                </div>
+                                <div class="col-xs-12">
+                                    <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'info' }}">
+                                        <div class="panel-heading">
+                                            <div class="row">
+											<span class="huge"  style="text-align: center"><b>Average={{ '%0.2f'|format((resident['toilet_night_to_both_ratio'] * 100)|float) }}</b></span><b> %</b>
+                                                <div class="col-xs-12 text-right" style="text-align: center">
+                                                    This is {{ 'greater' if resident['toilet_night_to_both_ratio'] >= resident['para_ratio_threshold'] else 'less' }} than the set threshold of <span class="semihuge">{{ '%0.1f'|format((resident['para_ratio_threshold'] * 100)|float) }}%</span>
+                                                </div>
+												</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!--first night toilet graph end-->
+				
+                <div class="col-lg-6 col-md-6 col-xs-12"><!--second night toilet graph start-->
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-center">
+                                    Average Night Toilet Usage<br/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="night_toilet_MA_chart" class="night_toilet_MA_chart_class svg-container container-fluid"></div>
+                                <script>
+                                var graphs = {{ night_toilet_MA_graph_json | safe }};
+
+                                Plotly.newPlot('night_toilet_MA_chart', graphs.data, graphs.layout || {} , {displayModeBar: false});
+                                window.onresize = function() {
+                                    Plotly.Plots.resize('night_toilet_MA_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('night_toilet_MA_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('night_toilet_MA_chart').getElementsByClassName('night_toilet_MA_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('night_toilet_MA_chart');
+                                    }
+
+                                    Plotly.Plots.resize('night_toilet_ratio_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('night_toilet_ratio_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('night_toilet_ratio_chart').getElementsByClassName('night_toilet_ratio_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('night_toilet_ratio_chart');
+                                    }
+
+                                    Plotly.Plots.resize('sleeping_motion_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('sleeping_motion_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('sleeping_motion_chart').getElementsByClassName('sleeping_motion_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('sleeping_motion_chart');
+                                    }
+
+                                    Plotly.Plots.resize('uninterrupted_sleep_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('uninterrupted_sleep_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('uninterrupted_sleep_chart').getElementsByClassName('uninterrupted_sleep_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('uninterrupted_sleep_chart');
+                                    }
+
+                                    Plotly.Plots.resize('vitals_breathing_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('vitals_breathing_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('vitals_breathing_chart').getElementsByClassName('vitals_breathing_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('vitals_breathing_chart');
+                                    }
+
+                                    Plotly.Plots.resize('vitals_heartbeat_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('vitals_heartbeat_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('vitals_heartbeat_chart').getElementsByClassName('vitals_heartbeat_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('vitals_heartbeat_chart');
+                                    }
+                                };
+
+                                $(document).ready(function () {
+                                    Plotly.Plots.resize('night_toilet_MA_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('night_toilet_MA_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('night_toilet_MA_chart').getElementsByClassName('night_toilet_MA_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('night_toilet_MA_chart');
+                                    }
+
+                                    Plotly.Plots.resize('night_toilet_ratio_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('night_toilet_ratio_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('night_toilet_ratio_chart').getElementsByClassName('night_toilet_ratio_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('night_toilet_ratio_chart');
+                                    }
+
+                                    Plotly.Plots.resize('sleeping_motion_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('sleeping_motion_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('sleeping_motion_chart').getElementsByClassName('sleeping_motion_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('sleeping_motion_chart');
+                                    }
+
+                                    Plotly.Plots.resize('uninterrupted_sleep_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('uninterrupted_sleep_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('uninterrupted_sleep_chart').getElementsByClassName('uninterrupted_sleep_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('uninterrupted_sleep_chart');
+                                    }
+
+                                    Plotly.Plots.resize('vitals_breathing_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('vitals_breathing_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('vitals_breathing_chart').getElementsByClassName('vitals_breathing_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('vitals_breathing_chart');
+                                    }
+
+                                    Plotly.Plots.resize('vitals_heartbeat_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('vitals_heartbeat_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('vitals_heartbeat_chart').getElementsByClassName('vitals_heartbeat_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('vitals_heartbeat_chart');
+                                    }
+                                });
+                                </script>
+                            </div>
+							<div class="row">Night Toilet Usage in the past week: <b>{{ '%0.2f'|format((resident['number_of_night_toilet_usage_in_past_week'])|float) }}</b>Times</span>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'danger' if resident['check_indicator_night_toilet_MA'] else 'primary' }}">
+									<div class="panel-heading">
+										<div class="row" style="text-align: center">
+										{{ 'Increase' if resident['number_of_night_toilet_usage_in_past_week_diff'] >= 0 else 'Decrease'}} of
+											<i class="material-icons" style="vertical-align:sup; align-content:center">
+												trending_{{ 'up' if resident['number_of_night_toilet_usage_in_past_week_diff'] >= 0 else 'down' }}
+											</i>{{ '%0.2f'|format((resident['number_of_night_toilet_usage_in_past_week_diff'])|float|abs) }}<b>Times</b><br/>
+										compared to the past 3 weeks
+										</div>
+										</div>
+									</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!--first section end-->
+
+<div class="row"> {# edit here for sleeping patterns #}
+    <div class="col-lg-12">
+        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['sleep_alerts']|length) }}"> <!--Toilet Panel-->
+            <div class="panel-heading">
+                Sleeping Pattern Details
+            </div>
+            <div class="panel-footer" style="height:420px">
+                <div class="col-lg-4 col-md-6 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    Average movement duration during sleeping hours<br/>
+                                    <span class="huge"><b>{{ '%0.2f'|format((resident['average_motion_during_sleep'] / 60)|float) }}</b></span><b> Mins</b>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="sleeping_motion_chart" class="sleeping_motion_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var smgraph = {{ sleeping_motion_graph_json | safe }};
+
+                                    Plotly.newPlot('sleeping_motion_chart', smgraph.data, smgraph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_indicator_sleep_movements'] else 'info' }}">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                {{ 'Increase' if resident['average_motion_during_sleep_difference'] >= 0 else 'Decrease'}} of
+                                                <span class="semihuge"><b>
+                                                    <i class="material-icons" style="vertical-align:sup; align-content:center">
+                                                        trending_{{ 'up' if resident['average_motion_during_sleep_difference'] >= 0 else 'down' }}
+                                                    </i>{{ '%0.2f'|format((resident['average_motion_during_sleep_difference'] / 60)|float|abs) }}
+                                                </b></span>
+                                                <b>Mins</b><br/>
+                                                compared to the past 3 weeks
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    Average longest uninterrupted sleep duration<br/>
+                                    <span class="huge"><b>{{ '%0.2f'|format((resident['average_longest_uninterrupted_sleep'] / 3600)|float) }}</b>
+                                    </span><b> Hours</b>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="uninterrupted_sleep_chart" class="uninterrupted_sleep_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var usgraph = {{ uninterrupted_sleep_graph_json | safe }};
+
+                                    Plotly.newPlot('uninterrupted_sleep_chart', usgraph.data, usgraph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_indicator_uninterrupted_sleep'] else 'info' }}">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                {{ 'Increase' if resident['average_longest_uninterrupted_sleep_difference'] >= 0 else 'Decrease'}} of
+                                                <span class="semihuge"><b>
+                                                    <i class="material-icons" style="vertical-align:sup; align-content:center">
+                                                        trending_{{ 'up' if resident['average_longest_uninterrupted_sleep_difference'] >= 0 else 'down' }}
+                                                    </i>{{ '%0.2f'|format((resident['average_longest_uninterrupted_sleep_difference'] / 3600)|float|abs) }}
+                                                </b></span>
+                                                <b>Hours</b><br/>
+                                                compared to the past 3 weeks
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-xs-12"> {# juvo sleep quality #}
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    Average sleep quality in past week<br/>
+                                    <span class="huge"><b>{{ '%0.2f'|format((resident['qos_mean'])|float) }}</b>
+                                    </span>%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="qos_chart" class="qos_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var qos_graph = {{ qos_json | safe }};
+
+                                    Plotly.newPlot('qos_chart', qos_graph.data, qos_graph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_out_of_rr_range'] else 'info' }}">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                Sleep respiratory rates are {{ 'outside of' if resident['check_out_of_rr_range'] else 'within' }} the typical range in the past week
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row"> {# edit here for vital signs #}
+    <div class="col-lg-12">
+        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['vitals_alerts']|length) }}">
+            <div class="panel-heading">
+                Vital Signs Details
+            </div>
+            <div class="panel-body" style="height:420px">
+                <div class="col-lg-4 col-md-6 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    Average sleep respiratory rate<br/>
+                                    <span class="huge"><b>{{ '%0.2f'|format((resident['past_week_average_breathing'])|float) }}</b>
+                                    </span><b> /min</b>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="vitals_breathing_chart" class="vitals_breathing_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var breathing_graph = {{ breathing_rates_json | safe }};
+
+                                    Plotly.newPlot('vitals_breathing_chart', breathing_graph.data, breathing_graph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_out_of_rr_range'] else 'info' }}">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                Sleep respiratory rates are {{ 'outside of' if resident['check_out_of_rr_range'] else 'within' }} the typical range in the past week
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-right">
+                                    Average sleep pulse rates<br/>
+                                    <span class="huge"><b>{{ '%0.2f'|format((resident['past_week_average_heart'])|float) }}</b>
+                                    </span><b> /min</b>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="vitals_heartbeat_chart" class="vitals_heartbeat_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var heartbeat_graph = {{ heartbeat_rates_json | safe }};
+
+                                    Plotly.newPlot('vitals_heartbeat_chart', heartbeat_graph.data, heartbeat_graph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_out_of_hb_range'] else 'info' }}">
+                                    <div class="panel-heading">
+                                        <div class="row">
+                                            <div class="col-xs-12 text-right">
+                                                Sleep pulse rates are {{ 'outside of' if resident['check_out_of_hb_range'] else 'within' }} the typical range in the past week
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+</div>
+</div>
+</body>
+</html>

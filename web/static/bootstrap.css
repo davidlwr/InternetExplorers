@@ -6030,6 +6030,7 @@ button.close {
   padding: 0 5px;
   margin-left: -3px;
 }
+
 .tooltip-inner {
   max-width: 200px;
   padding: 3px 8px;
@@ -6753,5 +6754,37 @@ button.close {
   .hidden-print {
     display: none !important;
   }
+}
+
+.DateInput {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+._dash-loading-callback {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    opacity:    0.5;
+    background: #000;
+    z-index:    10;
+    top:        45%;
+    left:       45%;
+    position:   fixed;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.js-plotly-plot .plotly .modebar {
+    transform: translateY(100%) !important;
+    top: 90% !important;
+    right: 0 !important;
+    position: absolute !important;
 }
 /*# sourceMappingURL=bootstrap.css.map */

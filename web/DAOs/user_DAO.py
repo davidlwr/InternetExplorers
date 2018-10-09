@@ -13,7 +13,7 @@ class user_DAO(object):
     This class handles connection between app and the database table
     '''
 
-    table_name = "stbern.USER"
+    table_name = "stbern.user"
 
     @staticmethod
     def authenticate(username, password):
@@ -30,7 +30,7 @@ class user_DAO(object):
         # Get connection
         factory = connection_manager()
         connection = factory.connection
-        cursor =  connection.cursor()
+        cursor = connection.cursor()
 
         try:
             # Check if username exists
@@ -38,19 +38,21 @@ class user_DAO(object):
                 .format(User.encrypted_password_token_tname, user_DAO.table_name, User.username_tname, username)
             cursor.execute(query)
             result = cursor.fetchone()
-            if result is None: return None   # No username found
+            if result is None: return None  # No username found
 
             # Get salt, Encrypt given password and authenticate
             salt = result[User.encrypted_password_token_tname]
             encrypted_password = (salt + password).encode('utf-8')
             encrypted_password = hashlib.sha512(encrypted_password).hexdigest()
             query = "SELECT * FROM {} WHERE {} = '{}' AND {} = '{}'" \
-                .format(user_DAO.table_name, User.username_tname, username, User.encrypted_password_tname, encrypted_password)
+                .format(user_DAO.table_name, User.username_tname, username, User.encrypted_password_tname,
+                        encrypted_password)
 
             cursor.execute(query)
             result = cursor.fetchone()
 
-            if result is None: return None  # Auth failed
+            if result is None:
+                return None  # Auth failed
             else:
                 username = result[User.username_tname]
                 name = result[User.name_tname]
@@ -59,9 +61,10 @@ class user_DAO(object):
                 staff_type = result[User.staff_type_tname]
 
                 return User(username=username, name=name, email=email, last_sign_in=last_sign_in, staff_type=staff_type)
-        except: raise
-        finally: factory.close_all(cursor=cursor, connection=connection)
-
+        except:
+            raise
+        finally:
+            factory.close_all(cursor=cursor, connection=connection)
 
     # NOTE: On salting and hashing: https://stackoverflow.com/questions/685855/how-do-i-authenticate-a-user-in-php-mysql
     @staticmethod
@@ -90,9 +93,10 @@ class user_DAO(object):
 
         try:
             cursor.execute(query)
-        except: raise
-        finally: factory.close_all(cursor=cursor, connection=connection)
-
+        except:
+            raise
+        finally:
+            factory.close_all(cursor=cursor, connection=connection)
 
     # below to comply with flask-login API
     @staticmethod
@@ -112,15 +116,39 @@ class user_DAO(object):
             cursor.execute(query)
             result = cursor.fetchone()
 
-            if result is None: return None 
+            if result is None:
+                return None
             else:
-                username     = result[User.username_tname]
-                name         = result[User.name_tname]
-                email        = result[User.email_tname]
+                username = result[User.username_tname]
+                name = result[User.name_tname]
+                email = result[User.email_tname]
                 last_sign_in = result[User.last_sign_in_tname]
-                staff_type   = result[User.staff_type_tname]
+                staff_type = result[User.staff_type_tname]
                 return User(username=username, name=name, email=email, last_sign_in=last_sign_in, staff_type=staff_type)
 
-        except: raise
-        finally: factory.close_all(cursor=cursor, connection=connection)
+        except:
+            raise
+        finally:
+            factory.close_all(cursor=cursor, connection=connection)
 
+    @staticmethod
+    def update_password(username, password):
+
+        alphabet = string.ascii_letters + string.digits
+        encrypted_password_token = ''.join(secrets.choice(alphabet) for i in range(20))
+        encrypted_password = (encrypted_password_token + password).encode('utf-8')
+        encrypted_password = hashlib.sha512(encrypted_password).hexdigest()
+
+        query = "UPDATE {} SET `encrypted_password` = '{}', `encrypted_password_token` = '{}' WHERE `username` = '{}'".format(
+            user_DAO.table_name, encrypted_password, encrypted_password_token, username)
+
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query)
+        except:
+            raise
+        finally:
+            factory.close_all(cursor=cursor, connection=connection)

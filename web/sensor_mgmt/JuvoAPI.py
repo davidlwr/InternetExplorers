@@ -1,14 +1,19 @@
-import requests
+import requests, sys
 from datetime import datetime
 from datetime import timedelta
 from dateutil import parser
 from dateutil import tz
+
+if __name__ == '__main__':  sys.path.append("..")
+from DAOs.sensor_DAO import sensor_DAO
 
 # MODULES USED: 'python-dateutil'
 
 # WARNING: Datetime objects returned by the functions tend to have UTC timezone.
 # This is not an error, API returns SGT time but in UTC format for some retarded reason.
  
+# Sleep periods: Juvo considers sleep period for i.e. 12th to be: 12th noon - 13th noon
+
 class JuvoAPI(object):
     
     UTC_TZ = tz.gettz('UTC')
@@ -41,7 +46,6 @@ class JuvoAPI(object):
 
         return utc.astimezone(cls.SGT_TZ)
     
-    # Turns out UTC time given by the API is FAKE, its just SGT Time but with in the wrong (UTC) format
     @classmethod
     def sgt_to_utc(cls, sgt):
         '''
@@ -99,6 +103,7 @@ class JuvoAPI(object):
         if r.status_code != 200: return False
         
         r_dict = r.json()
+
         cls.ACCESS_TOKEN  = r_dict['data']['access_token']
         cls.REFRESH_TOKEN = r_dict['data']['refresh_token']
         date              = cls.sudo_utc_datetime(r_dict['date'])
@@ -154,14 +159,17 @@ class JuvoAPI(object):
     
         # Check if ACCESS_TOKEN is not expired
         now = cls.sudo_utc_datetime(datetime.now())
-        if now <= cls.EXPIRY_DATETIME: return cls.refresh_token()
+        if now >= cls.EXPIRY_DATETIME: 
+            return cls.refresh_token()
+        else:
+            return True
         
         
     @classmethod
     def get_sensors(cls):
         '''
         Returns a dict if successfull, None if response code is anything other than 200
-        Note: Target field in successfull return is important
+        Note: Target field in successfull return is important as it is the sensor_id in a sense
         
         Return:
         {
@@ -202,6 +210,25 @@ class JuvoAPI(object):
         # Successfull call
         return r.json()
      
+
+    @classmethod
+    def get_unregistered_sensors(cls):
+        '''
+        Returns list of Juvo target IDs that are not currently in the sensor table
+        '''
+
+        unregistered_targets = []
+
+        registered_targets = [sensor.juvo_target for sensor in sensor_DAO.get_sensors(type="bed sensor")]
+
+        json = cls.get_sensors()
+        sensors = json["data"]["sensors"]
+        for sensor in sensors:
+            target = sensor["target"]
+            if target not in registered_targets: unregistered_targets.append(target)
+
+        return unregistered_targets
+
         
     @classmethod
     def get_target_environ_stats(cls, target, start_time, end_time):
@@ -247,7 +274,7 @@ class JuvoAPI(object):
         # Failed call
         if r.status_code != 200: return None
         
-        # Successfull call
+        # Successfull call 
         return r.json()
     
     
@@ -322,10 +349,11 @@ class JuvoAPI(object):
 
         or None if call is unsuccessfull
         '''
+
         # Precheck
         precheck_status = cls.token_precheck()
         if not precheck_status: return None 
-            
+        
         # API 
         url = f"{cls.BASE_URL}/targets/{target}/sleepsummary/"
         headers = {"Content-Type": "application/json",
@@ -421,7 +449,7 @@ class JuvoAPI(object):
         if not precheck_status: return None 
             
         # API 
-        url = f"{cls.BASE_URL}/targets/{target}/sleep/"
+        url = f"{cls.BASE_URL}/targets/{target}/vitals/"
         headers = {"Content-Type": "application/json",
                    "Authorization": f"Bearer {cls.ACCESS_TOKEN}"}
         payload = {'start_time': cls.sudo_utc_datetime(start_time).isoformat(),
@@ -463,6 +491,8 @@ class JuvoAPI(object):
         for j in sleep_times:
             start_dt = cls.sudo_utc_datetime(j['local_start_time'])
             end_dt   = cls.sudo_utc_datetime(j['local_end_time'])
+            # start_dt = parser.parse(j['local_start_time'])
+            # end_dt   = parser.parse(j['local_end_time'])
             ret.append((start_dt, end_dt))
         return ret
 
@@ -507,8 +537,8 @@ class JuvoAPI(object):
 
         Input:
         target (int)
-        start_date (datetime)
-        end_date (datetime)
+        start_date (datetime) -- Only date matters
+        end_date (datetime)   -- Only date matters
 
         Return array of tuples: [(datetime, secs), (datetime, secs)]
         [] if no result, None if error
@@ -590,27 +620,47 @@ class JuvoAPI(object):
 
 # Testing user defined methods- Checked against postman ================================================================
 if __name__ == "__main__":
-    start_date = parser.parse('2018-08-07 12:00') 
-    end_date   = parser.parse('2018-08-09 12:00')
-    target = 460
+    # start_date = parser.parse('2018-08-07 12:00')
+    # end_date   = parser.parse('2018-08-09 12:00')
+    # target = 460
+    # print("start date: ", start_date, "  end date: ", end_date, "  target: ", target)
+    # print(JuvoAPI.sudo_utc_datetime(start_date).strftime("%Y-%m-%d %H:%M:%S"))
+    # print(JuvoAPI.sgt_to_utc(start_date).strftime("%Y-%m-%d %H:%M:%S"))
 
-    sleep_period = JuvoAPI.get_sleep_period_by_day(target=target, start_date=start_date, end_date=end_date)
-    sleep_period = [(s.strftime("%Y-%m-%d %H:%M:%S"), e.strftime("%Y-%m-%d %H:%M:%S")) for s,e in sleep_period]
-    print('sleep_period: '.ljust(30), sleep_period)
+    # sleep_period = JuvoAPI.get_sleep_period_by_day(target=target, start_date=start_date, end_date=end_date)
+    # sleep_period = [(s.strftime("%Y-%m-%d %H:%M:%S"), e.strftime("%Y-%m-%d %H:%M:%S")) for s,e in sleep_period]
+    # print('sleep_period: '.ljust(30), sleep_period)
 
-    qos = JuvoAPI.get_qos_by_day(target=target, start_date=start_date, end_date=end_date)
-    qos = [(d.strftime("%Y-%m-%d %H:%M:%S"),q) for d,q in qos]
-    print('QOS: '.ljust(30), qos)
+    # qos = JuvoAPI.get_qos_by_day(target=target, start_date=start_date, end_date=end_date)
+    # qos = [(d.strftime("%Y-%m-%d %H:%M:%S"),q) for d,q in qos]
+    # # print('QOS: '.ljust(30), qos)
 
-    total_sleep = JuvoAPI.get_total_sleep_by_day(target=target, start_date=start_date, end_date=end_date)
-    total_sleep = [(d.strftime("%Y-%m-%d %H:%M:%S"),s) for d,s in total_sleep]
-    print('total_sleep:'.ljust(30), total_sleep)
+    # total_sleep = JuvoAPI.get_total_sleep_by_day(target=target, start_date=start_date, end_date=end_date)
+    # total_sleep = [(d.strftime("%Y-%m-%d %H:%M:%S"),s) for d,s in total_sleep]
+    # # print('total_sleep:'.ljust(30), total_sleep)
 
-    # Somehow total sleep from 'sleep summary' API does not match total time between 'sleep period' API so...
+    # # Somehow total sleep from 'sleep summary' API does not match total time between 'sleep period' API so...
 
-    periods, states = JuvoAPI.get_sleep_series_by_day(target=target, date=start_date)
-    periods = [(s.strftime("%Y-%m-%d %H:%M:%S"), e.strftime("%Y-%m-%d %H:%M:%S")) for s,e in periods]
-    print(f'series {len(periods)}: '.ljust(30), periods)
-    print(f'states {len(states)}: '.ljust(30), states)
+    # periods, states = JuvoAPI.get_sleep_series_by_day(target=target, date=start_date)
+    # periods = [(s.strftime("%Y-%m-%d %H:%M:%S"), e.strftime("%Y-%m-%d %H:%M:%S")) for s,e in periods]
+    # # print(f'series {len(periods)}: '.ljust(30), periods)
+    # print(f'states {len(states)}: '.ljust(30), states)
 
 
+    # Testing getting of unregistered targets
+    # print(JuvoAPI.get_unregistered_sensors())
+
+    target = 583
+    edt = datetime.now()
+    sdt = edt - timedelta(hours=1)
+    result = JuvoAPI.get_target_environ_stats(target=target, start_time=sdt, end_time=edt)
+    stats = result['data']['stats']
+    for log in stats: print(log['local_start_time'], log['local_end_time'])
+
+# 460
+# 2018-10-08T12:40:00Z 2018-10-08T12:45:00Z
+# 2018-10-08T12:35:00Z 2018-10-08T12:40:00Z
+# 2018-10-08T12:30:00Z 2018-10-08T12:35:00Z
+# 2018-10-08T12:25:00Z 2018-10-08T12:30:00Z
+# 2018-10-08T12:20:00Z 2018-10-08T12:25:00Z
+# 2018-10-08T12:15:00Z 2018-10-08T12:20:00Z

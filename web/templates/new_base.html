@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!-- Uncomment below for deployed app to track -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-125800418-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-125800418-1');
+    </script>
+    -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,9 +22,16 @@
     <script src="{{ url_for('static', filename='metis-menu.min.js') }}"></script>
     <script src="{{ url_for('static', filename='sb-admin-2.js') }}"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}">
+    <!--<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='metis-menu.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='sb-admin-2.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='sb-admin-2.css') }}">-->
+	<!-- lumino here-->
+	<!--<script src="static/js/"></script>-->
+	<link href="static/css/bootstrap.min.css" rel="stylesheet">
+	<link href="static/css/font-awesome.min.css" rel="stylesheet">
+	<link href="static/css/datepicker3.css" rel="stylesheet">
+	<link href="static/css/styles.css" rel="stylesheet">	
+	
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <!--<link rel="stylesheet" href="{{ url_for('static', filename='extra.css') }}"> set to reference url_for static css and put into git -->
     {% block additional_stylesheets %}{% endblock %}
@@ -36,10 +55,12 @@
                 <!-- /.dropdown -->
                 <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
+                        <i class="fa fa-user fa-fw"></i> {{ current_user.username }} <i class="fa fa-caret-down"></i>
                     </a>
                     <ul class="dropdown-menu dropdown-user">
                         <li><a href="/logout"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+                        </li>
+                        <li><a href="/change_password_form"><i class="fa fa-sign-out fa-fw"></i> Change Password</a>
                         </li>
                     </ul>
                     <!-- /.dropdown-user -->
@@ -68,6 +89,30 @@
                             <a href="/graphs"><i class="fa fa-bar-chart-o fa-fw"></i> Detailed Charts</a>
                         </li>
                         <li>
+                            <a href="#"><i class="fa fa-edit fa-fw"></i> Detailed Resident View<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                <li>
+                                    <a href="#">Bukit Timah <span class="fa arrow"></span></a>
+                                    <ul class="nav nav-third-level">
+                                        {% for r in all_residents(location_filter='bkttm') %}
+                                        <li>
+                                            <a href="/overview/{{ r['resident_id'] }}">{{ r['name'] }}</a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <!-- /.nav-third-level -->
+                                </li>
+                                <li>
+                                    <a href="#">Adam Road <span class="fa arrow"></span></a>
+                                    <ul class="nav nav-third-level">
+
+                                    </ul>
+                                    <!-- /.nav-third-level -->
+                                </li>
+                            </ul>
+                            <!-- /.nav-second-level -->
+                        </li>
+                        <li>
                             <a href="#"><i class="fa fa-edit fa-fw"></i> Forms<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
@@ -79,9 +124,32 @@
                             </ul>
                             <!-- /.nav-second-level -->
                         </li>
+                        {% if current_user.staff_type == 'Admin' %}
                         <li>
-                            <a href="/admin/resident"><i class="fa fa-wrench fa-fw"></i> Manage Users/Residents</a>
+                            <a href="#"><i class="fa fa-wrench fa-fw"></i> Manage<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                {% for l in get_admin_management_paths() %}
+                                <li>
+                                    <a href="{{ l[0] }}">{{ l[1] }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <!-- /.nav-second-level -->
                         </li>
+                        {% endif %}
+                        {% if current_user.staff_type == 'Staff' %}
+                        <li>
+                            <a href="#"><i class="fa fa-wrench fa-fw"></i> Manage<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">
+                                {% for l in get_staff_management_paths() %}
+                                <li>
+                                    <a href="{{ l[0] }}">{{ l[1] }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <!-- /.nav-second-level -->
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->
