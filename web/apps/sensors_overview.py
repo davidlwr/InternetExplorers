@@ -81,6 +81,13 @@ def showOverviewSensors():
                 status = "Down"
             loc = sensor_DAO.get_location_by_node_id(id)
             location = loc[0]['location']
+            if status == "Up" && batterystatus == '-' : 
+                if location == 'bed':
+                    batterystatus = "Plugged"
+                else: 
+                    batterystatus = 100
+            elif status == "Down" && batterystatus == '-':
+                batterystatus = "Unplugged"
             info = (id,location, batterystatus, status)
             infoList.append(info)
         r['infoList'] = infoList
