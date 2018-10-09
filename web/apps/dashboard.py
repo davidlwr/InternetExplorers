@@ -476,7 +476,11 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
         modified_date = temp_date + datetime.timedelta(days=1)
         end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
         # print('debug ' + str(type(end_date)))
-        df = input_data.input_data.get_relevant_data(input_location, start_date, end_date, input_resident, grouped=group_checkbox)
+        df = pd.DataFrame()
+        df['recieved_timestamp'] = []
+        df['event'] = []
+        if input_location and input_resident:
+            df = input_data.input_data.get_relevant_data(input_location, start_date, end_date, input_resident, grouped=group_checkbox)
         # df = input_data.input_raw_data
         return dcc.Graph(id='firstplot',
                          figure={
@@ -669,9 +673,10 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
         draw_data = []
         for r in input_resident:
             r_name = resident_DAO.get_resident_name_by_resident_id(r)
-            df = input_data.input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
-            # print(df.head())
-            draw_data.append({'x': df['recieved_timestamp'], 'y': df['visit_duration'], 'mode':'markers', 'name': r_name})
+            if input_location:
+                df = input_data.input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
+                # print(df.head())
+                draw_data.append({'x': df['recieved_timestamp'], 'y': df['visit_duration'], 'mode':'markers', 'name': r_name})
         return dcc.Graph(id = 'visit_duration_plot',
                 figure = {
                     'data':draw_data,
