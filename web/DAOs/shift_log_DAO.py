@@ -78,7 +78,7 @@ class shift_log_DAO(object):
         try:
             cursor.execute(query, shift_log.var_list)
         except:
-            return
+            raise
         finally:
             factory.close_all(cursor=cursor, connection=connection)
 

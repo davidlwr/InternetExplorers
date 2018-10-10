@@ -83,7 +83,7 @@ def showForms():
                                  submitted_consumption, submitted_toilet_visits, submitted_temperature,
                                  submitted_sbp, submitted_dbp, submitted_pulse)
 
-            response = 'Shift log for ' + submitted_date.strftime('%Y-%m-%d') + '(' + day_night + ') has already been recorded. Please enter another date.'
+            response = 'Shift log for ' + submitted_date.strftime('%Y-%m-%d') + '(' + day_night + ') for ' + name_to_show + ' has already been recorded. Please enter another date.'
             try:
                 shiftLogDAO.insert_shift_log(shiftLog)
             except:
