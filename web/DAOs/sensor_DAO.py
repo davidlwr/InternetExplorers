@@ -311,11 +311,11 @@ class sensor_DAO(object):
         
         if start_dt != None: 
             prefix = "WHERE" if prefix==None else "AND"
-            query += f" {prefix} t1.`{sensor_DAO.soh_period_end}` > \"{start_dt.strftime('%Y-%m-%d %H:%M:%S')}\" "
+            query += f" {prefix} t1.`{sensor_DAO.soh_period_start}` < \"{end_dt.strftime('%Y-%m-%d %H:%M:%S')}\" "
             prefix = " AND "
         
         if end_dt != None:
-            query += f" {prefix} (`{sensor_DAO.soh_period_start}` IS NULL OR `{sensor_DAO.soh_period_start}` < \"{end_dt.strftime('%Y-%m-%d %H:%M:%S')}\")"
+            query += f" {prefix} (`{sensor_DAO.soh_period_end}` IS NULL OR `{sensor_DAO.soh_period_end}` > \"{start_dt.strftime('%Y-%m-%d %H:%M:%S')}\")"
 
         query += f" ORDER BY `{sensor_DAO.soh_period_start}` ASC"       # Sort by start periods 
 
