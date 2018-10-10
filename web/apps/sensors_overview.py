@@ -85,7 +85,10 @@ def showOverviewSensors():
 					upCount += 1
 					totalCount +=1
 				else: 
-					status = "Down"
+					if statusNum == 3:
+						status = "Warning"
+					else:
+						status = "Down"
 					downCount += 1
 					totalCount +=1
 				loc = sensor_DAO.get_location_by_node_id(id)
