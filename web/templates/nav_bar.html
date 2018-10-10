@@ -95,6 +95,13 @@
 			setInterval(refresh_notifications, 10000);	// prev 10000
 		}));
 	</script>
+    <style>
+    @media only screen and (max-width: 767px) {
+        .not-in-mobile{
+            display: none;
+        }
+    }
+    </style>
     {% block additional_stylesheets %}{% endblock %}
 	{% block scripts %}
 	{% endblock %}
@@ -107,7 +114,7 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span></button>
-				<a class="navbar-brand" href="/"><span>St Bern</span> Healthcare</a>
+				<a class="navbar-brand" href="/"><span>St Bern</span><span class="not-in-mobile"> Healthcare</span></a>
 
 				<ul class="nav navbar-top-links navbar-right">
 					<li class="dropdown"><a class="dropdown-toggle count-info" data-toggle="dropdown" href="#"> <!--add link to sensor mgmt page-->
