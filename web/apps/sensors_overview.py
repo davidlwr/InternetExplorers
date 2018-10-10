@@ -72,8 +72,9 @@ def showOverviewSensors():
 			for uuid in uuids:
 				
 				id = uuid['uuid']
-				statusNumList = Sensor_mgmt.get_sensor_status_v2(id, True)[0]
-				batterystatusList = Sensor_mgmt.get_sensor_status_v2(id, True)[1]
+				_status = Sensor_mgmt.get_sensor_status_v2(id, True)
+				statusNumList = _status[0]
+				batterystatusList = _status[1]
 				statusNum = statusNumList[0]
 				batterystatus = '-'
 				
