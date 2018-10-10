@@ -274,6 +274,7 @@ class Sensor_mgmt(object):
         records = sysmon_log_DAO.get_logs(uuid=uuid, key=Sysmon_Log.key_battery, start_dt=start_dt_buff, end_dt=end_dt_buff, descDT=False, limit=0)
         # CHECK 1: If no records found, sensor is confirmed down during the period, but just
         if records == None: return [(start_dt, end_dt)]
+        if len(records) == 0: return [(start_dt, end_dt)]
 
         # CHECK 2: sysmon battery updates >> hourly sysmon battery updates are ASSURED
         down_periods = []
@@ -329,11 +330,11 @@ class Sensor_mgmt(object):
         # Get down periods
         now = datetime.datetime.now()
         down_periods = cls.get_down_periods_motion(uuid=uuid, start_dt=now, end_dt=now)
-        
         ret_codes = []
         down = False
         for p in down_periods:          # Check if current time is within a down period
-            if p[0] < now and now < p[1]: 
+            # print(p)
+            if p[0] <= now and now <= p[1]: 
                 down = True
                 break
         ret_codes.append(cls.CHECK_WARN if down else cls.OK)
@@ -450,6 +451,7 @@ class Sensor_mgmt(object):
 
         ret_codes = []
         if readings == None: ret_codes.append(cls.CHECK_WARN)        # No readings, therefore down
+        elif len(readings['data']['stats']) == 0: ret_codes.append(cls.CHECK_WARN)
         else:   
             # Compare last reading with current time, against threshold
             logs = readings['data']['stats']
@@ -529,21 +531,25 @@ class Sensor_mgmt(object):
                     juvo_uuid = k
                     break
 
+            if juvo_uuid == None: # This resident didnt own a bed sensor this day
+                down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])  
+
             if juvo_uuid != None:   # Attempt to find if owner slept this period
                 target = None       
                 for s in sensor_DAO.get_sensors(uuid=juvo_uuid):
                     target = s.juvo_target
                     break
                 
-                if target == None: continue     # This resident didnt own a bed sensor this day
+                if target == None:  # This resident didnt own a bed sensor this day
+                    down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])     
 
                 # Check if sleep was detected
                 juvo_offset_dt = missing - timedelta(days=1)    # i.e. Sleep for 10th = 10th 12pm to 11th 12pm
                 records = JuvoAPI.get_target_sleep_summaries(target, juvo_offset_dt, juvo_offset_dt)['sleep_summaries']
                 for r in records:
                     total_sleep = r['light'] + r['deep'] + r['awake']
-                    if total_sleep > 0:     # Sleep detected, no door detected. assume door is down
-                        down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=24, minute=0)])
+                    if total_sleep < 0:     # Sleep detected, no door detected. assume door is down
+                        down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
         return down_periods
 
 
@@ -562,7 +568,8 @@ class Sensor_mgmt(object):
         ret_codes = []
         down = False
         for p in down_periods:          # Check if current time is within a down period
-            if p[0] < now and now < p[1]: 
+            print(p)
+            if p[0] <= now and now <= p[1]: 
                 down = True
                 break
         ret_codes.append(cls.CHECK_WARN if down else cls.OK)
