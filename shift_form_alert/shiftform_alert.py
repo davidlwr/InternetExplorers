@@ -1,5 +1,6 @@
 import requests
 import json
+from datetime import datetime, timedelta
 import datetime
 import shift_log_DAO
 import resident_DAO
@@ -34,7 +35,7 @@ while 1:
 	minute = current_time.minute
 	second = current_time.second
 	microsecond = current_time.microsecond
-	if((hour ==7) and (minute==0) and (second == 0)):
+	if((hour ==18) and (minute==0) and (second == 0)):
 		date = datetime.date.today()
 		time = datetime.datetime.strptime('1200','%H%M').time()
 		shifttime = datetime.datetime.combine(date, time)
@@ -52,10 +53,12 @@ while 1:
 			text = "\n".join(nameList)
 			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text)
 			
-	elif((hour ==21) and (minute==0) and (second == 0)):
-		date = datetime.date.today()
-		time = datetime.datetime.strptime('2000','%H%M').time()
-		shifttime = datetime.datetime.combine(date, time)
+	elif((hour ==6) and (minute==0) and (second == 0)):
+		yesterday = datetime.datetime.now() - timedelta(days=1)
+		date = yesterday.strftime('%y-%m-%d')
+		# time = datetime.datetime.strptime('2000','%H%M').time()
+		# shifttime = datetime.datetime.combine(date, time)
+		shifttime = date + " 20:00:00"
 		patientIDList = check_shift_form(shifttime)
 		nameList = []
 		checkList = []
