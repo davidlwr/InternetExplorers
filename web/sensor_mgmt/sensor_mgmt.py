@@ -482,12 +482,19 @@ class Sensor_mgmt(object):
         '''
         
         # Split into periods whereby the 10th would refer to 12pm 9th, to 12pm 10th
-        start_date = start_dt.replace(hour=0, minute=0, second=0)
-        end_date   = end_dt.replace(hour=0, minute=0, second=0)  + timedelta(days=1)     # Expand by 1 day, in case start and end are the same day
+        start_date = start_dt.replace(hour=0, minute=0, second=0) - timedelta(days=1) # Expand by 1 day, in case start and end are the same day
+        end_date   = end_dt.replace(hour=0, minute=0, second=0)  
 
         # Get all sensor logs of this uuid between start and end dates
         logs = sensor_log_DAO.get_logs(uuid=uuid, start_datetime=start_date, end_datetime=end_date)
         logs.sort(key = lambda x: x.recieved_timestamp) # ASC
+
+        # Treat bathroom and main door differently
+        location = sensor_DAO.get_sensors(uuid=uuid)[0].location
+        if location == "toilet":
+            if logs == None or len(logs) == 0: # No readings since, send warning
+                return [[start_date.replace(hour=0, minute=0), end_date.replace(hour=23, minute=59)]]
+            else: return []
 
         # if no records, consider down
         if len(logs) == 0: 
