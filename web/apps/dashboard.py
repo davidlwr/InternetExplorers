@@ -1,6 +1,6 @@
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, Event
 import datetime
 import pandas as pd
 import numpy as np
@@ -494,7 +494,8 @@ app.layout = html.Div([
      Input(component_id='location_input', component_property='value'),
      Input('date_picker', 'start_date'),
      Input('date_picker', 'end_date'),
-     Input('group_checkbox_activity', 'values')])
+     Input('group_checkbox_activity', 'values')],
+    events=[Event('graph-update-01', 'interval')])
 def update_graph_01(input_resident, input_location, start_date, end_date, group_checkbox):
     '''
         Generates graph based on timestamps and whether the latest sensor reading is on or off
@@ -512,7 +513,7 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
         if input_location and input_resident:
             df = input_data.input_data.get_relevant_data(input_location, start_date, end_date, input_resident, grouped=group_checkbox)
         # df = input_data.input_raw_data
-        return dcc.Graph(id='firstplot',
+        return [dcc.Graph(id='firstplot',
                          figure={
                              'data': [{
                                  'x': df['recieved_timestamp'],
@@ -539,7 +540,12 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
                             'editable': False,
                             'displaylogo': False,
                             'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
-                         })
+                         },
+                         animate=True),
+                    dcc.Interval(
+                        id='graph-update-01',
+                        interval=1*10000
+                    )]
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
@@ -1044,7 +1050,7 @@ def update_graph_06(input_residents, start_date, end_date):
             except TypeError as e:
                 pass # just don't add to draw data
 
-        return dcc.Graph(id='qos_plot',
+        return dcc.Graph(id='qos_plot', 
                 figure = {
                     'data': draw_data,
                     'layout': {
