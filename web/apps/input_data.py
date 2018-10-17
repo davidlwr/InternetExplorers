@@ -31,36 +31,6 @@ COMBINE_MOTIONS_THRESHOLD = 4  # in minutes
 # total time should be about the time the resident would spend in the toilet if s/he is staying inside for extended period of time
 
 class input_data(object):
-    @staticmethod
-    def updateInputData():
-        input_data.input_raw_data = sensor_log_DAO.get_all_logs()
-        #convert datetime format
-        input_data.input_raw_data['recieved_timestamp'] = pd.to_datetime(input_data.input_raw_data['recieved_timestamp'], format='%Y-%m-%dT%H:%M:%S')
-        input_data.input_raw_data.loc[(input_data.input_raw_data.event == 0)
-        & (input_data.input_raw_data.uuid.str.contains("-m-")), 'recieved_timestamp'] += datetime.timedelta(minutes=-MOTION_TIMEOUT_MINS)
-        # print(input_raw_data.head())
-
-        # convert events to 1 and 0 instead of 255
-        input_data.input_raw_data.loc[:, 'event'].replace(255, 1, inplace=True)
-
-        # common variables
-        input_data.input_raw_max_date = input_data.input_raw_data['recieved_timestamp'].max()
-        input_data.input_raw_min_date = input_data.input_raw_data['recieved_timestamp'].min()
-        ### Assign resident IDs to the sensor readings
-        ownership_history = sensor_DAO.get_ownership_hist()
-        input_data.input_raw_data['resident_id'] = int()
-
-        uuid_list = input_data.input_raw_data['uuid'].unique().tolist()
-        for u in uuid_list:
-            ownership_periods = ownership_history[u]
-            for p in ownership_periods: # (resident_id, start_date, end_date)
-                # filter DataFrame
-                input_data.input_raw_data['resident_id'].loc[(input_data.input_raw_data['uuid'] == u)
-                        & (input_data.input_raw_data['recieved_timestamp'] > p[1])
-                        & (p[2] == None or input_data.input_raw_data['recieved_timestamp'] < p[2])] = p[0]
-        ###
-        input_data.input_raw_data = input_data.input_raw_data[input_data.input_raw_data['resident_id'] != 0]
-        input_sysmon.update_input_sysmon()
 
     # initialize empty df
     input_raw_data = pd.DataFrame()
@@ -104,7 +74,7 @@ class input_data(object):
     #             input_raw_data = pd.concat([input_raw_data, temp_df], ignore_index=True)
     #         except:
     #             print('something wrong with ' + filename)
-
+    
     # convert timestamp to remove the extra time from sensor timeout
     # only applicable for motion sensors
 
@@ -124,6 +94,43 @@ class input_data(object):
                                         #+is really that high, nocturia index is much likely to be that high
                                         # can be customised based on different patients and estimated nocturnal bladder capacity
 
+
+
+    @staticmethod
+    def updateInputData():
+        # sdt = datetime.datetime.now()
+        input_data.input_raw_data = sensor_log_DAO.get_all_logs()
+        #convert datetime format
+        input_data.input_raw_data['recieved_timestamp'] = pd.to_datetime(input_data.input_raw_data['recieved_timestamp'], format='%Y-%m-%dT%H:%M:%S')
+        input_data.input_raw_data.loc[(input_data.input_raw_data.event == 0)
+        & (input_data.input_raw_data.uuid.str.contains("-m-")), 'recieved_timestamp'] += datetime.timedelta(minutes=-MOTION_TIMEOUT_MINS)
+        # print(input_raw_data.head())
+
+        # convert events to 1 and 0 instead of 255
+        input_data.input_raw_data.loc[:, 'event'].replace(255, 1, inplace=True)
+
+        # common variables
+        input_data.input_raw_max_date = input_data.input_raw_data['recieved_timestamp'].max()
+        input_data.input_raw_min_date = input_data.input_raw_data['recieved_timestamp'].min()
+        ### Assign resident IDs to the sensor readings
+        ownership_history = sensor_DAO.get_ownership_hist()
+        input_data.input_raw_data['resident_id'] = int()
+
+        uuid_list = input_data.input_raw_data['uuid'].unique().tolist()
+        for u in uuid_list:
+            ownership_periods = ownership_history[u]
+            for p in ownership_periods: # (resident_id, start_date, end_date)
+                # filter DataFrame
+                input_data.input_raw_data['resident_id'].loc[(input_data.input_raw_data['uuid'] == u)
+                        & (input_data.input_raw_data['recieved_timestamp'] > p[1])
+                        & (p[2] == None or input_data.input_raw_data['recieved_timestamp'] < p[2])] = p[0]
+        ###
+        input_data.input_raw_data = input_data.input_raw_data[input_data.input_raw_data['resident_id'] != 0]
+        input_sysmon.update_input_sysmon()
+
+        # print(f"\t time taken for update = {(sdt - datetime.datetime.now()).total_seconds()}")
+
+
     @staticmethod
     def get_para_ratio_threshold(resident_id=None, current_sys_time=None):
         if not resident_id:
@@ -131,6 +138,7 @@ class input_data(object):
         else:
             # get past three weeks' average percentage
             return input_data.get_percentage_of_night_toilet_usage(resident_id, current_sys_time, average_over='month')[0]
+
 
     # replace date to be date only
     @staticmethod
