@@ -270,8 +270,10 @@ app.layout = html.Div([
                                 id='date_picker_visit_duration',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
                                 max_date_allowed=input_data.input_data.input_raw_max_date,
-                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -329,8 +331,10 @@ app.layout = html.Div([
                                 id='date_picker_logs',
                                 min_date_allowed=input_shiftlogs.input_raw_min_date,
                                 max_date_allowed=input_shiftlogs.input_raw_max_date,
-                                start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_shiftlogs.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -378,8 +382,10 @@ app.layout = html.Div([
                                 id='date_picker_vital_signs',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
                                 max_date_allowed=input_data.input_data.input_raw_max_date,
-                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -417,8 +423,10 @@ app.layout = html.Div([
                                 id='date_picker_qos',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
                                 max_date_allowed=input_data.input_data.input_raw_max_date,
-                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -462,8 +470,10 @@ app.layout = html.Div([
                                 id='date_picker',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
                                 max_date_allowed=input_data.input_data.input_raw_max_date,
-                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -1190,6 +1200,6 @@ def set_residents_options_six(selection):
 @app.callback(  Output('data_update_placeholder', 'children'),
                 events=[Event('data-update', 'interval')])
 def update_input_data_db():
-    print("Data Update Interval triggered... Running data update")
+    # print("Data Update Interval triggered... Running data update")
     return input_data.input_data.updateInputData()
     
