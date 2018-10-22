@@ -21,7 +21,7 @@ graph_update_interval = 10 * 1000
 # TODO: can return the bank plotly graph output after the exception so that the graph is still there
 app.layout = html.Div([
     dcc.Interval(id='data-update', interval=data_update_interval),
-    html.P(id='data_update_placeholder'),
+    html.P(id='data_update_placeholder', style={'dispaly':'none'}),
     # html.Nav([
     #     html.Div([
     #         html.Button([
@@ -556,7 +556,8 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
                                                 'title': 'Timestamps'
                                             },
                                             'yaxis': {
-                                                'title': 'Motion detected?'
+                                                'title': 'Motion detected?',
+                                                'range': [0, 1]
                                             }
                                         }
                                     },
@@ -876,7 +877,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                     })
                         )
         return ret_divs
-                
+
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
@@ -933,7 +934,7 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
                                     animate=True)
                             )
         return ret_divs
-                
+
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
@@ -1021,7 +1022,7 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
                                     },
                                     animate=True))
         return ret_divs
-                
+
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
@@ -1127,7 +1128,7 @@ def update_graph_06(input_residents, start_date, end_date):
             ret_divs.append(dcc.Interval(id='graph-update-06',interval=graph_update_interval))
 
 
-        ret_divs.append(dcc.Graph(  id='qos_plot', 
+        ret_divs.append(dcc.Graph(  id='qos_plot',
                                     figure = {
                                         'data': draw_data,
                                         'layout': {
@@ -1201,5 +1202,5 @@ def set_residents_options_six(selection):
                 events=[Event('data-update', 'interval')])
 def update_input_data_db():
     # print("Data Update Interval triggered... Running data update")
-    return input_data.input_data.updateInputData()
-    
+    input_data.input_data.updateInputData()
+    return ''
