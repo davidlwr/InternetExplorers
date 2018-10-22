@@ -34,6 +34,7 @@ from apps.create_sensor_form import SensorCreateForm, BedSensorCreateForm
 from apps.risk_assessment_form import RiskAssessmentForm
 from Entities.user import User
 from DAOs.user_DAO import user_DAO
+from DAOs.shift_log_DAO import shift_log_DAO
 from DAOs import resident_DAO
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import select, func, case
@@ -324,6 +325,9 @@ class FormView(ModelView):
     @expose('/new/', methods=('GET', 'POST'))
     def create_view(self):
         form = ShiftLogForm()
+        shiftLogDAO = shift_log_DAO()
+        resident_list = shiftLogDAO.get_incompleted_residents()
+        form.resident.choices = [(resident_map['resident_id'], resident_map['name']) for resident_map in resident_list]
         return render_template('eosforms.html', form=form)
 
     # def get_create_form(self):
