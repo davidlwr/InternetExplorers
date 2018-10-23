@@ -8,7 +8,8 @@ import numpy as np
 
 # internal imports
 from app import app
-from apps import input_data, input_shiftlogs
+from apps import input_data
+from apps.input_shiftlogs import input_shiftlogs
 from DAOs import resident_DAO
 from DAOs.sensor_DAO import sensor_DAO
 from sensor_mgmt import JuvoAPI, sensor_mgmt
@@ -1203,4 +1204,5 @@ def set_residents_options_six(selection):
 def update_input_data_db():
     # print("Data Update Interval triggered... Running data update")
     input_data.input_data.updateInputData()
+    input_shiftlogs.update_shiftlogs_data()
     return ''
