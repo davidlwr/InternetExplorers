@@ -26,6 +26,12 @@ class input_shiftlogs(object):
     daytime_start = datetime.time(7, 30)
     daytime_end = datetime.time(19, 30)
 
+    # changeable parameters NOTE: should be changeable
+    para_temperature_max = 37.6
+    para_temperature_min = 35.5
+    para_temperature_sd = 0.66
+    para_pulse_pressure_max = 50
+
     @staticmethod
     def update_shiftlogs_data():
         input_shiftlogs.input_raw_data = input_shiftlogs.sldao.get_all_logs()
@@ -119,7 +125,45 @@ class input_shiftlogs(object):
     def get_residents_options():
         return input_shiftlogs.input_raw_data['patient_id'].unique().tolist()
 
-if __name__ == '__main__':
-    input_shiftlogs.update_shiftlogs_data()
-    print("hi")
-    print(input_shiftlogs.get_logs_by_date(datetime.datetime(2018, 10, 1, 0, 0, 0), datetime.datetime.now(), 1))
+    @staticmethod
+    def get_shiftlog_indicators(patient_id, current_sys_time=None):
+        ret_alerts = []
+        if not current_sys_time:
+            current_sys_time = datetime.datetime.now()
+
+        current_sys_date = current_sys_time.date()
+        three_weeks_ago = current_sys_date + datetime.timedelta(days=-21)
+        one_week_ago = current_sys_date + datetime.timedelta(days=-7)
+        four_weeks_ago = current_sys_date + datetime.timedelta(days=-28)
+
+        # get data first
+        current_data = input_shiftlogs.get_relevant_data(four_weeks_ago, current_sys_date,patient_id)
+        # print(current_data)
+        # patient_id,datetime,num_falls,num_near_falls,food_consumption,temperature,systolic_bp,diastolic_bp,pulse_pressure,pulse_rate
+        # compare averages
+        three_week_data = current_data.loc[(current_data['datetime'] < one_week_ago)]
+        # print(three_week_data)
+        past_week_data = current_data.loc[current_data['datetime'] > one_week_ago]
+        # print(past_week_data)
+
+        # check averages then check for significant out-of-range numbers
+        # check temperatures
+        temperature_sd = three_week_data['temperature'].std() # NOTE: maybe can change to some other stdevs
+        three_week_average_temp = three_week_data['temperature'].mean()
+        past_week_average_temp = past_week_data['temperature'].mean()
+
+        if (past_week_average_temp - input_shiftlogs.para_temperature_sd * temperature_sd) > three_week_average_temp:
+            ret_alerts.append("Significant increase in temperature in the past week")
+        elif (past_week_average_temp + input_shiftlogs.para_temperature_sd * temperature_sd) < three_week_average_temp:
+            ret_alerts.append("Significant decrease in temperature in the past week")
+
+        if any((past_week_data['temperature'] < input_shiftlogs.para_temperature_min) | (past_week_data['temperature'] > input_shiftlogs.para_temperature_max)):
+            ret_alerts.append("Abnormal temperatures detected in past week")
+
+        return ret_alerts
+
+# if __name__ == '__main__': # for local testing
+#     input_shiftlogs.update_shiftlogs_data()
+#     print("hi")
+#     # print(input_shiftlogs.get_logs_by_date(datetime.datetime(2018, 10, 1, 0, 0, 0), datetime.datetime.now(), 1))
+#     print(input_shiftlogs.get_shiftlog_indicators(1, datetime.datetime(2018, 10, 10, 0, 0, 0)))
