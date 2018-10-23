@@ -39,6 +39,7 @@ def showOverviewResidents():
             List of Sleep Alerts (WIP), Overall Alert Level ('alert_highest')
     NOTE: jinja templates do not allow for import of python modules, so all calculation will be done here
     '''
+    input_data.input_data.updateInputData()
     residents_raw = resident_DAO.get_list_of_residents()
     residents = []
     date_in_use = datetime.datetime.now()
@@ -99,6 +100,7 @@ def showOverviewResidents():
 @flask_login.login_required
 def detailedLayerTwoOverviewResidents(resident_id):
     try:
+        input_data.input_data.updateInputData()
         date_in_use = datetime.datetime.now()
         # date_in_use = datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
         juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
