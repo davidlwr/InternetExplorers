@@ -16,12 +16,14 @@ import sys
 if __name__ == '__main__':
     sys.path.append(".")
     import input_data
+    from input_shiftlogs import input_shiftlogs
     from app import app, server
     from DAOs import resident_DAO, shift_log_DAO
     from Entities import resident
     from sensor_mgmt import sensor_mgmt
 else:
     from apps import input_data
+    from apps.input_shiftlogs import input_shiftlogs
     from app import app, server
     from DAOs import resident_DAO, shift_log_DAO
     from Entities import resident
@@ -67,6 +69,11 @@ def showOverviewResidents():
             r['sleep_tooltip'].extend(r['sleep_alerts'])
 
         r['vitals_alerts'], __, __, __, __ = input_data.input_data.get_vital_signs_indicator(resident['resident_id'], juvo_date_in_use)
+
+        # check shift logs and extend vital signs alerts if necessary
+        shiftlog_alerts = input_shiftlogs.get_shiftlog_indicators(resident['resident_id'], date_in_use)
+        r['vitals_alerts'].extend(shiftlog_alerts)
+        
         r['vitals_tooltip'] = []
         if len(r['vitals_alerts']) == 0:
             r['vitals_tooltip'].append("Vital signs from previous week appear to be normal")
