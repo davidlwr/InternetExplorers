@@ -1,4 +1,5 @@
 # simple python to use long polling for getting messages sent to telegram bots
+# simple python to use long polling for getting messages sent to telegram bots
 
 import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
@@ -45,7 +46,7 @@ def button(bot, update):
 						  chat_id=query.message.chat_id,
 						  message_id=query.message.message_id)
 
-		alert_DAO.delete_alert(DUTY_NURSE_CHAT_ID, query['message']['text'])
+		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, query['message']['text'])
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
 			keyboardBottom = [[alert['alert_text']] for alert in alerts]
@@ -60,7 +61,7 @@ def button(bot, update):
 						  chat_id=query.message.chat_id,
 						  message_id=query.message.message_id)
 
-		alert_DAO.delete_alert(DUTY_NURSE_CHAT_ID, initialMsg) 
+		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg) 
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
 			keyboardBottom = [[alert['alert_text']] for alert in alerts]
@@ -75,7 +76,7 @@ def button(bot, update):
 						  chat_id=query.message.chat_id,
 						  message_id=query.message.message_id)
 
-		alert_DAO.delete_alert(DUTY_NURSE_CHAT_ID, initialMsg) 
+		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg) 
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
 			keyboardBottom = [[alert['alert_text']] for alert in alerts]
@@ -89,7 +90,7 @@ def button(bot, update):
 		bot.edit_message_text(initialMsg + "\n\nUsing Toilet\n\nPurpose of visit: {}".format(query.data),
 						  chat_id=query.message.chat_id,
 						  message_id=query.message.message_id)
-		alert_DAO.delete_alert(DUTY_NURSE_CHAT_ID, initialMsg)
+		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg)
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
 			keyboardBottom = [[alert['alert_text']] for alert in alerts]
@@ -104,7 +105,7 @@ def button(bot, update):
 		bot.edit_message_text(text + "\nProblem fixed",
 						  chat_id=DUTY_NURSE_CHAT_ID,
 						  message_id=query.message.message_id)
-		alert_DAO.delete_alert(DUTY_NURSE_CHAT_ID, text)
+		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, text)
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
 			keyboardBottom = [[alert['alert_text']] for alert in alerts]
@@ -184,7 +185,7 @@ def sensoralert(bot, update):
 		for downSS in downList: 
 			text = downSS
 			bot.send_message(DUTY_NURSE_CHAT_ID, text, reply_markup=reply_markup)				
-			alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, text)
+			alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, datetime, text, "Sensor", "No")
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		keyboardBottom = [[alert['alert_text']] for alert in alerts]
 		reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
