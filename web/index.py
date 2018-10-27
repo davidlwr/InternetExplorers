@@ -20,8 +20,6 @@ from flask_sqlalchemy import SQLAlchemy
 from urllib.parse import urlparse, urljoin
 from dash_flask_login import FlaskLoginAuth
 from datetime import datetime, date
-from DAOs.sensor_DAO import sensor_DAO
-from sensor_mgmt.JuvoAPI import JuvoAPI
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -36,6 +34,8 @@ from Entities.user import User
 from DAOs.user_DAO import user_DAO
 from DAOs.shift_log_DAO import shift_log_DAO
 from DAOs import resident_DAO
+from DAOs.sensor_DAO import sensor_DAO
+from sensor_mgmt.JuvoAPI import JuvoAPI
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import select, func, case
 from wtforms.fields.html5 import DateField

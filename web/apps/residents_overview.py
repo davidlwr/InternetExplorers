@@ -73,7 +73,7 @@ def showOverviewResidents():
         # check shift logs and extend vital signs alerts if necessary
         shiftlog_alerts = input_shiftlogs.get_shiftlog_indicators(resident['resident_id'], date_in_use)
         r['vitals_alerts'].extend(shiftlog_alerts)
-        
+
         r['vitals_tooltip'] = []
         if len(r['vitals_alerts']) == 0:
             r['vitals_tooltip'].append("Vital signs from previous week appear to be normal")
@@ -104,13 +104,19 @@ def showOverviewResidents():
 
 # layer 2 routing
 @server.route("/overview/<int:resident_id>", methods=['GET', 'POST'])
+@server.route("/overview/<int:resident_id>/<date:currdate>")
 @flask_login.login_required
-def detailedLayerTwoOverviewResidents(resident_id):
+def detailedLayerTwoOverviewResidents(resident_id, currdate=None):
     try:
         input_data.input_data.updateInputData()
-        date_in_use = datetime.datetime.now()
-        # date_in_use = datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
-        juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
+        if not currdate:
+            date_in_use = datetime.datetime.now()
+            # date_in_use = datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
+            juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
+        else:
+            # take date from currdatestring
+            date_in_use = currdate
+            juvo_date_in_use = currdate
         resident = resident_DAO.get_resident_by_resident_id(resident_id)
         if resident['dob']:
             today = datetime.date.today()

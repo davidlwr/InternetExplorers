@@ -598,7 +598,9 @@ class input_data(object):
         if current_sys_time is None: # used in testing - pass in a different time for simulation
             current_sys_time = datetime.datetime.now()
 
-        juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
+            juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
+        else:
+            juvo_date_in_use = current_sys_time
 
         current_sys_date = current_sys_time.date()
         three_weeks_ago = current_sys_date + datetime.timedelta(days=-21)
