@@ -239,21 +239,25 @@ class sensor_log_DAO(object):
 
 
     @staticmethod
-    def get_last_logs(uuid, limit=1):
+    def get_last_logs(uuid, dt=None, limit=1):
         """
         Returns a list of logs found in the database according to the parameters given
 
         Inputs:
         uuid (str) -- Sensor identifier
+        dt (datetime)
         limit (int) -- default=1
         """
-
+        feeddict = [uuid]
         query = f"""
                 SELECT * FROM {sensor_log_DAO.table_name}
-                WHERE {Sensor_Log.uuid_tname} = "{uuid}"
-                ORDER BY `{Sensor_Log.recieved_timestamp_tname}`
-                DESC LIMIT {limit}
+                WHERE {Sensor_Log.uuid_tname} = %s
                 """
+        if dt != None:
+            query += f" AND {Sensor_Log.recieved_timestamp_tname} < %s "
+            feeddict.append(dt)
+        query += f""" ORDER BY `{Sensor_Log.recieved_timestamp_tname}`
+                      DESC LIMIT {limit} """
 
         # Get connection
         factory = connection_manager()
@@ -261,7 +265,7 @@ class sensor_log_DAO(object):
         cursor = connection.cursor()
 
         try:
-            cursor.execute(query)
+            cursor.execute(query, feeddict)
             result = cursor.fetchall()
 
             logs = []

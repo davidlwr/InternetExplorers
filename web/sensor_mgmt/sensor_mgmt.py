@@ -28,7 +28,7 @@ class Sensor_mgmt(object):
     motion_thresh = 3.5   # hours
     juvo_thresh  = 50     # minutes >> Environment Stats >> Difference between reading and API availability
 
-
+    # DEPRECIATED
     @classmethod
     def get_sensor_status(cls, uuid, retBatteryLevel=False):
         '''
@@ -47,7 +47,7 @@ class Sensor_mgmt(object):
             - Single value in %
         i.e. ([1,3], [75])
         i.e. ([1]  , [])        // Battery or newly installed sensor
-        i.e. ([0]  , [None]])   // Juvo
+        i.e. ([0]  , [None])    // Juvo
         '''
         # AREAS OF IMPROVEMENT
         # 1. Juvo Bed sensor: Warning triggered if no sleep in the past sleep period 9pm-9am. What about if sleep = 1sec? May also be a problem with elderly
@@ -122,6 +122,7 @@ class Sensor_mgmt(object):
         else: return ret_codes
 
 
+    # DEPRECIATED
     @classmethod
     def get_all_sensor_status(cls, retBatteryLevel=False):
         '''
@@ -642,7 +643,7 @@ class Sensor_mgmt(object):
 
             if result:
                 output = result['uuid']
-        except Exceptio as e:
+        except Exception as e:
             print(e)
 
         return output
