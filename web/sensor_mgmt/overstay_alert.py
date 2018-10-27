@@ -2,6 +2,7 @@ import datetime, os, sys
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 if __name__ == '__main__': sys.path.append("..")
 if __name__ == '__main__': 
@@ -18,7 +19,9 @@ from DAOs.sensor_log_DAO import sensor_log_DAO
 class overstay_alert(object):
 
     MOTION_TIMEOUT = 5   # mins. motion sensor minutes of inactivity before sending 0 to close off 225 event
-    
+    DOOR_CLOSE = 0
+    DOOR_OPEN  = 225
+
     # RETURN CODES:
     NO_MAIN_DOOR = -1    # Unable to run algo, as no main door sensor found
     DC_MAIN_DOOR = -2    # Unable to run algo, main doow is down. NOTE: no real action needed, CHECKWARN should already be sent
@@ -76,7 +79,6 @@ class overstay_alert(object):
         Returns int. 0 meaning resident not in as of now
         '''
         sec_diff = (now - last_door.recieved_timestamp).total_seconds()
-        print("check_isolated_door_motion >> sec_diff: ", sec_diff)
 
         if len(last_motions) > 0:      # last motion found
             for mlog in last_motions:   # Check if any was a 225, start motion, reading after door closed
@@ -127,6 +129,7 @@ class overstay_alert(object):
 
         last_mdoor = logs[0]
         secs_since_last_mdoor = (now - last_mdoor.recieved_timestamp).total_seconds()
+        # print("last main door: ", last_mdoor.recieved_timestamp, last_mdoor.event)
 
         # DEAL WITH ERROR PERIODS
         # NOTE: we can only detect in general when door is down: by date ONLY
@@ -135,12 +138,13 @@ class overstay_alert(object):
         if (now - last_mdoor.recieved_timestamp).total_seconds() > (60 * 60 * 24): return overstay_alert.DC_MAIN_DOOR
 
         # Else check if door close event
-        if last_mdoor.event == 255:    # Door close >> Check for ANY sensor trigger inside room to validate person inside
+        if last_mdoor.event == overstay_alert.DOOR_CLOSE:    # Door close >> Check for ANY sensor trigger inside room to validate person inside
 
             # Check if any MAIN MOTION
             mmotion_uuid = sdict['mMotion']                            
             if mmotion_uuid != None:    
                 logs =  sensor_log_DAO.get_last_logs(uuid=mmotion_uuid, dt=now, limit=2) # Get last logs
+                # print("\t", logs[0].uuid, [(x.recieved_timestamp, x.event)for x in logs])
                 check = overstay_alert.check_isolated_door_motion(last_door=last_mdoor, last_motions=logs, now=now)
                 if check > 0: return check
 
@@ -148,6 +152,7 @@ class overstay_alert(object):
             tmotion_uuid = sdict['tMotion']
             if tmotion_uuid != None:   
                 logs =  sensor_log_DAO.get_last_logs(uuid=tmotion_uuid, dt=now, limit=2)  # Get last logs
+                # print("\t", logs[0].uuid, [(x.recieved_timestamp, x.event)for x in logs])
                 check = overstay_alert.check_isolated_door_motion(last_door=last_mdoor, last_motions=logs, now=now)
                 if check > 0: return check
 
@@ -155,17 +160,22 @@ class overstay_alert(object):
             tdoor_uuid = sdict['tDoor']
             if tdoor_uuid != None:
                 logs =  sensor_log_DAO.get_last_logs(uuid=tdoor_uuid, dt=now)                    # Get last log
+                # print("\t", logs[0].uuid, [(x.recieved_timestamp, x.event)for x in logs])
                 if len(logs) > 0 and logs[0].recieved_timestamp > last_mdoor.recieved_timestamp: # If last log found and after door close
+                    # print("\t door: ", tdoor_uuid)
                     return secs_since_last_mdoor
 
             # Check if any JUVO      >> Get juvo heartrates from last close -- now if any != 0. someone was on the bed
             jtarget = sdict['juvo']
             if jtarget != None:
                 vitals_json = JuvoAPI.get_target_vitals(target=jtarget, start_time=last_mdoor.recieved_timestamp, end_time=now)
+                # print("Getting vitals from last_mdoor: ", last_mdoor.recieved_timestamp, now)
                 heart_pd,_  = JuvoAPI.extract_heart_breath_from_vitals(json=vitals_json)
-                heart_rates = heart_pd.query("heart_rate > 0") 
-                if len(heart_rates.index) > 0: 
-                    return secs_since_last_mdoor
+                if len(heart_pd.index) > 0:
+                    # print("\t found heart rates: ", heart_pd)
+                    heart_rates = heart_pd.query("heart_rate > 0") 
+                    if len(heart_rates.index) > 0: 
+                        return secs_since_last_mdoor
 
         return 0
 
@@ -188,7 +198,7 @@ class overstay_alert(object):
         tdoor_uuid   = sdict['tDoor']
         tmotion_uuid = sdict['tMotion']
         mmotion_uuid = sdict['mMotion']
-
+        
         # Check 1 >> Toilet door found, combine with toilet motion 
         if tdoor_uuid != None and tmotion_uuid != None:
             logs = sensor_log_DAO.get_last_logs(uuid=tdoor_uuid, dt=now)         # Get last record of toilet door close
@@ -196,10 +206,10 @@ class overstay_alert(object):
             # print("IN Check 1... now, last_tdoor", now, last_tdoor.recieved_timestamp)
 
             # ghetto check for door validity. Ensure didnt happen >24 hrs ago
-            if last_tdoor != None and last_tdoor.event == 225 and (now - last_tdoor.recieved_timestamp).total_seconds() < (60 * 60 * 24):
+            if last_tdoor != None and last_tdoor.event == overstay_alert.DOOR_CLOSE and (now - last_tdoor.recieved_timestamp).total_seconds() < (60 * 60 * 24):
                 logs = sensor_log_DAO.get_last_logs(uuid=tmotion_uuid, dt=now)         # Get last record of toilet motion
                 last_tmotion = logs[0] if len(logs) != 0 else None
-
+                # print("\t", last_tmotion.recieved_timestamp)
                 if last_tmotion != None:
                     # print("IN Check 1.1... last_tmotion", last_tmotion)
                     check = overstay_alert.check_isolated_door_motion(last_door=last_tdoor, last_motions=logs, now=now)
@@ -208,12 +218,13 @@ class overstay_alert(object):
 
         # Check 2 >> run algo based on movement in room. MAIN DOOR, MAIN MOTION, TOILET MOTION found
         if mmotion_uuid != None and tmotion_uuid != None:
-            # print("in Check 2...")
+            # print("in Check 2... ", now)
             # Get last instances of 225 of both motion, use this to track movement
             t_mlogs = sensor_log_DAO.get_last_logs(uuid=tmotion_uuid, dt=now, limit=2)
             m_mlogs = sensor_log_DAO.get_last_logs(uuid=mmotion_uuid, dt=now, limit=2)
-            print("toilet m logs: ", [(x.recieved_timestamp, x.event) for x in t_mlogs])
-            print("main m logs:   ", [(x.recieved_timestamp, x.event) for x in m_mlogs])
+            # print("\ttoilet m logs: ", [(x.recieved_timestamp, x.event) for x in t_mlogs])
+            # print("\tmain m logs:   ", [(x.recieved_timestamp, x.event) for x in m_mlogs])
+
             # Check 2.1 >> both are event == 0, closed motion events
             # print("bef Check 2.1")
             if len(t_mlogs) == 2 and len(m_mlogs) == 2:
@@ -223,11 +234,16 @@ class overstay_alert(object):
                         if t_mlogs[0].recieved_timestamp > m_mlogs[0].recieved_timestamp: 
                             return (now - (t_mlogs[0].recieved_timestamp - timedelta(minutes=5))).total_seconds()
 
-            # Check 2.2 >> 1 event is closed, 1 is open
-            # print("bef Check 2.2")
+            
             if len(t_mlogs) > 0 and len(m_mlogs) > 0:
+                # Check 2.2 >> 1 event is closed, 1 is open
                 if t_mlogs[0].event == 225 and m_mlogs[0].event == 0:    # Toilet open, Main closed
                     return (now - (m_mlogs[0].recieved_timestamp - timedelta(minutes=5))).total_seconds()
+
+                # # Check 2.3 >> both events open NOTE: WITH THIS SITUATION WE cannot be certain where person is. real ghetto
+                # if t_mlogs[0].event == 0 and m_mlogs[0].event == 0:
+                #     if t_mlogs[0].recieved_timestamp > m_mlogs[0].recieved_timestamp:
+                #         return (now - t_mlogs[0].recieved_timestamp).total_seconds()
 
         return 0
 
@@ -245,17 +261,21 @@ class overstay_alert(object):
             x_hours.append(tdt)
             y_values.append(value)
             tdt += timedelta(minutes=jump_mins)
+
+            if value > 0: print("\t FOUND!! ", tdt, value)
             
             if counter == 0: print(f"sanity check : ", tdt, value)
             counter += 1
-            if counter%10 == 0: print(f"sanity check: ", tdt, value)
-            
-        # print("hours", x_hours)
-        # print("values", y_values)
+            if counter%100 == 0: print(f"sanity check: ", tdt, value)
+        
+        # Print out specifically points where time > 0
+        for i in range(len(x_hours)):
+            if y_values[i] > 0:
+                print(x_hours[i], y_values[i])
+        
         # Plot
         plt.plot(x_hours,y_values)
-        # beautify the x-labels
-        plt.gcf().autofmt_xdate()
+        plt.gcf().autofmt_xdate()        # beautify the x-labels
         plt.show()
 
     @staticmethod
@@ -275,12 +295,14 @@ class overstay_alert(object):
             counter += 1
             if counter%10 == 0: print(f"sanity check: ", tdt, value)
             
-        # print("hours", x_hours)
-        # print("values", y_values)
+
         # Plot
+        fig,ax1 = plt.subplots()
         plt.plot(x_hours,y_values)
         # beautify the x-labels
-        plt.gcf().autofmt_xdate()
+        ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
+        ax1.xaxis.set_minor_formatter(mdates.DateFormatter("%H-%M:%S"))
+        _ = plt.xticks(rotation=45)
         plt.show()
         
 
@@ -291,8 +313,13 @@ if __name__ == '__main__':
     jump_mins = 5
     sdt = datetime.datetime.strptime('2018-10-25 18:00:00', '%Y-%m-%d %H:%M:%S')
     edt = datetime.datetime.strptime('2018-10-26 12:00:00', '%Y-%m-%d %H:%M:%S')
+    # overstay_alert.test_plot_in_room_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
 
-    # overstay_alert.test_plot_in_toilet_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
-    overstay_alert.test_plot_in_room_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
+    sdt = datetime.datetime.strptime('2018-09-21 00:00:00', '%Y-%m-%d %H:%M:%S')
+    edt = datetime.datetime.strptime('2018-10-28 00:00:00', '%Y-%m-%d %H:%M:%S')
+
+    sdt = datetime.datetime.strptime('2018-09-24 18:35:00', '%Y-%m-%d %H:%M:%S')
+    edt = datetime.datetime.strptime('2018-09-24 19:40:00', '%Y-%m-%d %H:%M:%S')
+    overstay_alert.test_plot_in_toilet_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
     
 
