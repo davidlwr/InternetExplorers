@@ -36,6 +36,8 @@ while 1:
 	second = current_time.second
 	microsecond = current_time.microsecond
 	if((hour ==18) and (minute==0) and (second == 0)):
+	# secondList = [10,20,30,40,50,0]
+	# if((second in secondList)):
 		date = datetime.date.today()
 		time = datetime.datetime.strptime('1200','%H%M').time()
 		shifttime = datetime.datetime.combine(date, time)
@@ -51,7 +53,8 @@ while 1:
 		
 		if(len(nameList) > 0):
 			text = "\n".join(nameList)
-			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text)
+			link = "http://13.228.71.248/eosforms"
+			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text + "\n\nClick here to access the shift form:\n" + link)
 			
 	elif((hour ==6) and (minute==0) and (second == 0)):
 		yesterday = datetime.datetime.now() - timedelta(days=1)
@@ -71,4 +74,5 @@ while 1:
 		
 		if(len(nameList) > 0):
 			text = "\n".join(nameList)
-			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text)
+			link = "http://13.228.71.248/eosforms"
+			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text + "\n\nClick here to access the form:\n" + link)
