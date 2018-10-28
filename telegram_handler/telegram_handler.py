@@ -178,18 +178,26 @@ def sensoralert(bot, update):
 			elif 3 in ss[1]:
 				error = "Sensor Issue: Warning"+ "\nLocation: " + residentName + " " + location + "\nType: " + type
 				downList.append(error)
-				
-	reply_markup = {"inline_keyboard": [[{"text": "Fixed", "callback_data": "fixed"},{"text": "False Alarm", "callback_data": "False Alarm"}]]}
-	if(len(downList) > 0):
+	sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
+	sensorAlertList = []
+	for sensor_alert in sensor_alerts:
+		sensor_alert_text = sensor_alert['alert_text']
+		sensorAlertList.append(sensor_alert_text)
+	# if(len(downList) > 0):
 		# text = "\n".join(downList)
-		for downSS in downList: 
-			text = downSS
-			bot.send_message(DUTY_NURSE_CHAT_ID, text, reply_markup=reply_markup)				
-			alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, datetime, text, "Sensor", "No")
-		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
-		keyboardBottom = [[alert['alert_text']] for alert in alerts]
-		reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
-		bot.send_message(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markup=reply_markupBottom)
+		if sensor_alert_text not in downList: 
+			alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, sensor_alert_text)
+	if(len(downList) > 0):
+		for downSS in downList:
+			if downSS not in sensorAlertList:
+				text = downSS 
+				bot.send_message(DUTY_NURSE_CHAT_ID, text)
+				date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+				alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, text, "Sensor", "No")
+				alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
+				keyboardBottom = [[alert['alert_text']] for alert in alerts]
+				reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
+				bot.send_message(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markup=reply_markupBottom)
 
 def exists(inputText):
 	alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
