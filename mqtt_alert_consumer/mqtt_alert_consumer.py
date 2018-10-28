@@ -22,14 +22,20 @@ from urllib.request import urlopen
 # MQTT Stuff
 BROKER_ADDRESS = "stb-broker.lvely.net"  # Broker address
 PORT           = 1883                    # Broker port
-CLIENT         = "acceptance_client"
 USER           = "stbern"                # username
 PASSWORD       = "int3rn3t"              # password
-TOPIC          = "test"
-QOS            = 0          
+TOPIC          = "#"        # Wildcard subscribe to everything
+QOS            = 2          
 TXT_FOLDER   = "./logs"
 LOGGING_FILE = f"{TXT_FOLDER}/log.txt"
 CSV_FILE = f"{TXT_FOLDER}/msg.csv"
+
+# DB stuff
+host            = "stbern.cdc1tjbn622d.ap-southeast-1.rds.amazonaws.com"
+port            = 3306
+database        = "stbern"
+username        = "internetexplorer"
+password        = "int3rn3t"
 
 # SAMPLE MOTION SENSOR: {"nodeid":2,"event":255,"uuid":"b827eb393415-0xf0baed65-2"}
 # SAMPLE DOOR SENSOR  : {"nodeid":3,"event":255,"uuid":"b827eb393415-0xf0baed65-3"}
@@ -58,7 +64,7 @@ def delete_message_with_reply(chatid, text):
     return response
 
 # Utility functions ==============================================================================================================
-def log_msg(filename, msg, verbose=True):
+def log_msg(filename, msg):
     '''
     Helper function to write logs to a specific file
     
@@ -76,20 +82,75 @@ def log_msg(filename, msg, verbose=True):
     with open(filename, "a+") as f:
         time = datetime.datetime.now().replace(microsecond=0).isoformat()
         f.write(f"{time} {msg}\n")
-        if verbose: print(msg)
+        print(msg)
 
 # db = DBHelper()
 # db.setup()
+dwelling_to_nodeid = {"room 1": 2005, "room 2": 2006}
 
+uuid_rname =    { "2005-d-01": "Lo Khuik Fah Joy",
+                  "2005-m-01": "Lo Khuik Fah Joy",
+                  "2005-m-02": "Lo Khuik Fah Joy",
+                  "2006-d-01": "Poh Kim Pew",
+                  "2006-m-02": "Poh Kim Pew",
+                  "2100-room 3-m-02": "Lai Yee Chun",
+                  "2100-room 4-m-02": "Lopez Beatrice Angelina"
+                }
+def process_msg(topic, message):
+    '''
+    Process json msgs from mqtt broker. Insert only event update msgs
+    
+    Input:
+    message (str) - A single json string
+    '''
+    try:
+        # Load JSON
+        jdict = json.loads(message)
 
-def action_motion(event):
+        topic = topic.split("/")
+        key_list = ('mode', 'sensor_id', 'key', 'value', 'gw_timestamp')
+
+        if len(topic) == 4 and all(k in jdict for k in key_list):         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
+
+            # Determine Sysmon or Sensor Data
+            project_id  = topic[0]  # 'stb'
+            hub_id      = topic[1]  # '2100' presumably the building
+            dwelling_id = topic[2]  # 'room1' or 'room2'
+            data_type   = topic[3]  # 'sysmon' or 'data
+            
+            # breakdown message
+            mode         = jdict['mode']        # i.e. 'motion'
+            sensor_id    = jdict['sensor_id']   # i.e. 'm-01'   
+            key          = jdict['key']         # i.e. 'motion', 'ultraviolet'
+            value        = jdict['value']       # str (actually float)
+            gw_timestamp = datetime.datetime.fromtimestamp(jdict['gw_timestamp'] / 1e3)
+
+            # Determine the uuid identifier of the sensor. Mostly for the conversion of the 2 sensors
+            uuid = None
+            if project_id=="stb" and hub_id=="2100" and dwelling_id in dwelling_to_nodeid:
+                uuid = f"{dwelling_to_nodeid[dwelling_id]}-{sensor_id}"
+            else:
+                uuid = f"{hub_id}-{dwelling_id}-{sensor_id}"
+
+            # SPLIT INTO SYSMON AND DATA
+            rname = uuid_rname[uuid] if uuid in uuid_rname else None
+            
+            if data_type == "data" and rname != None:
+                if key == "motion": action_motion(event=value, rname=uuid_rname["uuid"])
+                if key == "door":   action_door(event=value, rname=uuid_rname["uuid"])
+
+    except Exception as e:
+        msg = f"PROCESS MESSAGE FAILURE >> Exception: '{str(e)}, Msg: {message}'"
+        log_msg(LOGGING_FILE, msg)
+
+def action_motion(event, rname):
     if event == 255:
         
         print("called action motion")
         # ts = time.time()
         reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
         date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        text='Assistance Alert: Squid Ward at ' + date_time
+        text=f'Assistance Alert: {rname} at ' + date_time
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
         alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, text, "Assistance", "No")
 
@@ -102,12 +163,12 @@ def action_motion(event):
         message_id = response.json()['result']['message_id']
         # delete_message_with_reply(DUTY_NURSE_CHAT_ID, message_id)
 
-def action_door(event):
+def action_door(event, rname):
     if event == 255:
         print("called action_door motion")
         reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
         date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        text='Assistance Alert: Squid Ward at ' + date_time
+        text=f'Assistance Alert: {rname} at ' + date_time
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
         alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, text, "Assistance", "No")
 
@@ -171,44 +232,58 @@ def on_log(client, userdata, level, buf):
     Callback for logs, pretty sure its the logs transmitted by the broker
     '''
     message = f'ON LOG'.ljust(25) + f' >> {str(buf)}' 
-    log_msg(LOGGING_FILE, message, verbose=False)
+    log_msg(LOGGING_FILE, message)
 
 
+# def on_message(client, userdata, message):
+#     payload = message.payload.decode('utf-8')
+#     string = 'ON MESSAGE'.ljust(25) + f" >> Topic: '{message.topic}', Qos: '{message.qos}', Payload: '{payload}'"
+    
+#     # Log 
+#     log_msg(LOGGING_FILE, string)
+#     log_msg(CSV_FILE, f', \"{message.topic}\", \"{payload}\"')
+
+#     # Process / Send to DB
+#     # process_msg(topic=message.topic, message=payload)
+#     topic=message.topic
+#     message=payload
+#      # process_msg(topic=message.topic, message=payload)
+    
+#     try:
+#         # Load JSON
+#         jdict = json.loads(message)
+        
+#         topic = topic.split("/")
+#         if len(topic) == 1 and topic[0] == "test" and len(jdict) == 3:         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
+#             if 'nodeid' in jdict and 'event' in jdict and 'uuid' in jdict:     # Ensure this is the right message
+#                 nodeid = jdict['nodeid']    # int
+#                 event  = jdict['event']     # int
+#                 uuid   = jdict['uuid']      # str
+
+#                 if nodeid == NODEID_MOTION: action_motion(event=event)
+#                 if nodeid == NODEID_DOOR: action_door(event=event)
+
+#     except Exception as e:
+#         msg = f"PROCESS MESSAGE FAILURE >> Exception: '{str(e)}, Msg: {message}'"
+#         log_msg(LOGGING_FILE, msg)
 def on_message(client, userdata, message):
     payload = message.payload.decode('utf-8')
     string = 'ON MESSAGE'.ljust(25) + f" >> Topic: '{message.topic}', Qos: '{message.qos}', Payload: '{payload}'"
     
     # Log 
-    log_msg(LOGGING_FILE, string, verbose=False)
-    log_msg(CSV_FILE, f', \"{message.topic}\", \"{payload}\"', verbose=False)
+    log_msg(LOGGING_FILE, string)
+    
+    # Log to csv
+    csv_topic = message.topic.replace("\"","\"\"")
+    csv_payload = payload.replace("\"", "\"\"")
+    log_msg(CSV_FILE, f', \"{csv_topic}\", \"{csv_payload}\"')
 
     # Process / Send to DB
-    # process_msg(topic=message.topic, message=payload)
-    topic=message.topic
-    message=payload
-    
-    try:
-        # Load JSON
-        jdict = json.loads(message)
-        
-        topic = topic.split("/")
-        if len(topic) == 1 and topic[0] == "test" and len(jdict) == 3:         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
-            if 'nodeid' in jdict and 'event' in jdict and 'uuid' in jdict:     # Ensure this is the right message
-                nodeid = jdict['nodeid']    # int
-                event  = jdict['event']     # int
-                uuid   = jdict['uuid']      # str
-
-                if nodeid == NODEID_MOTION: action_motion(event=event)
-                if nodeid == NODEID_DOOR: action_door(event=event)
-
-    except Exception as e:
-        msg = f"PROCESS MESSAGE FAILURE >> Exception: '{str(e)}, Msg: {message}'"
-        log_msg(LOGGING_FILE, msg)
-
+    process_msg(topic=message.topic, message=payload)
 
 # Loop setup ====================================================================================================================
 try:
-    client = mqttClient.Client(CLIENT)               #create new instance
+    client = mqttClient.Client("acceptance_client")               #create new instance
     client.username_pw_set(USER, password=PASSWORD)    #set username and password
 
     # Attach callback functions

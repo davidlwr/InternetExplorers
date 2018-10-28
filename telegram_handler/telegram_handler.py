@@ -132,12 +132,10 @@ def check_shift_form(shifttime):
 	return patientIDList
 
 def shiftform(bot, update):
-	print("trig")
 	date = datetime.date.today()
 	time = datetime.datetime.strptime('1200','%H%M').time()
 	shifttime = datetime.datetime.combine(date, time)
 	patientIDList = check_shift_form(shifttime)
-	print("trig")
 	nameList = []
 	checkList = []
 	checkList.extend(range(1, 9))
@@ -146,11 +144,10 @@ def shiftform(bot, update):
 	for id in checkList:
 		patientName = resident_DAO.get_resident_name_by_resident_id(id)[0]['name']
 		nameList.append(patientName)
-	
 	if(len(nameList) > 0):
-		text = "\n".join(nameList)
-		bot.send_message(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text)
-	
+			text = "\n".join(nameList)
+			link = "http://13.228.71.248/eosforms"
+			bot.send_message(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text + "\n\nClick here to access the shift form:\n" + link)
 	
 def help(bot, update):
 	update.message.reply_text("Use /start to test this bot.")
