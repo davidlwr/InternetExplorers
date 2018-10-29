@@ -20,7 +20,7 @@ def notifications():
 
     type_texts = []
     try:
-        cursor.execute(f"SELECT * FROM stbern.alert_log WHERE `alert_text` LIKE '{SENSOR_SUBSTR}%' AND `response_status` = 'Yes'")
+        cursor.execute(f"SELECT * FROM stbern.alert_log WHERE `alert_text` LIKE '{SENSOR_SUBSTR}%' AND `response_status` <> 'Yes'")
         result = cursor.fetchall()
         if result != None:
             for r in result:
