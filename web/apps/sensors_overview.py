@@ -102,9 +102,9 @@ def showOverviewSensors():
 
 					# Settle battery status string
 					batt_status = ""
-					if type == "bed sensor":  batt_status = "Plugged"
-					elif batt_level == '-': batt_status = "Unplugged"	# Should not ever happen. But just in case
-					else: batt_status = batt_level
+					if type == "bed sensor": batt_status = "Plugged"
+					elif batt_level == '-':  batt_status = "Unplugged"	# Should not ever happen. But just in case
+					else:                    batt_status = batt_level
 					
 					info = (uuid, type, location, batt_status, status)
 					infoList.append(info)

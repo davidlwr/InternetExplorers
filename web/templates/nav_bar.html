@@ -62,11 +62,13 @@
 				if (types[i] == "1") {  // Battery
 					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div><em class=\"fa fa-battery-quarter\"></em><b>" + s_headers[i] + "</b>" +
 																			"<div>" + s_locations[i] + "</div><div>" + s_types[i] + "</div>" +
-																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>")
+																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>" + 
+																			"<li class=\"divider\"></li>")
 				} else {				// Sensor Down
 					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div style=\"white-space:normal;\"><em class=\"fa fa-feed\"></em><b>" + s_headers[i] + "</b>" +
 																			"<div>" + s_locations[i] + "</div><div>" + s_types[i] + "</div>" +
-																			"</div></a></li>")
+																			"</div></a></li>" + 
+																			"<li class=\"divider\"></li>")
 				}
 			}
 		}
