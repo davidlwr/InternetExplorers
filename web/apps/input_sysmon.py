@@ -75,6 +75,9 @@ def remove_disconnected_periods(current_data, dc_list=None):
         dc_list = [d[0] for d in dc_list]
 
     # filter out sysmon data for what is relevant in the current data first (by time and location)
+    # print(current_data.head())
+    if len(current_data) == 0:
+        return current_data 
     current_user = current_data['node_id'].iloc[0]
     if not dc_list:
         sysmon_relevant_data = sysmon_disconnected_data[(sysmon_disconnected_data['node_id'] == current_user)
