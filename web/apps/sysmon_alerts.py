@@ -20,7 +20,7 @@ def notifications():
 
     type_texts = []
     try:
-        cursor.execute('SELECT * FROM stbern.alert_log')
+        cursor.execute(f"SELECT * FROM stbern.alert_log WHERE `alert_text` LIKE '{SENSOR_SUBSTR}%' AND `response_status` <> 'Yes'")
         result = cursor.fetchall()
         if result != None:
             for r in result:
@@ -28,23 +28,36 @@ def notifications():
                 datetime  = r['date']
                  
                 # Categorize alert types
+                # # Slice text because of lack of standard msg len and theres tabs in here for some reason idk
                 if alerttext.startswith(WARNING_SUBSTR):        # Sensor down
-                    type_texts.append([TYPE_SENSOR, alerttext[len(SENSOR_SUBSTR):], datetime])
+                    plain_txt  = alerttext[len(SENSOR_SUBSTR):]     
+                    s_header   = plain_txt[0:9]                     
+                    s_location = plain_txt[10:(plain_txt.index('Type: ')-1)]
+                    s_type     = plain_txt[plain_txt.index('Type: '):]
+                    type_texts.append([TYPE_SENSOR, s_header, s_location, s_type, datetime])
                 else:                                           # Low battery
-                    type_texts.append([TYPE_BATT, alerttext[len(SENSOR_SUBSTR):], datetime])
+                    plain_txt  = alerttext[len(SENSOR_SUBSTR):]
+                    s_header   = plain_txt[0:13]
+                    s_location = plain_txt[14:(plain_txt.index('Type: ')-1)]
+                    s_type     = plain_txt[plain_txt.index('Type: '):]
+                    type_texts.append([TYPE_BATT, s_header, s_location, s_type, datetime])
 
     except:     # Fail safely
         return jsonify([{'type': type,
-                        'text': text,
+                        's_header': s_header,
+                        's_location': s_location,
+                        's_type': s_type,
                         'date': date
-                        } for type,text,date in type_texts])
+                        } for type,s_header,s_location,s_type,date in type_texts])
 
     finally: factory.close_all(cursor=cursor, connection=connection)
 
     return jsonify([{'type': type,
-                     'text': text,
-                     'date': date
-                    } for type,text,date in type_texts])
+                    's_header': s_header,
+                    's_location': s_location,
+                    's_type': s_type,
+                    'date': date
+                    } for type,s_header,s_location,s_type,date in type_texts])
 
 
 # DONT USE THIS. WRONG. but idk if pat is using this so I didnt remove it.

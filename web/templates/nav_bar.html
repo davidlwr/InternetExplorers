@@ -56,15 +56,17 @@
 	</script>
 
 	<script>
-		function set_message_dropdown(types, texts, dates) {
+		function set_message_dropdown(types, s_headers, s_locations, s_types, dates) {
 			document.getElementById("sysmon_alerts").innerHTML = ""
 			for (var i = 0; i < types.length; i++) {
 				if (types[i] == "1") {  // Battery
-					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div><em class=\"fa fa-battery-quarter\"></em>" + texts[i] +
+					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div><em class=\"fa fa-battery-quarter\"></em><b>" + s_headers[i] + "</b>" +
+																			"<div>" + s_locations[i] + "</div><div>" + s_types[i] + "</div>" +
 																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>")
 				} else {				// Sensor Down
-					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div style=\"white-space:normal;\"><em class=\"fa fa-feed\"></em>" + texts[i] + "</div></a></li>") // +
-																			// "<span class=\"pull-right text-muted small\">" + dates[i] + "</span>")
+					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div style=\"white-space:normal;\"><em class=\"fa fa-feed\"></em><b>" + s_headers[i] + "</b>" +
+																			"<div>" + s_locations[i] + "</div><div>" + s_types[i] + "</div>" +
+																			"</div></a></li>")
 				}
 			}
 		}
@@ -74,15 +76,19 @@
 				$.ajax("{{ url_for('notifications') }}").done(
 					function(type_txts) {
 						set_message_count(type_txts.length)
-						var types = new Array();
-						var texts = new Array();
-						var dates = new Array();
+						var types       = new Array();
+						var s_headers   = new Array();
+						var s_locations = new Array();
+						var s_types     = new Array();
+						var dates       = new Array();
 						for (var i = 0; i < type_txts.length; i++) {
 							types.push(type_txts[i].type)
-							texts.push(type_txts[i].text)
+							s_headers.push(type_txts[i].s_header)
+							s_locations.push(type_txts[i].s_location)
+							s_types.push(type_txts[i].s_type)
 							dates.push(type_txts[i].date) 
 						}
-						set_message_dropdown(types, texts, dates);
+						set_message_dropdown(types, s_headers, s_locations, s_types, dates);
 					}
 				);
 			}

@@ -109,7 +109,7 @@ def get_list_of_residents(filter_active=True, location_filter=None):
         if results:
             return results
         else:
-            return None
+            return []       # Return empty list to fail safely
     except:
         raise
     finally:

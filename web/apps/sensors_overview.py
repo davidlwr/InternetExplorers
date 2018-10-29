@@ -17,14 +17,14 @@ if __name__ == '__main__':
 	sys.path.append(".")
 	import input_data
 	from app import app, server
-	from DAOs import resident_DAO, sensor_hist_DAO
+	from DAOs import resident_DAO, sensor_DAO
 	from sensor_mgmt.sensor_mgmt import Sensor_mgmt, JuvoAPI
 	from DAOs.sensor_DAO import sensor_DAO
 	from Entities import resident
 else:
 	from apps import input_data
 	from app import app, server
-	from DAOs import resident_DAO, sensor_hist_DAO
+	from DAOs import resident_DAO, sensor_DAO
 	from sensor_mgmt.sensor_mgmt import Sensor_mgmt, JuvoAPI
 	from DAOs.sensor_DAO import sensor_DAO
 	from Entities import resident
@@ -40,76 +40,83 @@ def showOverviewSensors():
 			List of Sleep Alerts (WIP), Overall Alert Level ('alert_highest')
 	NOTE: jinja templates do not allow for import of python modules, so all calculation will be done here
 	'''
-	 # RETURN STATUS CODES
-	INVALID_SENSOR = -1
-	OK             = 0     # Can be OK and LOW_BATT at the same time
-	DISCONNECTED   = 1
-	LOW_BATT       = 2
-	CHECK_WARN     = 3    # Potentially down
-   
-	
-	residents_raw = resident_DAO.get_list_of_residents()
-	
-	
 
+   	# Get list of all Active residents
+	residents_raw = resident_DAO.get_list_of_residents(filter_active=True)   
+
+	# Get list of sensor ownerships
+	ownership_raw = sensor_DAO.get_ownership_hist()
+
+	# Get list of sensor statuss
+	senstatus_raw = Sensor_mgmt.get_all_sensor_status_v2(retBatteryLevel=True)
+
+	# Get list of sensors
+	sensors_raw   = sensor_DAO.get_sensors()
+
+	# Loop all residents and compile details into lists
 	residents = []
 	noSensorResidents = []
-	date_in_use = datetime.datetime.now() # datetime.datetime(2018, 4, 19, 23, 34, 12) # TODO: change to current system time once live data is available
-	juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 22, 34, 12) # TODO: change to current system time once live data is available
 	for resident in residents_raw:
-		r = {}
-		r['name'] = resident['name']
-		r['node_id'] = resident['node_id']
-		residentid = resident_DAO.get_resident_id_by_resident_name(resident['name'])
-		uuids = sensor_hist_DAO.get_uuids_by_id(residentid['resident_id']) #listofuuids
-		if len(uuids)==0: 
-			noSensorResidents.append(r)
+		r = {'name': resident['name']}
+
+		# Get list of uuid's owned by curr resident
+		uuids = []
+		for uuid,periods in ownership_raw.items():
+			for rid,sdt,edt in periods:
+				if edt == None and rid == resident['resident_id']:
+					uuids.append(uuid)
+					break
+
+		# Split residents into noSensor and sensor?
+		if len(uuids)==0: noSensorResidents.append(r)
 		else:
 			infoList = []
-			downCount = 0
-			upCount = 0
-			totalCount = 0
+			upCount    = 0
+			downCount  = 0
+			# Loop each uuid
 			for uuid in uuids:
-				
-				id = uuid['uuid']
-				_status = Sensor_mgmt.get_sensor_status_v2(id, True)
-				statusNumList = _status[0]
-				batterystatusList = _status[1]
-				statusNum = statusNumList[0]
-				batterystatus = '-'
-				
-				if(len(batterystatusList) > 0):
-					batterystatus = batterystatusList[0]
-				status = ""
-				if statusNum == 0: 
-					status = "Up"
-					upCount += 1
-					totalCount +=1
-				else: 
-					if statusNum == 3:
-						status = "Warning"
-					else:
-						status = "Down"
-					downCount += 1
-					totalCount +=1
-				loc = sensor_DAO.get_location_by_node_id(id)
-				location = loc[0]['location']
-				rawtype = sensor_DAO.get_type_by_node_id(id)
-				type = rawtype[0]['type']
-				if status == "Up" and batterystatus == '-' : 
-					if location == 'bed':
-						batterystatus = "Plugged"
-					else: 
-						batterystatus = 100
-				elif status == "Down" and batterystatus == '-':
-					batterystatus = "Unplugged"
-				info = (id,type, location, batterystatus, status)
-				infoList.append(info)
-			r['infoList'] = infoList
-			r['downCount'] = downCount
-			r['upCount'] = upCount
-			r['totalCount'] = totalCount
-			residents.append(r)
+
+				# Find sensor details
+				type     = ""
+				location = ""
+				for s in [s for s in sensors_raw if s.uuid == uuid]:
+					type     = s.type
+					location = s.location
+					break
+
+				# Find Sensor status 
+				for uuid,statuses,battery in [s for s in senstatus_raw if s[0] == uuid]:
+
+					batt_level  = battery[0] if len(battery) == 1 else '-' 
+					statusNum   = statuses[0]
+					batt_status = statuses[1] if len(statuses) == 2 else None
+
+					# Settle status string
+					status = ""
+					if statusNum == Sensor_mgmt.OK:           status = "Up"
+					elif statusNum == Sensor_mgmt.CHECK_WARN: status = "Warning"
+					if batt_status == Sensor_mgmt.LOW_BATT:   status = "Low batt"
+
+					if status == "Up" or status == "Low batt": upCount += 1
+					else: downCount += 1
+
+					# Settle battery status string
+					batt_status = ""
+					if type == "bed sensor":  batt_status = "Plugged"
+					elif batt_level == '-': batt_status = "Unplugged"	# Should not ever happen. But just in case
+					else: batt_status = batt_level
+					
+					info = (uuid, type, location, batt_status, status)
+					infoList.append(info)
+					break
+
+		# After finishing up all residents, compile
+		r['infoList']   = infoList
+		r['downCount']  = downCount
+		r['upCount']    = upCount
+		r['totalCount'] = upCount + downCount
+		residents.append(r)
+
 	return render_template('sensor_mgmt.html', residents = residents, noSensorResidents = noSensorResidents, downCount = downCount)
 
 
