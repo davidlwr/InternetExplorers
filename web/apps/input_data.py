@@ -31,36 +31,6 @@ COMBINE_MOTIONS_THRESHOLD = 4  # in minutes
 # total time should be about the time the resident would spend in the toilet if s/he is staying inside for extended period of time
 
 class input_data(object):
-    @staticmethod
-    def updateInputData():
-        input_data.input_raw_data = sensor_log_DAO.get_all_logs()
-        #convert datetime format
-        input_data.input_raw_data['recieved_timestamp'] = pd.to_datetime(input_data.input_raw_data['recieved_timestamp'], format='%Y-%m-%dT%H:%M:%S')
-        input_data.input_raw_data.loc[(input_data.input_raw_data.event == 0)
-        & (input_data.input_raw_data.uuid.str.contains("-m-")), 'recieved_timestamp'] += datetime.timedelta(minutes=-MOTION_TIMEOUT_MINS)
-        # print(input_raw_data.head())
-
-        # convert events to 1 and 0 instead of 255
-        input_data.input_raw_data.loc[:, 'event'].replace(255, 1, inplace=True)
-
-        # common variables
-        input_data.input_raw_max_date = input_data.input_raw_data['recieved_timestamp'].max()
-        input_data.input_raw_min_date = input_data.input_raw_data['recieved_timestamp'].min()
-        ### Assign resident IDs to the sensor readings
-        ownership_history = sensor_DAO.get_ownership_hist()
-        input_data.input_raw_data['resident_id'] = int()
-
-        uuid_list = input_data.input_raw_data['uuid'].unique().tolist()
-        for u in uuid_list:
-            ownership_periods = ownership_history[u]
-            for p in ownership_periods: # (resident_id, start_date, end_date)
-                # filter DataFrame
-                input_data.input_raw_data['resident_id'].loc[(input_data.input_raw_data['uuid'] == u)
-                        & (input_data.input_raw_data['recieved_timestamp'] > p[1])
-                        & (p[2] == None or input_data.input_raw_data['recieved_timestamp'] < p[2])] = p[0]
-        ###
-        input_data.input_raw_data = input_data.input_raw_data[input_data.input_raw_data['resident_id'] != 0]
-        input_sysmon.update_input_sysmon()
 
     # initialize empty df
     input_raw_data = pd.DataFrame()
@@ -124,6 +94,43 @@ class input_data(object):
                                         #+is really that high, nocturia index is much likely to be that high
                                         # can be customised based on different patients and estimated nocturnal bladder capacity
 
+
+
+    @staticmethod
+    def updateInputData():
+        # sdt = datetime.datetime.now()
+        input_data.input_raw_data = sensor_log_DAO.get_all_logs()
+        #convert datetime format
+        input_data.input_raw_data['recieved_timestamp'] = pd.to_datetime(input_data.input_raw_data['recieved_timestamp'], format='%Y-%m-%dT%H:%M:%S')
+        input_data.input_raw_data.loc[(input_data.input_raw_data.event == 0)
+        & (input_data.input_raw_data.uuid.str.contains("-m-")), 'recieved_timestamp'] += datetime.timedelta(minutes=-MOTION_TIMEOUT_MINS)
+        # print(input_raw_data.head())
+
+        # convert events to 1 and 0 instead of 255
+        input_data.input_raw_data.loc[:, 'event'].replace(255, 1, inplace=True)
+
+        # common variables
+        input_data.input_raw_max_date = input_data.input_raw_data['recieved_timestamp'].max()
+        input_data.input_raw_min_date = input_data.input_raw_data['recieved_timestamp'].min()
+        ### Assign resident IDs to the sensor readings
+        ownership_history = sensor_DAO.get_ownership_hist()
+        input_data.input_raw_data['resident_id'] = int()
+
+        uuid_list = input_data.input_raw_data['uuid'].unique().tolist()
+        for u in uuid_list:
+            ownership_periods = ownership_history[u]
+            for p in ownership_periods: # (resident_id, start_date, end_date)
+                # filter DataFrame
+                input_data.input_raw_data['resident_id'].loc[(input_data.input_raw_data['uuid'] == u)
+                        & (input_data.input_raw_data['recieved_timestamp'] > p[1])
+                        & (p[2] == None or input_data.input_raw_data['recieved_timestamp'] < p[2])] = p[0]
+        ###
+        input_data.input_raw_data = input_data.input_raw_data[input_data.input_raw_data['resident_id'] != 0]
+        input_sysmon.update_input_sysmon()
+
+        # print(f"\t time taken for update = {(sdt - datetime.datetime.now()).total_seconds()}")
+
+
     @staticmethod
     def get_para_ratio_threshold(resident_id=None, current_sys_time=None):
         if not resident_id:
@@ -131,6 +138,7 @@ class input_data(object):
         else:
             # get past three weeks' average percentage
             return input_data.get_percentage_of_night_toilet_usage(resident_id, current_sys_time, average_over='month')[0]
+
 
     # replace date to be date only
     @staticmethod
@@ -590,7 +598,9 @@ class input_data(object):
         if current_sys_time is None: # used in testing - pass in a different time for simulation
             current_sys_time = datetime.datetime.now()
 
-        juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
+            juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
+        else:
+            juvo_date_in_use = current_sys_time
 
         current_sys_date = current_sys_time.date()
         three_weeks_ago = current_sys_date + datetime.timedelta(days=-21)
@@ -624,16 +634,18 @@ class input_data(object):
             tuple_list = japi.get_qos_by_day(target, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
             if tuple_list:
                 qos_df = pd.DataFrame(list(tuple_list), columns=['date_timestamp', 'qos'])
+                # exclude 0 for mean calculation
+                temp_series = qos_df['qos'].replace(0, np.NaN)
+                qos_mean = temp_series.mean()
+                # print(qos_mean)
+                qos_threshold = 50
+                if qos_mean < qos_threshold:
+                    alerts_of_interest.append(f"Quality of sleep lower than {qos_threshold}%")
             else:
-                print('tuple list returned None with non-zero target: ' + str(target))
+                # print('tuple list returned None with non-zero target: ' + str(target))
+                qos_df['qos'] = []
+                qos_df['date_timestamp'] = []
 
-            # exclude 0 for mean calculation
-            temp_series = qos_df['qos'].replace(0, np.NaN)
-            qos_mean = temp_series.mean()
-            # print(qos_mean)
-            qos_threshold = 50
-            if qos_mean < qos_threshold:
-                alerts_of_interest.append(f"Quality of sleep lower than {qos_threshold}%")
         else:
             # print('resident has no vital signs info from juvo')
             qos_df['qos'] = []
@@ -827,7 +839,7 @@ class input_data(object):
         vitals_dict = vitals_json['data']['epoch_metrics']
         vitals_juvo_df = pd.DataFrame(vitals_dict)
         if vitals_juvo_df.empty:
-            print("empty data returned from juvo")
+            # print("empty data returned from juvo")
             return pd.DataFrame()
         # print(vitals_juvo_df.info())
 
@@ -897,7 +909,7 @@ class input_data(object):
         # print(vitals_juvo_df.info())
 
         if vitals_juvo_df.empty:
-            print("empty data returned from juvo")
+            # print("empty data returned from juvo")
             return pd.DataFrame()
 
         heart_rate_df = vitals_juvo_df[['vital_id', 'sensor_status', 'heart_rate', 'high_movement_rejection_heartbeat', 'local_start_time', 'local_end_time']]

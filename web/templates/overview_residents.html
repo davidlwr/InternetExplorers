@@ -113,7 +113,7 @@ tr:hover { background: WhiteSmoke; }
 			<div class="col-xs-6 col-md-3">
 				<div class="panel panel-red">
 					<div class="panel-heading dark-overlay text-center">
-						Sensors Down
+						Sensor Issues
 					</div>
 					<div class="panel-body" style="height:90px">
                         <div class="col-xs-3">
@@ -190,7 +190,7 @@ tr:hover { background: WhiteSmoke; }
 								<span data-toggle="tooltip-text" data-html="true" data-placement="bottom" title="Notes:
                                 {% for tooltip_line in resident['sleep_tooltip'] %}{{ loop.index }}. {{ tooltip_line }}
                                 {% endfor %}">
-                                        <i class="material-icons" style="font-size:15px; vertical-align:sup;color:{{ getTextColorFromAlertLength(resident['toilet_alerts']|length )}}">info</i>
+                                        <i class="material-icons" style="font-size:15px; vertical-align:sup;color:{{ getTextColorFromAlertLength(resident['sleep_alerts']|length )}}">info</i>
                                     </span>{{ getFooterFromAlertLength(resident['sleep_alerts']|length )}}
                                 </td>
                                 <td width="20%" style="padding:14px" class="not-in-mobile"><span data-toggle="tooltip-text" data-html="true" data-placement="bottom" title="Notes:

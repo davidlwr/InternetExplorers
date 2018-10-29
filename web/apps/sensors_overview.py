@@ -72,8 +72,9 @@ def showOverviewSensors():
 			for uuid in uuids:
 				
 				id = uuid['uuid']
-				statusNumList = Sensor_mgmt.get_sensor_status_v2(id, True)[0]
-				batterystatusList = Sensor_mgmt.get_sensor_status_v2(id, True)[1]
+				_status = Sensor_mgmt.get_sensor_status_v2(id, True)
+				statusNumList = _status[0]
+				batterystatusList = _status[1]
 				statusNum = statusNumList[0]
 				batterystatus = '-'
 				
@@ -85,7 +86,10 @@ def showOverviewSensors():
 					upCount += 1
 					totalCount +=1
 				else: 
-					status = "Down"
+					if statusNum == 3:
+						status = "Warning"
+					else:
+						status = "Down"
 					downCount += 1
 					totalCount +=1
 				loc = sensor_DAO.get_location_by_node_id(id)

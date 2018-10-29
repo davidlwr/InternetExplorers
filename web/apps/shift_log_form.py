@@ -1,12 +1,13 @@
 from flask import render_template, Flask, request, flash, Markup, redirect, url_for
 from flask_wtf import Form
-from wtforms import StringField, PasswordField, SubmitField, RadioField, FloatField, SelectField, IntegerField, HiddenField
+from wtforms import StringField, PasswordField, SubmitField, RadioField, FloatField, SelectField, IntegerField, \
+    HiddenField
 from wtforms.fields.html5 import DateField
 from wtforms_sqlalchemy.fields import QuerySelectField
 from flask_sqlalchemy import SQLAlchemy
 from wtforms.validators import InputRequired
 import flask_login
-from datetime import datetime
+from datetime import date, datetime, time, timedelta
 
 from app import app, server, db
 from DAOs.shift_log_DAO import shift_log_DAO
@@ -28,20 +29,26 @@ def resident_query():
 
 
 class ShiftLogForm(Form):
-    resident = QuerySelectField(query_factory=resident_query, allow_blank=False, get_label='name')
-    date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')], default=datetime.today)
+    resident = SelectField('Name', coerce=int)
+
     timeNow = datetime.time(datetime.now())
-    today7pm = timeNow.replace(hour=19, minute=0, second=0, microsecond=0)
+    today9pm = timeNow.replace(hour=21, minute=0, second=0, microsecond=0)
+    today10am = timeNow.replace(hour=10, minute=0, second=0, microsecond=0)
     dayNightSelector = 2
-    if timeNow < today7pm:
+    default_date = date.today()
+    if today9pm > timeNow > today10am:
         dayNightSelector = 1
 
+    if timeNow < today10am:
+        default_date = date.today() - timedelta(1)
+
+    date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')], default=default_date)
     time = SelectField('Shift', choices=[(1, 'Day'), (2, 'Night')], coerce=int, default=dayNightSelector)
     falls = IntegerField('Number of Slips/Falls of Resident', default=0)
     near_falls = IntegerField('Number of Near Falls', default=0)
     consumption = SelectField('Food consumption',
-                             choices=[(1, 'Insufficient'), (2, 'Moderate'),
-                                      (3, 'Excessive')], coerce=int, default=2)
+                              choices=[(1, 'Insufficient'), (2, 'Moderate'),
+                                       (3, 'Excessive')], coerce=int, default=2)
     toilet_visits = HiddenField()
     temperature = FloatField('Temperature (°C) ', default=36.9)
     sbp = FloatField('Systolic blood pressure (SBP) mmHg ')
@@ -55,12 +62,17 @@ class ShiftLogForm(Form):
 @flask_login.login_required
 def showForms():
     form = ShiftLogForm()
+    shiftLogDAO = shift_log_DAO()
+    resident_list = shiftLogDAO.get_incompleted_residents()
+    form.resident.choices = [(resident_map['resident_id'], resident_map['name']) for resident_map in resident_list]
+    resident_dict = {resident_map['resident_id']: resident_map['name'] for resident_map in resident_list}
     if request.method == 'POST':
         if form.validate_on_submit():
             # handle submitted data here
             # process form here
-            submitted_name = form.resident.data.resident_id
-            name_to_show = form.resident.data.name
+            submitted_name = form.resident.data
+            # name_to_show = "testing"
+            name_to_show = resident_dict[submitted_name]
             submitted_date = form.date.data
             submitted_time = form.time.data
             submitted_falls = form.falls.data
@@ -72,7 +84,7 @@ def showForms():
             submitted_dbp = form.dbp.data
             submitted_pulse = form.pulse.data
 
-            shiftLogDAO = shift_log_DAO()
+            # shiftLogDAO = shift_log_DAO()
 
             if submitted_time == 1:
                 day_night = "Day"
@@ -83,7 +95,8 @@ def showForms():
                                  submitted_consumption, submitted_toilet_visits, submitted_temperature,
                                  submitted_sbp, submitted_dbp, submitted_pulse)
 
-            response = 'Shift log for ' + submitted_date.strftime('%Y-%m-%d') + '(' + day_night + ') has already been recorded. Please enter another date.'
+            response = 'Shift log for ' + submitted_date.strftime(
+                '%Y-%m-%d') + '(' + day_night + ') for ' + name_to_show + ' has already been recorded. Please enter another date.'
             try:
                 shiftLogDAO.insert_shift_log(shiftLog)
             except:

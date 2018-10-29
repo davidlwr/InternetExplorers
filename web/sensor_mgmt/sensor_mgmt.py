@@ -25,7 +25,7 @@ class Sensor_mgmt(object):
 
     # SETTINGS
     batt_thresh  = 10     # percent
-    motion_thresh = 1.2   # hours
+    motion_thresh = 3.5   # hours
     juvo_thresh  = 50     # minutes >> Environment Stats >> Difference between reading and API availability
 
 
@@ -90,7 +90,7 @@ class Sensor_mgmt(object):
 
                 # Check 1: hourly battery update. aeotec multisensor 6 should send battery level sysmon updates on the hour
                 # This may just be Boon Thais' configs
-                if batt_update_period > (60 * 60 * 1.2): ret_codes.append(cls.CHECK_WARN)
+                if batt_update_period > (60 * 60 * cls.motion_thresh): ret_codes.append(cls.CHECK_WARN)
                 else: ret_codes.append(cls.OK)
 
 
@@ -267,13 +267,14 @@ class Sensor_mgmt(object):
         '''
         # Expand period by 2 hours, 1 before start_dt and 1 hour after end_dt
         # This is to gather the sysmon battery updates
-        start_dt_buff = start_dt - timedelta(hours=1.2)
-        end_dt_buff   = end_dt   + timedelta(hours=1.2)
+        start_dt_buff = start_dt - timedelta(hours=cls.motion_thresh)
+        end_dt_buff   = end_dt   + timedelta(hours=cls.motion_thresh)
 
         # get all sysmon battery readings within start_dt and end_dt
         records = sysmon_log_DAO.get_logs(uuid=uuid, key=Sysmon_Log.key_battery, start_dt=start_dt_buff, end_dt=end_dt_buff, descDT=False, limit=0)
         # CHECK 1: If no records found, sensor is confirmed down during the period, but just
         if records == None: return [(start_dt, end_dt)]
+        if len(records) == 0: return [(start_dt, end_dt)]
 
         # CHECK 2: sysmon battery updates >> hourly sysmon battery updates are ASSURED
         down_periods = []
@@ -294,7 +295,7 @@ class Sensor_mgmt(object):
                 continue
 
             # Nothing wrong >> update was within 1 hour + buffer
-            if (curr_ts - prev_ts) / timedelta(minutes=1) <= (60 * 1.2):
+            if (curr_ts - prev_ts) / timedelta(minutes=1) <= (60 * cls.motion_thresh):
                 prev_ts = curr_ts
                 continue
 
@@ -329,11 +330,11 @@ class Sensor_mgmt(object):
         # Get down periods
         now = datetime.datetime.now()
         down_periods = cls.get_down_periods_motion(uuid=uuid, start_dt=now, end_dt=now)
-
         ret_codes = []
         down = False
         for p in down_periods:          # Check if current time is within a down period
-            if p[0] < now and now < p[1]:
+            # print(p)
+            if p[0] <= now and now <= p[1]:
                 down = True
                 break
         ret_codes.append(cls.CHECK_WARN if down else cls.OK)
@@ -441,7 +442,7 @@ class Sensor_mgmt(object):
         Returns status of Juvo Bed sensor based on last received environment statistic
         if last received was > threshold mins, then return down.
 
-        target (int) 
+        target (int)
         '''
         # Get all environ readings for past 1 hour
         end_dt   = datetime.datetime.now()      # Also the current time
@@ -450,8 +451,8 @@ class Sensor_mgmt(object):
 
         ret_codes = []
         if readings == None: ret_codes.append(cls.CHECK_WARN)        # No readings, therefore down
-        
-        else:   
+        elif len(readings['data']['stats']) == 0: ret_codes.append(cls.CHECK_WARN)
+        else:
             # Compare last reading with current time, against threshold
             logs = readings['data']['stats']
             if(len(logs) > 0):
@@ -483,12 +484,19 @@ class Sensor_mgmt(object):
         '''
 
         # Split into periods whereby the 10th would refer to 12pm 9th, to 12pm 10th
-        start_date = start_dt.replace(hour=0, minute=0, second=0)
-        end_date   = end_dt.replace(hour=0, minute=0, second=0)  + timedelta(days=1)     # Expand by 1 day, in case start and end are the same day
+        start_date = start_dt.replace(hour=0, minute=0, second=0) - timedelta(days=1) # Expand by 1 day, in case start and end are the same day
+        end_date   = end_dt.replace(hour=0, minute=0, second=0)
 
         # Get all sensor logs of this uuid between start and end dates
         logs = sensor_log_DAO.get_logs(uuid=uuid, start_datetime=start_date, end_datetime=end_date)
         logs.sort(key = lambda x: x.recieved_timestamp) # ASC
+
+        # Treat bathroom and main door differently
+        location = sensor_DAO.get_sensors(uuid=uuid)[0].location
+        if location == "toilet":
+            if logs == None or len(logs) == 0: # No readings since, send warning
+                return [[start_date.replace(hour=0, minute=0), end_date.replace(hour=23, minute=59)]]
+            else: return []
 
         # if no records, consider down
         if len(logs) == 0:
@@ -532,21 +540,25 @@ class Sensor_mgmt(object):
                     juvo_uuid = k
                     break
 
+            if juvo_uuid == None: # This resident didnt own a bed sensor this day
+                down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
+
             if juvo_uuid != None:   # Attempt to find if owner slept this period
                 target = None
                 for s in sensor_DAO.get_sensors(uuid=juvo_uuid):
                     target = s.juvo_target
                     break
 
-                if target == None: continue     # This resident didnt own a bed sensor this day
+                if target == None:  # This resident didnt own a bed sensor this day
+                    down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
 
                 # Check if sleep was detected
                 juvo_offset_dt = missing - timedelta(days=1)    # i.e. Sleep for 10th = 10th 12pm to 11th 12pm
                 records = JuvoAPI.get_target_sleep_summaries(target, juvo_offset_dt, juvo_offset_dt)['sleep_summaries']
                 for r in records:
                     total_sleep = r['light'] + r['deep'] + r['awake']
-                    if total_sleep > 0:     # Sleep detected, no door detected. assume door is down
-                        down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=24, minute=0)])
+                    if total_sleep < 0:     # Sleep detected, no door detected. assume door is down
+                        down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
         return down_periods
 
 
@@ -565,7 +577,8 @@ class Sensor_mgmt(object):
         ret_codes = []
         down = False
         for p in down_periods:          # Check if current time is within a down period
-            if p[0] < now and now < p[1]:
+            # print(p)
+            if p[0] <= now and now <= p[1]:
                 down = True
                 break
         ret_codes.append(cls.CHECK_WARN if down else cls.OK)

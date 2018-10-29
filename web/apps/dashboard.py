@@ -1,23 +1,28 @@
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, Event
 import datetime
+from datetime import timedelta
 import pandas as pd
 import numpy as np
 
 # internal imports
 from app import app
-from apps import input_data, input_shiftlogs
+from apps import input_data
+from apps.input_shiftlogs import input_shiftlogs
 from DAOs import resident_DAO
 from DAOs.sensor_DAO import sensor_DAO
 from sensor_mgmt import JuvoAPI, sensor_mgmt
 
 locationMap = input_data.input_data.get_location_options()
+data_update_interval  = 10 * 1000
+graph_update_interval = 10 * 1000
 
 # define page layout
 # TODO: can return the bank plotly graph output after the exception so that the graph is still there
-
 app.layout = html.Div([
+    dcc.Interval(id='data-update', interval=data_update_interval),
+    html.P(id='data_update_placeholder', style={'dispaly':'none'}),
     # html.Nav([
     #     html.Div([
     #         html.Button([
@@ -176,8 +181,10 @@ app.layout = html.Div([
                                 id='date_picker_toilet_numbers',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
                                 max_date_allowed=input_data.input_data.input_raw_max_date,
-                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -264,8 +271,10 @@ app.layout = html.Div([
                                 id='date_picker_visit_duration',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
                                 max_date_allowed=input_data.input_data.input_raw_max_date,
-                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -323,8 +332,10 @@ app.layout = html.Div([
                                 id='date_picker_logs',
                                 min_date_allowed=input_shiftlogs.input_raw_min_date,
                                 max_date_allowed=input_shiftlogs.input_raw_max_date,
-                                start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_shiftlogs.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -372,8 +383,10 @@ app.layout = html.Div([
                                 id='date_picker_vital_signs',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
                                 max_date_allowed=input_data.input_data.input_raw_max_date,
-                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -411,8 +424,10 @@ app.layout = html.Div([
                                 id='date_picker_qos',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
                                 max_date_allowed=input_data.input_data.input_raw_max_date,
-                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -456,8 +471,10 @@ app.layout = html.Div([
                                 id='date_picker',
                                 min_date_allowed=input_data.input_data.input_raw_min_date,
                                 max_date_allowed=input_data.input_data.input_raw_max_date,
-                                start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
-                                                                                 microsecond=0),
+                                # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
+                                #                                                  microsecond=0),
+                                start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                                                                               microsecond=0) - timedelta(days=60),
                                 # need to truncate the dates here
                                 end_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0),
@@ -494,12 +511,14 @@ app.layout = html.Div([
      Input(component_id='location_input', component_property='value'),
      Input('date_picker', 'start_date'),
      Input('date_picker', 'end_date'),
-     Input('group_checkbox_activity', 'values')])
+     Input('group_checkbox_activity', 'values')],
+    events=[Event('graph-update-01', 'interval')])
 def update_graph_01(input_resident, input_location, start_date, end_date, group_checkbox):
     '''
         Generates graph based on timestamps and whether the latest sensor reading is on or off
         Shaded area indicates detected movement
     '''
+    # print(f"Update Graph 01, IR:{input_resident} {type(input_resident)}, IL:{input_location} {type(input_location)}")
     try:
         # add one day to the entered end date as a workaround to allow one day picks (since entered dates are at time 00:00:00)
         temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
@@ -512,34 +531,45 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
         if input_location and input_resident:
             df = input_data.input_data.get_relevant_data(input_location, start_date, end_date, input_resident, grouped=group_checkbox)
         # df = input_data.input_raw_data
-        return dcc.Graph(id='firstplot',
-                         figure={
-                             'data': [{
-                                 'x': df['recieved_timestamp'],
-                                 'y': df['event'],
-                                 'type': 'line',
-                                 'name': input_location,
-                                 'line': dict(shape='hv'),
-                                 'fill': 'tozeroy'
-                             }],
-                             'layout': {
-                                 'paper_bgcolor': 'rgba(0,0,0,0)',
-                                 'plot_bgcolor': 'rgba(0,0,0,0)',
-                                 'title': 'Periods with motion detected',
-                                 'xaxis': {
-                                     'range': [start_date, end_date],
-                                     'title': 'Timestamps'
-                                 },
-                                 'yaxis': {
-                                     'title': 'Motion detected?'
-                                 }
-                             }
-                         },
-                         config={
-                            'editable': False,
-                            'displaylogo': False,
-                            'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
-                         })
+
+        ret_divs = []
+
+        if not (input_resident == None and input_location == None):     # Not initial load, load interval counter, begin auto refresh
+            # print("\t graph 01 shoving in interval")
+            ret_divs.append(dcc.Interval(id='graph-update-01',interval=graph_update_interval))
+
+        ret_divs.append(dcc.Graph(  id='firstplot',
+                                    figure={
+                                        'data': [{
+                                            'x': df['recieved_timestamp'],
+                                            'y': df['event'],
+                                            'type': 'line',
+                                            'name': input_location,
+                                            'line': dict(shape='hv'),
+                                            'fill': 'tozeroy'
+                                        }],
+                                        'layout': {
+                                            'paper_bgcolor': 'rgba(0,0,0,0)',
+                                            'plot_bgcolor': 'rgba(0,0,0,0)',
+                                            'title': 'Periods with motion detected',
+                                            'xaxis': {
+                                                'range': [start_date, end_date],
+                                                'title': 'Timestamps'
+                                            },
+                                            'yaxis': {
+                                                'title': 'Motion detected?',
+                                                'range': [0, 1]
+                                            }
+                                        }
+                                    },
+                                    config={
+                                        'editable': False,
+                                        'displaylogo': False,
+                                        'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
+                                    },
+                                    animate=True)
+                        )
+        return ret_divs
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
@@ -556,9 +586,11 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
      Input('ignore_checkbox_toilet_numbers', 'values'),
      Input('group_checkbox_toilet_numbers', 'values'),
      Input('seven_checkbox_toilet_numbers', 'values'),
-     Input('twentyone_checkbox_toilet_numbers', 'values')])
+     Input('twentyone_checkbox_toilet_numbers', 'values')],
+    events=[Event('graph-update-02', 'interval')])
 def update_graph_02(input_resident, start_date, end_date, filter_input, offset_checkbox, ignore_checkbox,
                     group_checkbox, seven_checkbox, twentyone_checkbox):
+    # print(f"Update Graph 02, IR:{input_resident} {type(input_resident)}, FI:{filter_input} {type(filter_input)}")
     try:
         temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         modified_date = temp_date + datetime.timedelta(days=1)
@@ -819,26 +851,34 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
                              'mode': 'lines+markers', 'name': r_name + ' 21D MA Night'})
 
-        return dcc.Graph(id='toilet_numbers_plot',
-                         figure={
-                             'data': draw_data,
-                             'layout': {
-                                 'paper_bgcolor': 'rgba(0,0,0,0)',
-                                 'plot_bgcolor': 'rgba(0,0,0,0)',
-                                 'title': 'Number of toilet visits',
-                                 'xaxis': {
-                                     'title': 'Date'
-                                 },
-                                 'yaxis': {
-                                     'title': 'Number'
-                                 }
-                             }
-                         },
-                         config={
-                            'editable': False,
-                            'displaylogo': False,
-                            'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
-                         })
+        ret_divs = []
+        if not len(input_resident) == 0:     # Not initial load, load interval counter, begin auto refresh
+            # print("\t graph 02 shoving in interval")
+            ret_divs.append(dcc.Interval(id='graph-update-02',interval=graph_update_interval))
+
+        ret_divs.append(dcc.Graph(id='toilet_numbers_plot',
+                                    figure={
+                                        'data': draw_data,
+                                        'layout': {
+                                            'paper_bgcolor': 'rgba(0,0,0,0)',
+                                            'plot_bgcolor': 'rgba(0,0,0,0)',
+                                            'title': 'Number of toilet visits',
+                                            'xaxis': {
+                                                'title': 'Date'
+                                            },
+                                            'yaxis': {
+                                                'title': 'Number'
+                                            }
+                                        }
+                                    },
+                                    config={
+                                        'editable': False,
+                                        'displaylogo': False,
+                                        'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
+                                    })
+                        )
+        return ret_divs
+
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
@@ -850,8 +890,10 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
     [Input(component_id='resident_input_visit_duration', component_property='value'),
      Input(component_id='location_input_visit_duration', component_property='value'),
      Input('date_picker_visit_duration', 'start_date'),
-     Input('date_picker_visit_duration', 'end_date')])
+     Input('date_picker_visit_duration', 'end_date')],
+    events=[Event('graph-update-03', 'interval')])
 def update_graph_03(input_resident, input_location, start_date, end_date):
+    # print(f"Update Graph 03. IR:{input_resident}, {type(input_resident)} IL:{input_location} {type(input_location)}")
     try:
         temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         modified_date = temp_date + datetime.timedelta(days=1)
@@ -863,26 +905,37 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
                 df = input_data.input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
                 # print(df.head())
                 draw_data.append({'x': df['recieved_timestamp'], 'y': df['visit_duration'], 'mode':'markers', 'name': r_name})
-        return dcc.Graph(id = 'visit_duration_plot',
-                figure = {
-                    'data':draw_data,
-                    'layout': {
-                        'paper_bgcolor': 'rgba(0,0,0,0)',
-                        'plot_bgcolor': 'rgba(0,0,0,0)',
-                        'title':'Duration of activity of residents',
-                        'xaxis': {
-                            'title': 'Start datetime of visit'
-                        },
-                        'yaxis': {
-                            'title': 'Duration of visit (seconds)'
-                        }
-                    }
-                },
-                config={
-                   'editable': False,
-                   'displaylogo': False,
-                   'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
-                })
+
+        ret_divs = []
+        if not (len(input_resident) == 0 and input_location == None):     # Not initial load, load interval counter, begin auto refresh
+            # print("\t graph 03 shoving in interval")
+            ret_divs.append(dcc.Interval(id='graph-update-03',interval=graph_update_interval))
+
+
+        ret_divs.append(dcc.Graph(  id = 'visit_duration_plot',
+                                    figure = {
+                                        'data':draw_data,
+                                        'layout': {
+                                            'paper_bgcolor': 'rgba(0,0,0,0)',
+                                            'plot_bgcolor': 'rgba(0,0,0,0)',
+                                            'title':'Duration of activity of residents',
+                                            'xaxis': {
+                                                'title': 'Start datetime of visit'
+                                            },
+                                            'yaxis': {
+                                                'title': 'Duration of visit (seconds)'
+                                            }
+                                        }
+                                    },
+                                    config={
+                                    'editable': False,
+                                    'displaylogo': False,
+                                    'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
+                                    },
+                                    animate=True)
+                            )
+        return ret_divs
+
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
@@ -895,8 +948,10 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
      Input('filter_input_day_night', 'value'),
      Input('filter_input_temp_bp_pulse', 'value'),
      Input('date_picker_logs', 'start_date'),
-     Input('date_picker_logs', 'end_date')])
+     Input('date_picker_logs', 'end_date')],
+    events=[Event('graph-update-04', 'interval')])
 def update_graph_04(input_resident, filter_input, filter_type, start_date, end_date):
+    # print(f"Update Graph 04. IR:{input_resident} {type(input_resident)}, FI:{filter_input} {type(filter_input)}")
     try:
         temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         modified_date = temp_date + datetime.timedelta(days=1)
@@ -941,38 +996,49 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
                         draw_data.append({'x': df['date_only'], 'y': df['diastolic_bp'], 'mode': 'lines+markers',
                                           'name': r_name + ' - Night'})
 
-        return dcc.Graph(id='logs_plot',
-                         figure={
-                             'data': draw_data,
-                             'layout': {
-                                 'paper_bgcolor': 'rgba(0,0,0,0)',
-                                 'plot_bgcolor': 'rgba(0,0,0,0)',
-                                 'title': 'Shift Logs',
-                                 'xaxis': {
-                                     'title': 'Date'
-                                 },
-                                 'yaxis': {
-                                     'title': filter_type
-                                 }
-                             }
-                         },
-                         config={
-                             'editable': False,
-                             'displaylogo': False,
-                             'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
-                         })
+        ret_divs = []
+        if not (len(input_resident) == 0 and filter_input == 'None'):     # Not initial load, load interval counter, begin auto refresh
+            # print("\t graph 04 shoving in interval")
+            ret_divs.append(dcc.Interval(id='graph-update-04',interval=graph_update_interval))
+
+        ret_divs.append(dcc.Graph(  id='logs_plot',
+                                    figure={
+                                        'data': draw_data,
+                                        'layout': {
+                                            'paper_bgcolor': 'rgba(0,0,0,0)',
+                                            'plot_bgcolor': 'rgba(0,0,0,0)',
+                                            'title': 'Shift Logs',
+                                            'xaxis': {
+                                                'title': 'Date'
+                                            },
+                                            'yaxis': {
+                                                'title': filter_type
+                                            }
+                                        }
+                                    },
+                                    config={
+                                        'editable': False,
+                                        'displaylogo': False,
+                                        'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
+                                    },
+                                    animate=True))
+        return ret_divs
+
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
         return ''
+
 
 @app.callback(
     Output('vital_signs_output', component_property='children'),
     [Input('resident_input_vital_signs', 'value'),
     Input('vital_sign_selector', 'value'),
     Input('date_picker_vital_signs', 'start_date'),
-    Input('date_picker_vital_signs', 'end_date')])
+    Input('date_picker_vital_signs', 'end_date')],
+    events=[Event('graph-update-05', 'interval')])
 def update_graph_05(input_residents, input_vital_signs, start_date, end_date):
+    # print(f"Update Graph 05. IR:{input_residents} {type(input_residents)}, IVS:{input_vital_signs} {type(input_vital_signs)}")
     # NOTE: input_residents here are the node_ids
     try:
         # add one day to the entered end date as a workaround to allow one day picks (since entered dates are at time 00:00:00)
@@ -995,37 +1061,50 @@ def update_graph_05(input_residents, input_vital_signs, start_date, end_date):
                 if isinstance(df, str):
                     continue
                 draw_data.append({'x': df['local_start_time'], 'y': df['breathing_rate'], 'mode': 'markers', 'name': r_name + ' ' + 'breathing_rate'})
-        return dcc.Graph(id='vital_signs_plot',
-                figure = {
-                    'data': draw_data,
-                    'layout': {
-                        'paper_bgcolor': 'rgba(0,0,0,0)',
-                        'plot_bgcolor': 'rgba(0,0,0,0)',
-                        'title':'Vital signs information of elderly',
-                        'xaxis': {
-                            'title': 'Start datetime of recorded vitals'
-                        },
-                        'yaxis': {
-                            'title': 'Vitals reading values (/min)'
-                        }
-                    }
-                },
-                config={
-                    'editable': False,
-                    'displaylogo': False,
-                    'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
-                })
+
+        ret_divs = []
+        if not (len(input_residents) == 0 and len(input_vital_signs) == 0):     # Not initial load, load interval counter, begin auto refresh
+            # print("\t graph 05 shoving in interval")
+            ret_divs.append(dcc.Interval(id='graph-update-05',interval=graph_update_interval))
+
+
+        ret_divs.append(dcc.Graph(  id='vital_signs_plot',
+                                    figure = {
+                                        'data': draw_data,
+                                        'layout': {
+                                            'paper_bgcolor': 'rgba(0,0,0,0)',
+                                            'plot_bgcolor': 'rgba(0,0,0,0)',
+                                            'title':'Vital signs information of elderly',
+                                            'xaxis': {
+                                                'title': 'Start datetime of recorded vitals'
+                                            },
+                                            'yaxis': {
+                                                'title': 'Vitals reading values (/min)'
+                                            }
+                                        }
+                                    },
+                                    config={
+                                        'editable': False,
+                                        'displaylogo': False,
+                                        'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
+                                    },
+                                    animate=True))
+
+        return ret_divs
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
         return ''
 
+
 @app.callback(
     Output('qos_output', component_property='children'),
     [Input('resident_input_qos', 'value'),
     Input('date_picker_qos', 'start_date'),
-    Input('date_picker_qos', 'end_date')])
+    Input('date_picker_qos', 'end_date')],
+    events=[Event('graph-update-06', 'interval')])
 def update_graph_06(input_residents, start_date, end_date):
+    # print(f"Update Graph 06. IR:{input_residents} {type(input_residents)}")
     try:
         start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
         temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
@@ -1044,30 +1123,40 @@ def update_graph_06(input_residents, start_date, end_date):
             except TypeError as e:
                 pass # just don't add to draw data
 
-        return dcc.Graph(id='qos_plot',
-                figure = {
-                    'data': draw_data,
-                    'layout': {
-                        'paper_bgcolor': 'rgba(0,0,0,0)',
-                        'plot_bgcolor': 'rgba(0,0,0,0)',
-                        'title':'Sleep quality information of elderly (Juvo)',
-                        'xaxis': {
-                            'title': 'Date'
-                        },
-                        'yaxis': {
-                            'title': 'Sleep quality (%)'
-                        }
-                    }
-                },
-                config={
-                    'editable': False,
-                    'displaylogo': False,
-                    'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
-                })
+        ret_divs = []
+        if not len(input_residents) == 0:     # Not initial load, load interval counter, begin auto refresh
+            # print("\t graph 06 shoving in interval")
+            ret_divs.append(dcc.Interval(id='graph-update-06',interval=graph_update_interval))
+
+
+        ret_divs.append(dcc.Graph(  id='qos_plot',
+                                    figure = {
+                                        'data': draw_data,
+                                        'layout': {
+                                            'paper_bgcolor': 'rgba(0,0,0,0)',
+                                            'plot_bgcolor': 'rgba(0,0,0,0)',
+                                            'title':'Sleep quality information of elderly (Juvo)',
+                                            'xaxis': {
+                                                'title': 'Date'
+                                            },
+                                            'yaxis': {
+                                                'title': 'Sleep quality (%)'
+                                            }
+                                        }
+                                    },
+                                    config={
+                                        'editable': False,
+                                        'displaylogo': False,
+                                        'modeBarButtonsToRemove': ['sendDataToCloud', 'toggleSpikelines']
+                                    },
+                                    animate=True))
+
+        return ret_divs
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
         return ''
+
 
 # next callbacks automatically updates the resident names live for each graph
 @app.callback(
@@ -1101,8 +1190,19 @@ def set_residents_options_four(selection):
 def set_residents_options_five(selection):
     return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in sensor_DAO.get_juvo_resident_ids()]
 
+
 @app.callback(
     Output('resident_input_qos', 'options'),
     [Input('resident_input_qos', 'value')])
 def set_residents_options_six(selection):
     return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in sensor_DAO.get_juvo_resident_ids()]
+
+
+# This callback periodicallu updates the input_data
+@app.callback(  Output('data_update_placeholder', 'children'),
+                events=[Event('data-update', 'interval')])
+def update_input_data_db():
+    # print("Data Update Interval triggered... Running data update")
+    input_data.input_data.updateInputData()
+    input_shiftlogs.update_shiftlogs_data()
+    return ''

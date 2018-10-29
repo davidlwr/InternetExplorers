@@ -16,12 +16,14 @@ import sys
 if __name__ == '__main__':
     sys.path.append(".")
     import input_data
+    from input_shiftlogs import input_shiftlogs
     from app import app, server
     from DAOs import resident_DAO, shift_log_DAO
     from Entities import resident
     from sensor_mgmt import sensor_mgmt
 else:
     from apps import input_data
+    from apps.input_shiftlogs import input_shiftlogs
     from app import app, server
     from DAOs import resident_DAO, shift_log_DAO
     from Entities import resident
@@ -39,6 +41,7 @@ def showOverviewResidents():
             List of Sleep Alerts (WIP), Overall Alert Level ('alert_highest')
     NOTE: jinja templates do not allow for import of python modules, so all calculation will be done here
     '''
+    input_data.input_data.updateInputData()
     residents_raw = resident_DAO.get_list_of_residents()
     residents = []
     date_in_use = datetime.datetime.now()
@@ -66,6 +69,11 @@ def showOverviewResidents():
             r['sleep_tooltip'].extend(r['sleep_alerts'])
 
         r['vitals_alerts'], __, __, __, __ = input_data.input_data.get_vital_signs_indicator(resident['resident_id'], juvo_date_in_use)
+
+        # check shift logs and extend vital signs alerts if necessary
+        shiftlog_alerts = input_shiftlogs.get_shiftlog_indicators(resident['resident_id'], date_in_use)
+        r['vitals_alerts'].extend(shiftlog_alerts)
+
         r['vitals_tooltip'] = []
         if len(r['vitals_alerts']) == 0:
             r['vitals_tooltip'].append("Vital signs from previous week appear to be normal")
@@ -96,12 +104,19 @@ def showOverviewResidents():
 
 # layer 2 routing
 @server.route("/overview/<int:resident_id>", methods=['GET', 'POST'])
+@server.route("/overview/<int:resident_id>/<date:currdate>")
 @flask_login.login_required
-def detailedLayerTwoOverviewResidents(resident_id):
+def detailedLayerTwoOverviewResidents(resident_id, currdate=None):
     try:
-        date_in_use = datetime.datetime.now()
-        # date_in_use = datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
-        juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
+        input_data.input_data.updateInputData()
+        if not currdate:
+            date_in_use = datetime.datetime.now()
+            # date_in_use = datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
+            juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
+        else:
+            # take date from currdatestring
+            date_in_use = currdate
+            juvo_date_in_use = currdate
         resident = resident_DAO.get_resident_by_resident_id(resident_id)
         if resident['dob']:
             today = datetime.date.today()

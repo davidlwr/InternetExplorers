@@ -78,7 +78,7 @@ class shift_log_DAO(object):
         try:
             cursor.execute(query, shift_log.var_list)
         except:
-            return
+            raise
         finally:
             factory.close_all(cursor=cursor, connection=connection)
 
@@ -111,6 +111,32 @@ class shift_log_DAO(object):
             cursor.execute(query)
             result = cursor.fetchone()
             return result['count(*)']
+        except:
+            print("error")
+        finally:
+            factory.close_all(cursor=cursor, connection=connection)
+
+    def get_incompleted_residents(self):
+        current_datetime = datetime.today()
+        # current_datetime = datetime(2018, 10, 21, 13, 59)
+        night_shift_end = datetime.combine(date.today(), time(10))
+        day_shift_end = datetime.combine(date.today(), time(21))
+        start_datetime = datetime.combine(date.today(), time(12))
+        if current_datetime < night_shift_end:
+            start_datetime = datetime.combine(date.today() - timedelta(1), time(20))
+
+        if current_datetime > day_shift_end:
+            start_datetime = datetime.combine(date.today(), time(20))
+
+        query = "SELECT name, resident_id FROM resident where resident_id not in (select patient_id from {} where datetime =  '{}')".format(shift_log_DAO.table_name, start_datetime)
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            return rows
         except:
             print("error")
         finally:
