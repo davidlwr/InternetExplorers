@@ -525,7 +525,7 @@ div.sticky {
                 Vital Signs Details
 				<span class="pull-right clickable panel-toggle"><em class="fa fa-toggle-up"></em></span>
             </div>
-            <div class="panel-body" style="height:470px;background-color:#fff;">
+            <div class="panel-body" style="height:880px;background-color:#fff;">
                 <div class="col-lg-6 col-md-6 col-xs-12">
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -550,7 +550,7 @@ div.sticky {
                                         <div class="row">
 										<b>Average Sleep Respiratory Rate {{ '%0.2f'|format((resident['past_week_average_breathing'])|float) }} /min</b>
                                             <div class="col-xs-12 text-center"style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_out_of_rr_range'] else 'WhiteSmoke' }} ">
-                                                Sleep respiratory rates are <b>{{ 'outside of' if resident['check_out_of_rr_range'] else 'within' }} the typical range</b><br> based on the past 7 days
+                                                Sleep respiratory rates are <b>{{ 'outside of' if resident['check_out_of_rr_range'] else 'within' }} the typical range</b> based on the past 7 days
                                             </div>
                                         </div>
                                     </div>
@@ -584,6 +584,39 @@ div.sticky {
 										<b>Average Sleep Pulse Rate {{ '%0.2f'|format((resident['past_week_average_heart'])|float) }} /min</b>
                                             <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_out_of_hb_range'] else 'WhiteSmoke' }} ">
                                                 Sleep pulse rates are <b>{{ 'outside of' if resident['check_out_of_hb_range'] else 'within' }} the typical range</b><br> based on the past 7 days
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-center">
+                                    Pulse Pressure in Past Week<br/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="pp_chart" class="pp_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var pp_graph = {{ pp_json | safe }};
+
+                                    Plotly.newPlot('pp_chart', pp_graph.data, pp_graph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_pp_too_high'] else 'red' if resident['check_pp_decrease'] else 'red' if resident['check_pp_increase'] else 'info' }}">
+                                    <div class="panel-heading" style="text-align:center; font-size:16px;">
+                                        <div class="row">
+										<b>Average Pulse Pressure {{ '%0.f'|format((resident['past_week_average_pp'])|float) }} mmHg</b>
+                                            <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_pp_too_high'] else 'Salmon' if resident['check_pp_increase'] else 'Salmon' if resident['check_pp_decrease'] else 'WhiteSmoke' }} ">
+                                                Pulse pressure readings <b>{{ 'are too high' if resident['check_pp_too_high'] else 'have increased significantly' if resident['check_pp_increase'] else 'have decreased significantly' if resident['check_pp_decrease'] else 'are normal' }}
                                             </div>
                                         </div>
                                     </div>

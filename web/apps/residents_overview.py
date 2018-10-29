@@ -71,7 +71,7 @@ def showOverviewResidents():
         r['vitals_alerts'], __, __, __, __ = input_data.input_data.get_vital_signs_indicator(resident['resident_id'], juvo_date_in_use)
 
         # check shift logs and extend vital signs alerts if necessary
-        shiftlog_alerts = input_shiftlogs.get_shiftlog_indicators(resident['resident_id'], date_in_use)
+        shiftlog_alerts, __, __ = input_shiftlogs.get_shiftlog_indicators(resident['resident_id'], date_in_use)
         r['vitals_alerts'].extend(shiftlog_alerts)
 
         r['vitals_tooltip'] = []
@@ -393,6 +393,11 @@ def detailedLayerTwoOverviewResidents(resident_id, currdate=None):
 
         ### below for vital signs
         resident['vitals_alerts'], resident['past_week_average_breathing'], resident['previous_weeks_average_breathing'], resident['past_week_average_heart'], resident['previous_weeks_average_heart'] = input_data.input_data.get_vital_signs_indicator(resident_id, juvo_date_in_use)
+
+        # check shift logs and extend vital signs alerts if necessary
+        shiftlog_alerts, past_week_data_sl, three_week_data_sl = input_shiftlogs.get_shiftlog_indicators(resident['resident_id'], date_in_use)
+        resident['vitals_alerts'].extend(shiftlog_alerts)
+
         past_week_breathing_df = input_data.input_data.retrieve_breathing_rate_info(resident_id, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
         # CHECK FOR EMPTY DF
         if isinstance(past_week_breathing_df, str) or past_week_breathing_df.empty:
@@ -711,9 +716,56 @@ def detailedLayerTwoOverviewResidents(resident_id, currdate=None):
         qos_json = json.dumps(qos_graph,
                 cls=plotly.utils.PlotlyJSONEncoder)
 
+        # prepare pulse pressure graph
+
+        pp_graph = dict(
+                data = [
+                    dict(
+                        x = past_week_data_sl['date_only'],
+                        y = past_week_data_sl['pulse_pressure'],
+                        type = 'scatter',
+                        mode = 'lines',
+                        text = 'Last week daily pulse pressure',
+                        name = ''
+                    )
+                ],
+                layout = dict(
+                    autosize = True,
+                    height = 200,
+                    showlegend = False,
+                    margin = dict(
+                        l = 25,
+                        r = 20,
+                        b = 25,
+                        t = 30,
+                        pad = 5
+                    ),
+                    yaxis = dict(
+                        title = "",#'%',
+                        scaleanchor = 'x',
+                        scaleratio = 0.5,
+                        hoverformat = '.2f'
+                    ),
+                    xaxis = dict(
+                        title = "",#"Day",
+                        tickformat = "%a",
+                        showticklabels = True,
+                        showline = True
+                    ),
+                    displayModeBar = False
+                )
+        )
+
+        pp_json = json.dumps(pp_graph, cls=plotly.utils.PlotlyJSONEncoder)
+
+        resident['past_week_average_pp'] = past_week_data_sl['pulse_pressure'].mean()
+        resident['check_pp_too_high'] = any('High pulse pressure' in s for s in resident['vitals_alerts'])
+        resident['check_pp_increase'] = any('Significant increase in pulse pressure' in s for s in resident['vitals_alerts'])
+        resident['check_pp_decrease'] = any('Significant decrease in pulse pressure' in s for s in resident['vitals_alerts'])
+
         return render_template('overview_layer_two.html', resident=resident,
                 night_toilet_MA_graph_json=night_toilet_MA_graph_json, sleeping_motion_graph_json=sleeping_motion_graph_json, uninterrupted_sleep_graph_json=uninterrupted_sleep_graph_json,
-                breathing_rates_json=breathing_rates_json, heartbeat_rates_json=heartbeat_rates_json, qos_json=qos_json)
+                breathing_rates_json=breathing_rates_json, heartbeat_rates_json=heartbeat_rates_json, qos_json=qos_json, pp_json=pp_json)
     except Exception as e:
         print(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
         return "An Error Occurred!"
