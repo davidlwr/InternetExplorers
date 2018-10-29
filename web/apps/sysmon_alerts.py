@@ -4,10 +4,12 @@ from flask_login import current_user, login_required
 from app import app, server
 from DAOs.connection_manager import connection_manager
 
-LOW_BATT_SUBSTR = "Battery Low"
-SENSOR_SUBSTR = "Sensor Issue"
+LOW_BATT_SUBSTR = "Sensor Issue: Low Battery"
+WARNING_SUBSTR  = "Sensor Issue: Warning"
+SENSOR_SUBSTR   = "Sensor Issue"
 TYPE_BATT   = 1
 TYPE_SENSOR = 2
+
 
 @server.route('/notifications', methods=['GET', 'POST'])     # see init in main for example
 def notifications():
@@ -22,19 +24,31 @@ def notifications():
         result = cursor.fetchall()
         if result != None:
             for r in result:
-                alerttext  = r['alert_text']
-                # alert_type = TYPE_BATT if LOW_BATT_SUBSTR in alerttext else TYPE_SENSOR
-                # type_texts.append([alert_type, alerttext])
-                if alerttext.startswith(SENSOR_SUBSTR):
-                    type_texts.append([TYPE_SENSOR, alerttext[len(SENSOR_SUBSTR):]])
+                alerttext = r['alert_text']
+                datetime  = r['date']
+                 
+                # Categorize alert types
+                if alerttext.startswith(WARNING_SUBSTR):        # Sensor down
+                    type_texts.append([TYPE_SENSOR, alerttext[len(SENSOR_SUBSTR):], datetime])
+                else:                                           # Low battery
+                    type_texts.append([TYPE_BATT, alerttext[len(SENSOR_SUBSTR):], datetime])
 
-    except: raise
+    except:     # Fail safely
+        return jsonify([{'type': type,
+                        'text': text,
+                        'date': date
+                        } for type,text,date in type_texts])
+
     finally: factory.close_all(cursor=cursor, connection=connection)
 
     return jsonify([{'type': type,
-                     'text': text
-                    } for type,text in type_texts])
+                     'text': text,
+                     'date': date
+                    } for type,text,date in type_texts])
 
+
+# DONT USE THIS. WRONG. but idk if pat is using this so I didnt remove it.
+# NOTE: Fixed the sql statement to take into account response status
 @server.route('/notifications_count', methods=['GET', 'POST'])
 def notifications_count():
     # Get connection
@@ -43,7 +57,7 @@ def notifications_count():
     cursor = connection.cursor()
 
     try:
-        cursor.execute(f"SELECT * FROM stbern.alert_log WHERE alert_text LIKE '{SENSOR_SUBSTR}%'")
+        cursor.execute(f"SELECT * FROM stbern.alert_log WHERE `alert_text` LIKE '{SENSOR_SUBSTR}%' AND `response_status` <> 'Yes'")
         result = cursor.fetchall()
 
         if result == None: return 0
