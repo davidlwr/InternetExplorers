@@ -88,11 +88,11 @@ def log_msg(filename, msg):
 # db.setup()
 dwelling_to_nodeid = {"room 1": 2005, "room 2": 2006}
 
-uuid_rname =    { "2005-d-01": "Lo Khuik Fah Joy",
-                  "2005-m-01": "Lo Khuik Fah Joy",
-                  "2005-m-02": "Lo Khuik Fah Joy",
-                  "2006-d-01": "Poh Kim Pew",
-                  "2006-m-02": "Poh Kim Pew",
+uuid_rname =    { "2005-d-01": "Poh Kim Pew",
+                  "2005-m-01": "Poh Kim Pew",
+                  "2005-m-02": "Poh Kim Pew",
+                  "2006-d-01": "Lo Khuik Fah Joy",
+                  "2006-m-02": "Lo Khuik Fah Joy",
                   "2100-room 3-m-02": "Lai Yee Chun",
                   "2100-room 4-m-02": "Lopez Beatrice Angelina"
                 }
@@ -113,6 +113,7 @@ def process_msg(topic, message):
         if len(topic) == 4 and all(k in jdict for k in key_list):         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
 
             # Determine Sysmon or Sensor Data
+            
             project_id  = topic[0]  # 'stb'
             hub_id      = topic[1]  # '2100' presumably the building
             dwelling_id = topic[2]  # 'room1' or 'room2'
@@ -136,8 +137,8 @@ def process_msg(topic, message):
             rname = uuid_rname[uuid] if uuid in uuid_rname else None
             
             if data_type == "data" and rname != None:
-                if key == "motion": action_motion(event=value, rname=uuid_rname["uuid"])
-                if key == "door":   action_door(event=value, rname=uuid_rname["uuid"])
+                if key == "motion": action_motion(event=value, rname=uuid_rname[uuid])
+                if key == "door":   action_door(event=value, rname=uuid_rname[uuid])
 
     except Exception as e:
         msg = f"PROCESS MESSAGE FAILURE >> Exception: '{str(e)}, Msg: {message}'"
