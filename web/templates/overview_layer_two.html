@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+pp<!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -298,6 +298,26 @@ div.sticky {
                                         svg_container.style.height = (window_height - 40) + 'px';
                                         Plotly.Plots.resize('vitals_heartbeat_chart');
                                     }
+
+                                    Plotly.Plots.resize('temperature_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('temperature_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('temperature_chart').getElementsByClassName('temperature_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('temperature_chart');
+                                    }
+
+                                    Plotly.Plots.resize('pp_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('pp_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('pp_chart').getElementsByClassName('pp_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('pp_chart');
+                                    }
                                 };
 
                                 $(document).ready(function () {
@@ -369,6 +389,26 @@ div.sticky {
                                         var svg_container = document.getElementById('qos_chart').getElementsByClassName('qos_chart_class')[0].getElementsByClassName('svg-container')[0];
                                         svg_container.style.height = (window_height - 40) + 'px';
                                         Plotly.Plots.resize('qos_chart');
+                                    }
+
+                                    Plotly.Plots.resize('pp_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('pp_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('pp_chart').getElementsByClassName('pp_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('pp_chart');
+                                    }
+
+                                    Plotly.Plots.resize('temperature_chart');
+                                    var window_height = window.innerHeight;
+                                    var content_div_height = document.getElementById('temperature_chart').offsetHeight;
+                                    // workaround for bug in Plotly: when flexbox container gets smaller, graph does not shrink
+                                    if (content_div_height > (window_height - 40)) {
+                                        var svg_container = document.getElementById('temperature_chart').getElementsByClassName('temperature_chart_class')[0].getElementsByClassName('svg-container')[0];
+                                        svg_container.style.height = (window_height - 40) + 'px';
+                                        Plotly.Plots.resize('temperature_chart');
                                     }
                                 });
                                 </script>
@@ -617,6 +657,39 @@ div.sticky {
 										<b>Average Pulse Pressure {{ '%0.f'|format((resident['past_week_average_pp'])|float) }} mmHg</b>
                                             <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_pp_too_high'] else 'Salmon' if resident['check_pp_increase'] else 'Salmon' if resident['check_pp_decrease'] else 'WhiteSmoke' }} ">
                                                 Pulse pressure readings <b>{{ 'are too high' if resident['check_pp_too_high'] else 'have increased significantly' if resident['check_pp_increase'] else 'have decreased significantly' if resident['check_pp_decrease'] else 'are normal' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-xs-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12 text-center">
+                                    Temperature in Past Week<br/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="col-xs-12">
+                                <div id="temperature_chart" class="temperature_chart_class svg-container container-fluid"></div>
+                                <script>
+                                    var temperature_graph = {{ temperature_json | safe }};
+
+                                    Plotly.newPlot('temperature_chart', temperature_graph.data, temperature_graph.layout || {} , {displayModeBar: false});
+                                </script>
+                            </div>
+                            <div class="col-xs-12">
+                                <div class="panel panel-{{ 'red' if resident['check_temperature_increase'] else 'red' if resident['check_temperature_decrease'] else 'red' if resident['check_temperature_abnormal'] else 'info' }}">
+                                    <div class="panel-heading" style="text-align:center; font-size:16px;">
+                                        <div class="row">
+										<b>Average Temperature {{ '%0.1f'|format((resident['past_week_average_temperature'])|float) }} &#8451;</b>
+                                            <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_temperature_abnormal'] else 'Salmon' if resident['check_temperature_increase'] else 'Salmon' if resident['check_temperature_increase'] else 'WhiteSmoke' }} ">
+                                                Temperature readings <b>{{ 'are abnormal' if resident['check_temperature_abnormal'] else 'have increased significantly' if resident['check_temperature_increase'] else 'have decreased significantly' if resident['check_temperature_decrease'] else 'are normal' }}
                                             </div>
                                         </div>
                                     </div>

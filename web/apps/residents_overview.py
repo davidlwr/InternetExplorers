@@ -763,9 +763,56 @@ def detailedLayerTwoOverviewResidents(resident_id, currdate=None):
         resident['check_pp_increase'] = any('Significant increase in pulse pressure' in s for s in resident['vitals_alerts'])
         resident['check_pp_decrease'] = any('Significant decrease in pulse pressure' in s for s in resident['vitals_alerts'])
 
+        # prepare temperature graph
+
+        temperature_graph = dict(
+                data = [
+                    dict(
+                        x = past_week_data_sl['date_only'],
+                        y = past_week_data_sl['temperature'],
+                        type = 'scatter',
+                        mode = 'lines',
+                        text = 'Last week daily temperature',
+                        name = ''
+                    )
+                ],
+                layout = dict(
+                    autosize = True,
+                    height = 200,
+                    showlegend = False,
+                    margin = dict(
+                        l = 25,
+                        r = 20,
+                        b = 25,
+                        t = 30,
+                        pad = 5
+                    ),
+                    yaxis = dict(
+                        title = "",#'%',
+                        scaleanchor = 'x',
+                        scaleratio = 0.5,
+                        hoverformat = '.2f'
+                    ),
+                    xaxis = dict(
+                        title = "",#"Day",
+                        tickformat = "%a",
+                        showticklabels = True,
+                        showline = True
+                    ),
+                    displayModeBar = False
+                )
+        )
+
+        temperature_json = json.dumps(temperature_graph, cls=plotly.utils.PlotlyJSONEncoder)
+
+        resident['past_week_average_temperature'] = past_week_data_sl['temperature'].mean()
+        resident['check_temperature_increase'] = any('Significant increase in temperature' in s for s in resident['vitals_alerts'])
+        resident['check_temperature_decrease'] = any('Significant decrease in temperature' in s for s in resident['vitals_alerts'])
+        resident['check_temperature_abnormal'] = any('Abnormal temperatures' in s for s in resident['vitals_alerts'])
+
         return render_template('overview_layer_two.html', resident=resident,
                 night_toilet_MA_graph_json=night_toilet_MA_graph_json, sleeping_motion_graph_json=sleeping_motion_graph_json, uninterrupted_sleep_graph_json=uninterrupted_sleep_graph_json,
-                breathing_rates_json=breathing_rates_json, heartbeat_rates_json=heartbeat_rates_json, qos_json=qos_json, pp_json=pp_json)
+                breathing_rates_json=breathing_rates_json, heartbeat_rates_json=heartbeat_rates_json, qos_json=qos_json, pp_json=pp_json, temperature_json=temperature_json)
     except Exception as e:
         print(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
         return "An Error Occurred!"
