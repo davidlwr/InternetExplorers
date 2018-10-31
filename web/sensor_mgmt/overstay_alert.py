@@ -1,8 +1,10 @@
 import datetime, os, sys, time
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
+from itertools import islice
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import pandas as pd
 
 if __name__ == '__main__': sys.path.append("..")
 if __name__ == '__main__': 
@@ -18,9 +20,12 @@ from DAOs.sensor_log_DAO import sensor_log_DAO
 
 class overstay_alert(object):
 
-    MOTION_TIMEOUT = 5   # mins. motion sensor minutes of inactivity before sending 0 to close off 225 event
+    MOTION_TIMEOUT = 4   # mins. motion sensor minutes of inactivity before sending 0 to close off 225 event
     DOOR_CLOSE = 0
-    DOOR_OPEN  = 225
+    DOOR_OPEN  = 255
+
+    MOTION_START = 255
+    MOTION_END   = 0
 
     # RETURN CODES:
     NO_MAIN_DOOR = -1    # Unable to run algo, as no main door sensor found
@@ -81,7 +86,7 @@ class overstay_alert(object):
         '''
         sec_diff = (now - last_door.recieved_timestamp).total_seconds()
 
-        if len(last_motions) > 0:      # last motion found
+        if len(last_motions) > 0:       # last motion found
             for mlog in last_motions:   # Check if any was a 225, start motion, reading after door closed
 
                 # Check 1 >> motion start after door close
@@ -130,7 +135,6 @@ class overstay_alert(object):
 
         last_mdoor = logs[0]
         secs_since_last_mdoor = (now - last_mdoor.recieved_timestamp).total_seconds()
-        # print("last main door: ", last_mdoor.recieved_timestamp, last_mdoor.event)
 
         # DEAL WITH ERROR PERIODS
         # NOTE: we can only detect in general when door is down: by date ONLY
@@ -145,7 +149,6 @@ class overstay_alert(object):
             mmotion_uuid = sdict['mMotion']                            
             if mmotion_uuid != None:    
                 logs =  sensor_log_DAO.get_last_logs(uuid=mmotion_uuid, dt=now, limit=2) # Get last logs
-                # print("\t", logs[0].uuid, [(x.recieved_timestamp, x.event)for x in logs])
                 check = overstay_alert.check_isolated_door_motion(last_door=last_mdoor, last_motions=logs, now=now)
                 if check > 0: return check
 
@@ -153,7 +156,6 @@ class overstay_alert(object):
             tmotion_uuid = sdict['tMotion']
             if tmotion_uuid != None:   
                 logs =  sensor_log_DAO.get_last_logs(uuid=tmotion_uuid, dt=now, limit=2)  # Get last logs
-                # print("\t", logs[0].uuid, [(x.recieved_timestamp, x.event)for x in logs])
                 check = overstay_alert.check_isolated_door_motion(last_door=last_mdoor, last_motions=logs, now=now)
                 if check > 0: return check
 
@@ -161,19 +163,15 @@ class overstay_alert(object):
             tdoor_uuid = sdict['tDoor']
             if tdoor_uuid != None:
                 logs =  sensor_log_DAO.get_last_logs(uuid=tdoor_uuid, dt=now)                    # Get last log
-                # print("\t", logs[0].uuid, [(x.recieved_timestamp, x.event)for x in logs])
                 if len(logs) > 0 and logs[0].recieved_timestamp > last_mdoor.recieved_timestamp: # If last log found and after door close
-                    # print("\t door: ", tdoor_uuid)
                     return secs_since_last_mdoor
 
             # Check if any JUVO      >> Get juvo heartrates from last close -- now if any != 0. someone was on the bed
             jtarget = sdict['juvo']
             if jtarget != None:
                 vitals_json = JuvoAPI.get_target_vitals(target=jtarget, start_time=last_mdoor.recieved_timestamp, end_time=now)
-                # print("Getting vitals from last_mdoor: ", last_mdoor.recieved_timestamp, now)
                 heart_pd,_  = JuvoAPI.extract_heart_breath_from_vitals(json=vitals_json)
                 if len(heart_pd.index) > 0:
-                    # print("\t found heart rates: ", heart_pd)
                     heart_rates = heart_pd.query("heart_rate > 0") 
                     if len(heart_rates.index) > 0: 
                         return secs_since_last_mdoor
@@ -195,13 +193,7 @@ class overstay_alert(object):
         # List of currently owned sensors      
         sensors = sensor_DAO.get_owned_sensors(rid=rid, dt=now)
         sdict = overstay_alert.extract_sensors(sensors=sensors)
-<<<<<<< HEAD
         uuids = [uuid for k,uuid in sdict.items() if uuid != None]
-
-        # Get all sensor logs
-        logs_dt = sensor_log_DAO.get_all_logs()
-=======
->>>>>>> parent of 65ce2f9... Initial for greedy t=n method
 
         tdoor_uuid   = sdict['tDoor']
         tmotion_uuid = sdict['tMotion']
@@ -243,7 +235,51 @@ class overstay_alert(object):
                             return (now - (t_mlogs[0].recieved_timestamp - timedelta(minutes=5))).total_seconds()
 
             
-<<<<<<< HEAD
+            if len(t_mlogs) > 0 and len(m_mlogs) > 0:
+                # Check 2.2 >> 1 event is closed, 1 is open
+                if t_mlogs[0].event == 225 and m_mlogs[0].event == 0:    # Toilet open, Main closed
+                    return (now - (m_mlogs[0].recieved_timestamp - timedelta(minutes=5))).total_seconds()
+
+                # Check 2.3 >> both events open NOTE: WITH THIS SITUATION WE cannot be certain where person is. real ghetto
+                if t_mlogs[0].event == 225 and m_mlogs[0].event == 225:
+                    if t_mlogs[0].recieved_timestamp > m_mlogs[0].recieved_timestamp:
+                        return (now - t_mlogs[0].recieved_timestamp).total_seconds()
+
+        return 0
+
+
+    @staticmethod
+    def check_activities_by_date(rid, sdt, edt):
+        '''
+        Returns time spent in toilet by date. both sdt and edt are inclusive
+        NOTE: This is a greedy algo, sort of ghetto, theres better logic, but I dont have time left to do them.
+
+        rid (int)      -- resident id
+        sdt (datetime) -- start datetime
+        edt (datetime) -- end datetime
+        '''
+        # DEAL WITH TOILET DOOR AS WELL
+        # List of currently owned sensors      
+        sensors = sensor_DAO.get_owned_sensors(rid=rid, dt=edt)
+        sdict = overstay_alert.extract_sensors(sensors=sensors)
+        uuids = [uuid for k,uuid in sdict.items() if uuid != None]
+
+        # Get all sensor logs
+        logs_dt = sensor_log_DAO.get_all_logs()
+
+        curr_sdt = sdt.replace(hour=0, second=0, minute=0, microsecond=0)
+        edate    = edt.replace(hour=0, second=0, minute=0, microsecond=0)
+
+        # Loop between dates and get summary statistics
+        ret_list = []
+        while curr_sdt <= edate:
+            curr_edt = curr_sdt.replace(hour=23, minute=59, second=59)
+            
+            # Pull out all logs within the current date
+            curr_logs = logs_dt[(logs_dt['recieved_timestamp'] >= curr_sdt) & (logs_dt['recieved_timestamp'] <= curr_edt)]
+            curr_logs = curr_logs[curr_logs['uuid'].isin(uuids)]
+            curr_logs.sort_values(by='recieved_timestamp', ascending=True, inplace=True)
+            
             # Summary values
             time_in_room = 0
             time_in_bath = 0
@@ -253,23 +289,27 @@ class overstay_alert(object):
             prev_md = None
             prev_tm = None
             prev_mm = None
-            df_iterator = range(0, len(curr_logs)) 
-            for i in df_iterator:
+            for i in range(0, len(curr_logs)) :
                 row = curr_logs.iloc[i]
 
                 # If Door
                 if row.uuid == sdict["mDoor"]:
 
                     # Deal with situation where door close was before the sdt
-                    if (prev_md == None and row.event == overstay_alert.DOOR_OPEN):
-                        time_in_room += (row.recieved_timestamp - curr_sdt).total_seconds()
+                    if type(prev_md) == type(None): 
+                        if row.event == overstay_alert.DOOR_OPEN:
+                            time_in_room += (row.recieved_timestamp - curr_sdt).total_seconds()
 
                     # If current door event is OPEN and previous door event is CLOSE
-                    elif prev_md != None and (row.event == overstay_alert.DOOR_OPEN and prev_md.event == overstay_alert.DOOR_CLOSE):
+                    elif (row.event == overstay_alert.DOOR_OPEN and prev_md.event == overstay_alert.DOOR_CLOSE):
                         # Check if any motion in room while door was closed. If yes, then take this as in room
-                        if (prev_tm != None and prev_tm.recieved_timestamp > prev_md.recieved_timestamp) or \
-                           (prev_mm != None and prev_tm.recieved_timestamp > prev_md.recieved_timestamp):
-                            time_in_room += (row.recieved_timestamp - prev_md.recieved_timestamp).total_seconds()
+                            if type(prev_tm) != type(None): 
+                                if prev_tm.recieved_timestamp > prev_md.recieved_timestamp: 
+                                    time_in_room += (row.recieved_timestamp - prev_md.recieved_timestamp).total_seconds()
+
+                            elif type(prev_mm) != type(None): 
+                                if prev_mm.recieved_timestamp > prev_md.recieved_timestamp:
+                                    time_in_room += (row.recieved_timestamp - prev_md.recieved_timestamp).total_seconds()
 
                     prev_md = row
 
@@ -278,72 +318,289 @@ class overstay_alert(object):
                     # EVENT START
                     if row.event == overstay_alert.MOTION_START: 
                         nvisits_bath += 1
+
                         # Motion log 225 then 225?? treat previous start as being 4 mins long
-                        if prev_tm != None and prev_tm == overstay_alert.MOTION_START: 
-                            time_in_bath += 60 * overstay_alert.MOTION_TIMEOUT
+                        if type(prev_tm) != type(None):
+                            if prev_tm.event == overstay_alert.MOTION_START: 
+                                time_in_bath += 60 * overstay_alert.MOTION_TIMEOUT
 
                     # EVENT END
-                    if row.event == overstay_alert.MOTION_END and prev_tm != None and prev_tm.event == overstay_alert.MOTION_START:
-                        event_length = (row.recieved_timestamp - prev_tm.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT)).total_seconds()
-                        time_in_bath += event_length
+                    if row.event == overstay_alert.MOTION_END:
+                        if type(prev_tm) != type(None):
+                            if prev_tm.event == overstay_alert.MOTION_START:
+                                event_length = (row.recieved_timestamp - prev_tm.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT)).total_seconds()
+                                time_in_bath += event_length
 
-                    prev_tm == row
+                    prev_tm = row
 
                 # If main Motion
                 if row.uuid == sdict["mMotion"]: prev_mm = row
                 
             # Deal with trailing status
             #   Final main door == closed
-            if prev_md != None and prev_md.event == overstay_alert.DOOR_CLOSE: 
-                time_in_room += (curr_edt - prev_md.recieved_timestamp).total_seconds()
+            if type(prev_md) != type(None):
+                if prev_md.event == overstay_alert.DOOR_CLOSE:
+                    if type(prev_tm) != type(None):     # Check for any motion inside toilet motion
+                        if prev_tm.recieved_timestamp > prev_md.recieved_timestamp:  
+                            time_in_room += (curr_edt - prev_md.recieved_timestamp).total_seconds()
 
-            #   FInal toilet motion open
-            if prev_tm != None and prev_tm.event == overstay_alert.MOTION_START:
-                time_in_bath += (curr_edt - prev_tm.recieved_timestamp).total_seconds()
-=======
-            if len(t_mlogs) > 0 and len(m_mlogs) > 0:
-                # Check 2.2 >> 1 event is closed, 1 is open
-                if t_mlogs[0].event == 225 and m_mlogs[0].event == 0:    # Toilet open, Main closed
-                    return (now - (m_mlogs[0].recieved_timestamp - timedelta(minutes=5))).total_seconds()
->>>>>>> parent of 65ce2f9... Initial for greedy t=n method
+                    elif type(prev_mm) != type(None):   # Check for any motion inside main motion
+                        if prev_mm.recieved_timestamp > prev_md.recieved_timestamp:  
+                            time_in_room += (curr_edt - prev_md.recieved_timestamp).total_seconds()
 
-                # # Check 2.3 >> both events open NOTE: WITH THIS SITUATION WE cannot be certain where person is. real ghetto
-                # if t_mlogs[0].event == 0 and m_mlogs[0].event == 0:
-                #     if t_mlogs[0].recieved_timestamp > m_mlogs[0].recieved_timestamp:
-                #         return (now - t_mlogs[0].recieved_timestamp).total_seconds()
+            #   Final toilet motion open
+            if type(prev_tm) != type(None):
+                if prev_tm.event == overstay_alert.MOTION_START:
+                    time_in_bath += (curr_edt - prev_tm.recieved_timestamp).total_seconds()
 
-        return 0
+            # Add summary values to ret_dict
+            ret_list.append({"date":curr_sdt, "secs_room":time_in_room, "secs_bath":time_in_bath, "nvisit_bath":nvisits_bath})
 
+            # Increment curr_date
+            curr_sdt += timedelta(days=1)
 
-    # @staticmethod
-    # def test_plot_in_toilet_check(rid, sdt, edt, jump_mins=5):
+        return ret_list
 
-    #     tdt = sdt   # Temp datetime
-    #     x_hours  = []
-    #     y_values = []
+    @staticmethod
+    def sub_room_w_door(curr_logs, sdict, curr_sdt, curr_edt):
+        # Summary values
+        time_in_room = 0
 
-    #     counter = 0
-    #     while tdt < edt:
-    #         value = overstay_alert.check_in_toilet(rid=rid, sudo_now=tdt)
-    #         x_hours.append(tdt)
-    #         y_values.append(value)
-    #         tdt += timedelta(minutes=jump_mins)
+        # Iterate logs in ascending datetime order. Generate summary values >> Greedy algo
+        prev_md = None
+        prev_tm = None
+        prev_mm = None
+        for i in range(0, len(curr_logs)) :
+            row = curr_logs.iloc[i]
 
-    #         if value > 0: print("\t FOUND!! ", tdt, value)
+            # If Door
+            if row.uuid == sdict["mDoor"]:
+
+                # Deal with situation where door close was before the sdt
+                if type(prev_md) == type(None): 
+                    if row.event == overstay_alert.DOOR_OPEN:
+                        time_in_room += (row.recieved_timestamp - curr_sdt).total_seconds()
+
+                # If current door event is OPEN and previous door event is CLOSE
+                elif (row.event == overstay_alert.DOOR_OPEN and prev_md.event == overstay_alert.DOOR_CLOSE):
+                    # Check if any motion in room while door was closed. If yes, then take this as in room
+                        if type(prev_tm) != type(None): 
+                            if prev_tm.recieved_timestamp > prev_md.recieved_timestamp: 
+                                time_in_room += (row.recieved_timestamp - prev_md.recieved_timestamp).total_seconds()
+
+                        elif type(prev_mm) != type(None): 
+                            if prev_mm.recieved_timestamp > prev_md.recieved_timestamp:
+                                time_in_room += (row.recieved_timestamp - prev_md.recieved_timestamp).total_seconds()
+
+                prev_md = row
+
+            # If toilet Motion                
+            if row.uuid == sdict["tMotion"]: prev_tm = row
+            # If main Motion
+            if row.uuid == sdict["mMotion"]: prev_mm = row
             
-    #         if counter == 0: print(f"sanity check : ", tdt, value)
-    #         counter += 1
-    #         if counter%100 == 0: print(f"sanity check: ", tdt, value)
+            # Deal with trailing status
+            #   Final main door == closed
+            if type(prev_md) != type(None):
+                if prev_md.event == overstay_alert.DOOR_CLOSE:
+                    add_last = False
+                    if type(prev_tm) != type(None):     # Check for any motion inside toilet motion
+                        if prev_tm.recieved_timestamp > prev_md.recieved_timestamp:  
+                            add_last = True
+
+                    if type(prev_mm) != type(None):   # Check for any motion inside main motion
+                        if prev_mm.recieved_timestamp > prev_md.recieved_timestamp:  
+                            add_last = True
+                    
+                    if add_last:
+                        time_in_room += (curr_edt - prev_md.recieved_timestamp).total_seconds()
+
+        return time_in_room
+
+    @staticmethod
+    def sub_room_wo_door(curr_logs, sdict, curr_sdt, curr_edt):
+        # Summary values
+        time_in_room = 0
+
+        # Iterate logs in ascending datetime order. Generate summary values >> Greedy algo
+        # Find start of a motion event, search for end, if encounter another motion start (of other sensor), look for that end instead. Use abs start and end to take time in room 
+        first_motion_found = False
+        uuid_searching_end = None
+        i = 0
+        while i < len(curr_logs):
+            row = curr_logs.iloc[i]
+
+            # ALSO POTENTIALY BUGGY, but not by alot. since data suggest residents dont really sleep for a long period of time. More like they nap alot
+            if first_motion_found == False and row.recieved_timestamp < curr_sdt.replace(hour=6) and (row.uuid == sdict['mMotion'] or row.uuid == sdict['mMotion']):
+                time_in_room += (row.recieved_timestamp - curr_sdt).total_seconds() 
+                first_motion_found == True
+
+            elif row.uuid == sdict['mMotion'] or row.uuid == sdict['mMotion']:
+                uuid_searching_end = row.uuid
+
+                # Look forward
+                for j in range(i, len(curr_logs)):
+                    future_row = curr_logs.iloc[j]
+
+                    if future_row.uuid == uuid_searching_end and future_row.event == overstay_alert.MOTION_END:
+                        time_in_room += (future_row.recieved_timestamp - row.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT)).total_seconds()
+
+                        # Skip i ahead to after j
+                        uuid_searcing_end = None    # Set to None when search ends
+                        i += j - i 
+
+                    # If another motion sensor starts within the room, look for its end instead
+                    elif (future_row.uuid  == sdict['mMotion'] or future_row.uuid == sdict['mMotion']) and future_row.event == overstay_alert.MOTION.START:
+                        uuid_searching_end = future_row.uuid
+
+                    # Tail end, open seach, but we hit edt >> POTENTIALLY BUGGY AF
+                    elif j == len(curr_logs) - 1: 
+                        time_in_room += (curr_edt - row.recieved_timestamp).total_seconds()
+
+            # Increment counter
+            i += 1
+        return time_in_room
+
+    @staticmethod
+    def sub_bath_w_door(curr_logs, sdict, curr_sdt, curr_edt):
+        # Summary values
+        time_in_bath = 0
+        nvisits_bath = 0
+
+        # Iterate logs in ascending datetime order. Generate summary values >> Greedy algo
+        prev_td = None
+        prev_tm = None
+        prev_mm = None
+        for i in range(0, len(curr_logs)) :
+            row = curr_logs.iloc[i]
+
+            # If Toilet Door
+            if row.uuid == sdict["tDoor"]:
+
+                # Deal with situation where door close was before the sdt
+                if type(prev_td) == type(None): 
+                    if row.event == overstay_alert.DOOR_OPEN:
+                        time_in_bath += (row.recieved_timestamp - curr_sdt).total_seconds()
+                        nvisits_bath += 1
+
+                # If current door event is OPEN and previous door event is CLOSE
+                elif (row.event == overstay_alert.DOOR_OPEN and prev_td.event == overstay_alert.DOOR_CLOSE):
+                    # Check if any motion in room while door was closed. If yes, then take this as in room
+                        if type(prev_tm) != type(None): 
+
+                            # Motion start after door close 
+                            if prev_tm.event == overstay_alert.MOTION_START and prev_tm.recieved_timestamp > prev_td.recieved_timestamp: 
+                                time_in_bath += (row.recieved_timestamp - prev_td.recieved_timestamp).total_seconds()
+                                nvisits_bath += 1
+
+                            # Motion close after door close and before door open
+                            elif prev_tm.event == overstay_alert.MOTION_END and prev_tm.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT) < row.recieved_timestamp:
+                                time_in_bath += (row.recieved_timestamp - prev_td.recieved_timestamp).total_seconds()
+                                nvisits_bath += 1
+
+                            # Motion start before door close, within a 4 minute window
+                            elif prev_tm.event == overstay_alert.MOTION_START and prev_tm.recieved_timestamp < prev_td.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT):
+                                # last mian room motion was start and was before door close
+                                if type(prev_mm) != type(None):
+                                    if prev_mm.event == overstay_alert.MOTION_START and prev_mm.recieved_timestamp < prev_td.recieved_timestamp:
+                                        time_in_bath += (row.recieved_timestamp - prev_td.recieved_timestamp).total_seconds()
+                                        nvisits_bath += 1
+
+                                    # last main room motion was end, and was refreshed before main door closed
+                                    elif prev_mm.event == overstay_alert.MOTION_END: 
+                                        if prev_mm.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT) < prev_td.recieved_timestamp:
+                                            time_in_bath += (row.recieved_timestamp - prev_td.recieved_timestamp).total_seconds()
+                                            nvisits_bath += 1
+                prev_td = row
+
+            # If toilet Motion                
+            elif row.uuid == sdict["tMotion"]: prev_tm = row
+            elif row.uuid == sdict["mMotion"]: prev_mm = row
+                
+            # Deal with trailing status
+            #   Final main door == closed
+            if type(prev_td) != type(None):
+                if prev_td.event == overstay_alert.DOOR_CLOSE:
+                    if type(prev_tm) != type(None):     # Check for any motion inside toilet motion
+                        if prev_tm.event == overstay_alert.MOTION_END and prev_tm.recieved_timestamp > (prev_td.recieved_timestamp + timedelta(minutes=overstay_alerts.MOTION_TIMEOUT)):  
+                            time_in_bath += (curr_edt - prev_td.recieved_timestamp).total_seconds()
+                            nvisits_bath += 1
+                        elif prev_tm.event == overstay_alert.MOTION_START and prev_tm.recieved_timestamp > prev_td.recieved_timestamp:
+                            time_in_bath += (curr_edt - prev_td.recieved_timestamp).total_seconds()
+                            nvisits_bath += 1
+
+        return time_in_bath, nvisits_bath
+
+    @staticmethod
+    def sub_bath_wo_door(curr_logs, sdict, curr_sdt, curr_edt):
+        # Summary values
+        time_in_bath = 0
+        nvisits_bath = 0
+
+        # Iterate logs in ascending datetime order. Generate summary values >> Greedy algo
+        prev_tm = None
+        for i in range(0, len(curr_logs)) :
+            row = curr_logs.iloc[i]
+
+            # If toilet Motion                
+            if row.uuid == sdict["tMotion"]:
+                # EVENT START
+                if row.event == overstay_alert.MOTION_START: 
+                    nvisits_bath += 1
+
+                    # Motion log 225 then 225?? treat previous start as being 4 mins long
+                    if type(prev_tm) != type(None):
+                        if prev_tm.event == overstay_alert.MOTION_START: 
+                            time_in_bath += 60 * overstay_alert.MOTION_TIMEOUT
+
+                # EVENT END
+                if row.event == overstay_alert.MOTION_END:
+                    if type(prev_tm) != type(None):
+                        if prev_tm.event == overstay_alert.MOTION_START:
+                            event_length = (row.recieved_timestamp - prev_tm.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT)).total_seconds()
+                            time_in_bath += event_length
+
+                prev_tm = row
+            
+        # Deal with trailing status
+        #   Final toilet motion open
+        if type(prev_tm) != type(None):
+            if prev_tm.event == overstay_alert.MOTION_START:
+                time_in_bath += (curr_edt - prev_tm.recieved_timestamp).total_seconds()
+
+        return time_in_bath, nvisits_bath
+
+
+    @staticmethod
+    def test_plot_in_toilet_check(rid, sdt, edt, jump_mins=5):
+
+        tdt = sdt   # Temp datetime
+        x_hours  = []
+        y_values = []
+
+        counter = 0
+        while tdt < edt:
+            value = overstay_alert.check_in_toilet(rid=rid, sudo_now=tdt)
+            x_hours.append(tdt)
+            y_values.append(value)
+            tdt += timedelta(minutes=jump_mins)
+
+            if value > 0: print("\t FOUND!! ", tdt, value)
+            
+            if counter == 0: print(f"sanity check : ", tdt, value)
+            counter += 1
+            if counter%100 == 0: print(f"sanity check: ", tdt, value)
         
-    #     # Print out specifically points where time > 0
-    #     for i in range(len(x_hours)):
-    #         if y_values[i] > 0:
-    #             print(x_hours[i], y_values[i])
+        # Print out specifically points where time > 0
+        for i in range(len(x_hours)):
+            if y_values[i] > 0:
+                print(x_hours[i], y_values[i])
         
-    #     # Plot
-    #     plt.plot(x_hours,y_values)
-    #     plt.gcf().autofmt_xdate()        # beautify the x-labels
-    #     plt.show()
+        # Plot
+        plt.plot(x_hours,y_values)
+        plt.gcf().autofmt_xdate()        # beautify the x-labels
+        plt.show()
+
 
     @staticmethod
     def test_plot_in_room_check(rid, sdt, edt, jump_mins=5):
@@ -361,7 +618,6 @@ class overstay_alert(object):
             if counter == 0: print(f"sanity check : ", tdt, value)
             counter += 1
             if counter%10 == 0: print(f"sanity check: ", tdt, value)
-            
 
         # Plot
         fig,ax1 = plt.subplots()
@@ -373,16 +629,15 @@ class overstay_alert(object):
         plt.show()
         
 
-<<<<<<< HEAD
     @staticmethod
-    def test_check_in_toilet_by_date(rids, sdt, edt, print_summary=False):
+    def test_check_activities_by_date(rids, sdt, edt, print_summary=False):
         
         results = []
         times = []
 
         for rid in rids:
             start_time = time.clock()
-            ret_list = overstay_alert.check_in_toilet_by_date(rid=rid, sdt=sdt, edt=edt)
+            ret_list = overstay_alert.check_activities_by_date(rid=rid, sdt=sdt, edt=edt)
             results.append(ret_list)
             times.append(time.clock() - start_time)
 
@@ -407,18 +662,16 @@ class overstay_alert(object):
                 summary.append({"rid":rids[i], "avg_room":avg_room, "avg_bath":avg_bath, "avg_visit":avg_vist})
 
             for r in summary:
-                print(f"RID: {r['rid']} \t AVG_ROOM: {r['avg_room']} \t AVG_BATH: {r['avg_bath']} \t AVG_VIST: {r['avg_visit']}, TIME: {times[i]}")
+                print(f"RID: {r['rid']} \t AVG_ROOM: {format(r['avg_room'], '.2f')} \t AVG_BATH: {format(r['avg_bath'], '.2f')} \t AVG_VIST: {format(r['avg_visit'], '.2f')}, TIME: {times[i]}")
 
         else:
             for i in range(0, len(rids)):
                 print(f"========= RID: {rids[i]} ==========")
-                for d in results[i]:
-                    for r in d:
-                        print(f"\t DATE: {r['date']}, \t ROOM: {r['secs_room']}, \t BATH: {r['secs_bath']}, \t B_VISIT: {r['nvisit_bath']}")
+                for r in results[i]:
+                    print(f"\t DATE: {r['date']}, \t ROOM: {r['secs_room']}, \t BATH: {r['secs_bath']}, \t B_VISIT: {r['nvisit_bath']}")
                 print(f"===== END TIME: {times[i]} ======")
 
-=======
->>>>>>> parent of 65ce2f9... Initial for greedy t=n method
+
 
 # TESTS ======================================================================================
 if __name__ == '__main__':
@@ -431,23 +684,16 @@ if __name__ == '__main__':
     # edt = datetime.datetime.strptime('2018-10-26 12:00:00', '%Y-%m-%d %H:%M:%S')
     # overstay_alert.test_plot_in_room_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
 
-<<<<<<< HEAD
     # sdt = datetime.datetime.strptime('2018-09-21 00:00:00', '%Y-%m-%d %H:%M:%S')
     # edt = datetime.datetime.strptime('2018-10-28 00:00:00', '%Y-%m-%d %H:%M:%S')
     # overstay_alert.test_plot_in_toilet_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
 
 
     rids = [rid for rid,rname in rdict.items()]
+    rids = [5]
     sdt = datetime.datetime.strptime('2018-10-01 00:00:00', '%Y-%m-%d %H:%M:%S')
     edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
-    overstay_alert.test_check_in_toilet_by_date(rids, sdt, edt, print_summary=True)
-=======
-    sdt = datetime.datetime.strptime('2018-09-21 00:00:00', '%Y-%m-%d %H:%M:%S')
-    edt = datetime.datetime.strptime('2018-10-28 00:00:00', '%Y-%m-%d %H:%M:%S')
->>>>>>> parent of 65ce2f9... Initial for greedy t=n method
+    overstay_alert.test_check_in_toilet_by_date(rids, sdt, edt, print_summary=False)
 
-    sdt = datetime.datetime.strptime('2018-09-24 18:35:00', '%Y-%m-%d %H:%M:%S')
-    edt = datetime.datetime.strptime('2018-09-24 19:40:00', '%Y-%m-%d %H:%M:%S')
-    overstay_alert.test_plot_in_toilet_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
     
 
