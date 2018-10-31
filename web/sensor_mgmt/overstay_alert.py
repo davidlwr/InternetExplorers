@@ -1,4 +1,4 @@
-import datetime, os, sys
+import datetime, os, sys, time
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from itertools import islice
@@ -75,6 +75,7 @@ class overstay_alert(object):
             elif t == "bed sensor" and l == "bed": sensor_dict["juvo"] = jtarget
             else: print("Unable to match sensor?? ", uuid, ls)
         return sensor_dict
+
 
     @staticmethod
     def check_isolated_door_motion(last_door, last_motions, now):
@@ -177,6 +178,7 @@ class overstay_alert(object):
 
         return 0
 
+
     @staticmethod
     def check_in_toilet_by_date(rid, sdt, edt):
         '''
@@ -190,7 +192,7 @@ class overstay_alert(object):
         # List of currently owned sensors      
         sensors = sensor_DAO.get_owned_sensors(rid=rid, dt=edt)
         sdict = overstay_alert.extract_sensors(sensors=sensors)
-        uuids = [uuid for k,uuid in sdict.items() if v != None]
+        uuids = [uuid for k,uuid in sdict.items() if uuid != None]
 
         # Get all sensor logs
         logs_dt = sensor_log_DAO.get_all_logs()
@@ -237,7 +239,6 @@ class overstay_alert(object):
 
                     prev_md = row
 
-
                 # If toilet Motion                
                 if row.uuid == sdict["tMotion"]:
                     # EVENT START
@@ -275,35 +276,35 @@ class overstay_alert(object):
         return ret_list
 
 
-    @staticmethod
-    def test_plot_in_toilet_check(rid, sdt, edt, jump_mins=5):
+    # @staticmethod
+    # def test_plot_in_toilet_check(rid, sdt, edt, jump_mins=5):
 
-        tdt = sdt   # Temp datetime
-        x_hours  = []
-        y_values = []
+    #     tdt = sdt   # Temp datetime
+    #     x_hours  = []
+    #     y_values = []
 
-        counter = 0
-        while tdt < edt:
-            value = overstay_alert.check_in_toilet(rid=rid, sudo_now=tdt)
-            x_hours.append(tdt)
-            y_values.append(value)
-            tdt += timedelta(minutes=jump_mins)
+    #     counter = 0
+    #     while tdt < edt:
+    #         value = overstay_alert.check_in_toilet(rid=rid, sudo_now=tdt)
+    #         x_hours.append(tdt)
+    #         y_values.append(value)
+    #         tdt += timedelta(minutes=jump_mins)
 
-            if value > 0: print("\t FOUND!! ", tdt, value)
+    #         if value > 0: print("\t FOUND!! ", tdt, value)
             
-            if counter == 0: print(f"sanity check : ", tdt, value)
-            counter += 1
-            if counter%100 == 0: print(f"sanity check: ", tdt, value)
+    #         if counter == 0: print(f"sanity check : ", tdt, value)
+    #         counter += 1
+    #         if counter%100 == 0: print(f"sanity check: ", tdt, value)
         
-        # Print out specifically points where time > 0
-        for i in range(len(x_hours)):
-            if y_values[i] > 0:
-                print(x_hours[i], y_values[i])
+    #     # Print out specifically points where time > 0
+    #     for i in range(len(x_hours)):
+    #         if y_values[i] > 0:
+    #             print(x_hours[i], y_values[i])
         
-        # Plot
-        plt.plot(x_hours,y_values)
-        plt.gcf().autofmt_xdate()        # beautify the x-labels
-        plt.show()
+    #     # Plot
+    #     plt.plot(x_hours,y_values)
+    #     plt.gcf().autofmt_xdate()        # beautify the x-labels
+    #     plt.show()
 
 
     @staticmethod
@@ -337,13 +338,17 @@ class overstay_alert(object):
     def test_check_in_toilet_by_date(rids, sdt, edt, print_summary=False):
         
         results = []
+        times = []
 
         for rid in rids:
+            start_time = time.clock()
             ret_list = overstay_alert.check_in_toilet_by_date(rid=rid, sdt=sdt, edt=edt)
             results.append(ret_list)
+            times.append(time.clock() - start_time)
 
 
         if print_summary:
+            summary = []
             for i in range(0, len(rids)):
                 n_days = 0
                 total_in_room = 0
@@ -359,10 +364,10 @@ class overstay_alert(object):
                 avg_room = total_in_room / n_days
                 avg_bath = total_in_bath / n_days
                 avg_vist = total_nv_bath / n_days
-                results.append({"rid":rids[i], "avg_room":avg_room, "avg_bath":avg_bath, "avg_visit":avg_vist})
+                summary.append({"rid":rids[i], "avg_room":avg_room, "avg_bath":avg_bath, "avg_visit":avg_vist})
 
-            for r in results:
-                print(f"RID: {r['rid']} \t AVG_ROOM: {r['avg_room']} \t AVG_BATH: {r['avg_bath']} \t AVG_VIST: {r['avg_visit']}")
+            for r in summary:
+                print(f"RID: {r['rid']} \t AVG_ROOM: {r['avg_room']} \t AVG_BATH: {r['avg_bath']} \t AVG_VIST: {r['avg_visit']}, TIME: {times[i]}")
 
         else:
             for i in range(0, len(rids)):
@@ -370,23 +375,26 @@ class overstay_alert(object):
                 for d in results[i]:
                     for r in d:
                         print(f"\t DATE: {r['date']}, \t ROOM: {r['secs_room']}, \t BATH: {r['secs_bath']}, \t B_VISIT: {r['nvisit_bath']}")
-
+                print(f"===== END TIME: {times[i]} ======")
 
 
 # TESTS ======================================================================================
 if __name__ == '__main__':
-    rid = 3
-    jump_mins = 5
-    sdt = datetime.datetime.strptime('2018-10-25 18:00:00', '%Y-%m-%d %H:%M:%S')
-    edt = datetime.datetime.strptime('2018-10-26 12:00:00', '%Y-%m-%d %H:%M:%S')
+
+    rdict = {1:"Poh", 3:"Lai" , 5:"Beatrice", 7:"Joy"}
+
+    # rid = 3
+    # jump_mins = 5
+    # sdt = datetime.datetime.strptime('2018-10-25 18:00:00', '%Y-%m-%d %H:%M:%S')
+    # edt = datetime.datetime.strptime('2018-10-26 12:00:00', '%Y-%m-%d %H:%M:%S')
     # overstay_alert.test_plot_in_room_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
 
-    sdt = datetime.datetime.strptime('2018-09-21 00:00:00', '%Y-%m-%d %H:%M:%S')
-    edt = datetime.datetime.strptime('2018-10-28 00:00:00', '%Y-%m-%d %H:%M:%S')
+    # sdt = datetime.datetime.strptime('2018-09-21 00:00:00', '%Y-%m-%d %H:%M:%S')
+    # edt = datetime.datetime.strptime('2018-10-28 00:00:00', '%Y-%m-%d %H:%M:%S')
     # overstay_alert.test_plot_in_toilet_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
 
 
-    rids = []
+    rids = [rid for rid,rname in rdict.items()]
     sdt = datetime.datetime.strptime('2018-10-01 00:00:00', '%Y-%m-%d %H:%M:%S')
     edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
     overstay_alert.test_check_in_toilet_by_date(rids, sdt, edt, print_summary=True)
