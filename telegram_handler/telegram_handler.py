@@ -62,6 +62,10 @@ def button(bot, update):
 		
 		if len(alerts) > 0:
 			latest_list = get_latest_alerts(alerts)
+			sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
+			for sensor_alert in sensor_alerts:
+				sensor_alert_text = sensor_alert['alert_text']
+				latest_list.append(sensor_alert_text)
 			keyboardBottom = [[alert] for alert in latest_list]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
@@ -78,6 +82,10 @@ def button(bot, update):
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
 			latest_list = get_latest_alerts(alerts)
+			sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
+			for sensor_alert in sensor_alerts:
+				sensor_alert_text = sensor_alert['alert_text']
+				latest_list.append(sensor_alert_text)
 			keyboardBottom = [[alert] for alert in latest_list]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
@@ -94,6 +102,10 @@ def button(bot, update):
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
 			latest_list = get_latest_alerts(alerts)
+			sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
+			for sensor_alert in sensor_alerts:
+				sensor_alert_text = sensor_alert['alert_text']
+				latest_list.append(sensor_alert_text)
 			keyboardBottom = [[alert] for alert in latest_list]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
@@ -109,6 +121,10 @@ def button(bot, update):
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
 			latest_list = get_latest_alerts(alerts)
+			sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
+			for sensor_alert in sensor_alerts:
+				sensor_alert_text = sensor_alert['alert_text']
+				latest_list.append(sensor_alert_text)
 			keyboardBottom = [[alert] for alert in latest_list]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
@@ -125,6 +141,10 @@ def button(bot, update):
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
 			latest_list = get_latest_alerts(alerts)
+			sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
+			for sensor_alert in sensor_alerts:
+				sensor_alert_text = sensor_alert['alert_text']
+				latest_list.append(sensor_alert_text)
 			keyboardBottom = [[alert] for alert in latest_list]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
@@ -209,6 +229,10 @@ def sensoralert(bot, update):
 				alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, key, text, "Sensor", "No")
 				alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 				latest_list = get_latest_alerts(alerts)
+				sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
+				for sensor_alert in sensor_alerts:
+					sensor_alert_text = sensor_alert['alert_text']
+					latest_list.append(sensor_alert_text)
 				keyboardBottom = [[alert] for alert in latest_list]
 				reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 				bot.send_message(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markup=reply_markupBottom)

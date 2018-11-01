@@ -11,7 +11,8 @@ def get_alerts_by_id(chat_id):
     '''
     Returns alert_text and rname by id
     '''
-    query = "SELECT alert_text, rname FROM {} WHERE chat_id = {} AND response_status = 'No'".format(table_name, chat_id)
+    query = "SELECT alert_text, rname FROM {} WHERE chat_id = %s AND alert_type = %s AND response_status = %s".format(table_name)
+    values = (chat_id, "Assistance", "No")
     # chat_id = {} AND 
     # Get connection
     factory = connection_manager()
@@ -19,7 +20,7 @@ def get_alerts_by_id(chat_id):
     cursor = connection.cursor()
 
     try:
-        cursor.execute(query)
+        cursor.execute(query, values)
         results = cursor.fetchall()
         return results
     except: raise
@@ -40,7 +41,6 @@ def get_sensor_alerts(chat_id, alert_type):
     try:
         cursor.execute(query, values)
         results = cursor.fetchall()
-        print(len(results))
         return results
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
