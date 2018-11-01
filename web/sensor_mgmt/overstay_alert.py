@@ -249,7 +249,7 @@ class overstay_alert(object):
 
     # SUMMARY DETECTION METHODS ========================================
     @staticmethod
-    def check_activities_by_date(rid, sdt, edt, tm_pure=True):
+    def check_activities_by_date(rid, sdt, edt, mm_pure=False, tm_pure=True):
         """  Checkes values of `time_in_room`, `time_in_bath`, `nbath_visits` per day for a specific resident
         INPUTS:
         -----
@@ -278,6 +278,10 @@ class overstay_alert(object):
         td_uuid = sdict['tDoor']
         tm_uuid = sdict['tMotion']
 
+        # print(f"RID {rid}")
+        # print("\t main w used" if md_uuid != None and mm_pure == False else "\t main wo used")
+        # print("\t bath w used" if td_uuid != None and tm_pure == False else "\t bath wo used")
+
         # Get all sensor logs
         logs_dt = sensor_log_DAO.get_all_logs()
 
@@ -300,7 +304,7 @@ class overstay_alert(object):
             curr_logs.sort_values(by='recieved_timestamp', ascending=True, inplace=True)
 
             # Get time in main room
-            if md_uuid != None:
+            if md_uuid != None and mm_pure == False:
                 time_in_room = overstay_alert.sub_room_w_door(curr_logs, sdict, curr_sdt, curr_edt)
             else:
                 time_in_room = overstay_alert.sub_room_wo_door(curr_logs, sdict, curr_sdt, curr_edt)
@@ -389,20 +393,24 @@ class overstay_alert(object):
         first_motion_found = False
         uuid_searching_end = None
         i = 0
+        # print(f"BEGINNING >> curr i={i}, len of curr logs = {len(curr_logs)}")
         while i < len(curr_logs):
+            
             row = curr_logs.iloc[i]
 
             # ALSO POTENTIALY BUGGY, but not by alot. since data suggest residents dont really sleep for a long period of time. More like they nap alot
             if first_motion_found == False and row.recieved_timestamp < curr_sdt.replace(hour=6) and (row.uuid == sdict['mMotion'] or row.uuid == sdict['mMotion']):
                 # print(f"\t Adding from Head: {row.recieved_timestamp} \t {curr_sdt}")
                 time_in_room += (row.recieved_timestamp - curr_sdt).total_seconds() 
-                first_motion_found == True
+                first_motion_found = True
 
-            elif row.uuid == sdict['mMotion'] or row.uuid == sdict['tMotion']:
+            # If its a start of a motion event, look for the end
+            elif row.uuid == sdict['mMotion'] or row.uuid == sdict['tMotion'] and row.event == overstay_alert.MOTION_START:
+                # print(f"\t STARTING LOOK AHEAD at i = {i} ==========")
                 uuid_searching_end = row.uuid
 
                 # Look forward
-                for j in range(i, len(curr_logs)):
+                for j in range(i+1, len(curr_logs)):
                     future_row = curr_logs.iloc[j]
 
                     if future_row.uuid == uuid_searching_end and future_row.event == overstay_alert.MOTION_END:
@@ -410,12 +418,15 @@ class overstay_alert(object):
                         time_in_room += (future_row.recieved_timestamp - row.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT)).total_seconds()
 
                         # Skip i ahead to after j
-                        uuid_searcing_end = None    # Set to None when search ends
+                        uuid_searching_end = None    # Set to None when search ends
+                        # print(f"\t Skipping i at j {j} >> before {i} , after {i + (j-i)}")
                         i += j - i 
+                        # print(f"\t checking after skip... {i}")
                         break
 
                     # If another motion sensor starts within the room, look for its end instead
                     elif (future_row.uuid  == sdict['mMotion'] or future_row.uuid == sdict['mMotion']) and future_row.event == overstay_alert.MOTION_START:
+                        # print(f"\t Found new to look ahread: prev={uuid_searching_end}, new={future_row.uuid}")
                         uuid_searching_end = future_row.uuid
 
                     # Tail end, open seach, but we hit edt >> POTENTIALLY BUGGY AF
@@ -423,8 +434,15 @@ class overstay_alert(object):
                         # print(f"\t Adding from tail: {curr_edt} \t {row.recieved_timestamp}")
                         time_in_room += (curr_edt - row.recieved_timestamp).total_seconds()
 
-            # Increment counter
-            i += 1
+                        uuid_searching_end = None    # Set to None when search ends
+                        # print(f"\t Skipping i at j {j} >> before {i} , after {i + (j-i)}")
+                        i += j - i 
+                        # print(f"\t checking after skip... {i}")
+                        break
+
+                # print("\t EXITING LOOK AHEAD ====================")
+            # print(f"\t i incrementing from {i} to {i+1}")
+            i += 1  # Increment counter
         return time_in_room
 
     @staticmethod
@@ -574,11 +592,18 @@ class overstay_alert(object):
         [2] API Reference: https://docs.scipy.org/doc/numpy/reference/generated/numpy.convolve.html
 
         """
-        window = np.ones(int(window_size))/float(window_size)
-        return np.convolve(data, window, 'same')
+        # window_kernel = np.ones(int(window_size))/float(window_size)
+        # convolved_moving_avg = np.convolve(data, window_kernel, 'same')
+        # Due to how np deals with kernel shifting over edges, the ends seem to be amplifying trends; Pandas seems to do it better 
+
+        pandas_moving_avg = data.rolling(window=window_size, center=False).mean()
+
+        # print("convolved_moving average", convolved_moving_avg)
+        # print("pandas_moving average   ", pandas_moving_avg)
+        return pandas_moving_avg
 
     @staticmethod
-    def explain_anomalies(y, window_size, sigma=1.0):
+    def explain_anomalies(x, y, window_size, sigma=1.0):
         """
          Helps in exploring the anamolies using stationary standard deviation
         Args:
@@ -598,12 +623,11 @@ class overstay_alert(object):
         # Calculate the variation in the distribution of the residual
         std = np.std(residual)
         return {'standard_deviation': round(std, 3),
-                'anomalies_dict': collections.OrderedDict([(index, y_i) for
-                                                        index, y_i, avg_i in zip(count(), y, avg)
-                if (y_i > avg_i + (sigma*std)) | (y_i < avg_i - (sigma*std))])}
+                'anomalies_dict': collections.OrderedDict([(x[index], y_i) for index, y_i, avg_i in zip(count(), y, avg)
+                                                                        if (y_i > avg_i + (sigma*std)) | (y_i < avg_i - (sigma*std))])}
 
     @staticmethod
-    def explain_anomalies_rolling_std(y, window_size, sigma=1.0):
+    def explain_anomalies_rolling_std(x, y, window_size, sigma=1.0):
         """ Helps in exploring the anamolies using rolling standard deviation
         Args:
         -----
@@ -620,16 +644,15 @@ class overstay_alert(object):
         avg_list = avg.tolist()
         residual = y - avg
         # Calculate the variation in the distribution of the residual
-        testing_std = residual.rolling(window=window_size, center=False).std() # DEPRECIATED pd.rolling_std(residual, window_size) 
+        testing_std       = residual.rolling(window=window_size, center=False).std() # DEPRECIATED pd.rolling_std(residual, window_size) 
         testing_std_as_df = pd.DataFrame(testing_std)
-        rolling_std = testing_std_as_df.replace(np.nan,
-                                    testing_std_as_df.ix[window_size - 1]).round(3).iloc[:,0].tolist()
+        rolling_std       = testing_std_as_df.replace(np.nan,testing_std_as_df.ix[window_size - 1]).round(3).iloc[:,0].tolist()
+
         std = np.std(residual)
         return {'stationary standard_deviation': round(std, 3),
-                'anomalies_dict': collections.OrderedDict([(index, y_i)
-                                                        for index, y_i, avg_i, rs_i in zip(count(),
-                                                                                            y, avg_list, rolling_std)
-                if (y_i > avg_i + (sigma * rs_i)) | (y_i < avg_i - (sigma * rs_i))])}
+                'anomalies_dict': collections.OrderedDict([(x[index], y_i)
+                                                        for index, y_i, avg_i, rs_i in zip(count(), y, avg_list, rolling_std)
+                                                        if (y_i > avg_i + (sigma * rs_i)) | (y_i < avg_i - (sigma * rs_i))])}
 
     # This function is repsonsible for displaying how the function performs on the given dataset.
     @staticmethod
@@ -650,6 +673,7 @@ class overstay_alert(object):
         plt.figure(figsize=(15, 8))
         plt.plot(x, y, "k.")
         y_av = overstay_alert.moving_average(y, window_size)
+        
         plt.plot(x, y_av, color='green')
         plt.xlabel(text_xlabel)
         plt.ylabel(text_ylabel)
@@ -657,12 +681,12 @@ class overstay_alert(object):
         # Query for the anomalies and plot the same
         events = {}
         if applying_rolling_std:
-            events = overstay_alert.explain_anomalies_rolling_std(y, window_size=window_size, sigma=sigma_value)
+            events = overstay_alert.explain_anomalies_rolling_std(x, y, window_size=window_size, sigma=sigma_value)
         else:
-            events = overstay_alert.explain_anomalies(y, window_size=window_size, sigma=sigma_value)
+            events = overstay_alert.explain_anomalies(x, y, window_size=window_size, sigma=sigma_value)
 
         # x_anomaly = np.fromiter(events['anomalies_dict'].keys(), dtype=int, count=len(events['anomalies_dict'])) # treats x values as idx WRONG BEHAVIOUR
-        x_anomaly = [x.iloc[idx] for idx in events['anomalies_dict'].keys()]
+        x_anomaly = [x for x in events['anomalies_dict'].keys()]
         y_anomaly = np.fromiter(events['anomalies_dict'].values(), dtype=float, count=len(events['anomalies_dict']))
         plt.plot(x_anomaly, y_anomaly, "r*", markersize=12)
 
@@ -728,14 +752,14 @@ class overstay_alert(object):
         plt.show()
         
     @staticmethod
-    def test_check_activities_by_date(rids, sdt, edt, print_summary=False, tm_pure=True, plot=False):
+    def test_check_activities_by_date(rids, sdt, edt, print_summary=False, mm_pure=False, tm_pure=True, plot=False):
         
         results = [] # 'date'  'secs_room'   'secs_bath'    'nvisit_bath'
         times   = []
 
         for rid in rids:
             start_time = time.clock()
-            ret_list = ret_list = overstay_alert.check_activities_by_date(rid=rid, sdt=sdt, edt=edt, tm_pure=tm_pure)
+            ret_list = ret_list = overstay_alert.check_activities_by_date(rid=rid, sdt=sdt, edt=edt, mm_pure=mm_pure, tm_pure=tm_pure)
             results.append(ret_list)
             times.append(time.clock() - start_time)
 
@@ -774,22 +798,22 @@ class overstay_alert(object):
     def test_anomaly_by_averages(rids, sdt, edt, tm_pure=True, print_summary=True, sigma=2, window=7, applying_rolling_std=True):
 
         # RESULTS >> 'date'  'secs_room'   'secs_bath'    'nvisit_bath'
-        results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, tm_pure=True, print_summary=True)
+        results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, mm_pure=True, tm_pure=True, print_summary=True)
 
         for idx,rid in enumerate(rids):
             print(f"==================== RID: {rid} ==================================================")
             x_dates  = pd.Series([d['date'] for d in results[idx]])
 
             y_iroom  = pd.Series([d['secs_room'] for d in results[idx]])
-            print("Information about the anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(y_iroom, window_size=window, sigma=sigma)))
+            print("Info of secs room anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_iroom, window_size=window, sigma=sigma)))
             overstay_alert.plot_results(x_dates, y=y_iroom, window_size=window, text_xlabel=f"RID {rid} - Datetime", sigma_value=sigma, text_ylabel="secs room", applying_rolling_std=True)
 
             y_ibath  = pd.Series([d['secs_bath'] for d in results[idx]])
-            print("Information about the anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(y_ibath, window_size=window, sigma=sigma)))
+            print("Info of secs bath anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_ibath, window_size=window, sigma=sigma)))
             overstay_alert.plot_results(x_dates, y=y_ibath, window_size=window, text_xlabel=f"RID {rid} - Datetime", sigma_value=sigma, text_ylabel="secs bath", applying_rolling_std=True)
 
             y_nvisit = pd.Series([d['nvisit_bath'] for d in results[idx]])
-            print("Information about the anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(y_nvisit, window_size=window, sigma=sigma)))
+            print("Info of num vbath anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_nvisit, window_size=window, sigma=sigma)))
             overstay_alert.plot_results(x_dates, y=y_nvisit, window_size=window, text_xlabel=f"RID {rid} - Datetime", sigma_value=sigma, text_ylabel="visits bath", applying_rolling_std=True)
 
             print()
@@ -812,31 +836,11 @@ if __name__ == '__main__':
 
     # ============================== TESTING ANOMALY DETECTION =========================================
     rids = [rid for rid,rname in rdict.items()]
-    rids = [1,3,5,7]
     sdt = datetime.datetime.strptime('2018-08-01 00:00:00', '%Y-%m-%d %H:%M:%S')
     edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
+
     overstay_alert.test_anomaly_by_averages(rids, sdt, edt, tm_pure=True, print_summary=True, sigma=2, window=7, applying_rolling_std=True)
-
-    # # # RESULTS >> `rid`: 'date'  'secs_room'   'secs_bath'    'nvisit_bath'
-    # results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, tm_pure=True, print_summary=True)
-
-    # rid_to_plot = 3
-    # x_idx    = pd.Series([idx for idx,d in enumerate(results[rids.index(rid_to_plot)])])
-    # x_dates  = pd.Series([d['date'] for d in results[rids.index(rid_to_plot)]])
-    # y_iroom  = pd.Series([d['secs_room'] for d in results[rids.index(rid_to_plot)]])
-    # y_ibath  = pd.Series([d['secs_bath'] for d in results[rids.index(rid_to_plot)]])
-    # y_nvisit = pd.Series([d['nvisit_bath'] for d in results[rids.index(rid_to_plot)]])
-
-    # # DETECT and/or DISPLAY the anomalies
-    # window = 7
-    # sigma  = 2
-    # x_series = x_dates
-    # y_series = y_nvisit
-
-    # print("Information about the anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(y_series, window_size=window, sigma=sigma)))
-    # overstay_alert.plot_results(x_series, y=y_series, window_size=window, text_xlabel="Datetime", sigma_value=sigma, text_ylabel="Y Axis", applying_rolling_std=True)
-
-    
+    print("this may take up to 30 secs...")
 
     
 
