@@ -29,62 +29,27 @@ def check_shift_form(shifttime):
 	return patientIDList
 	
 def job():
-    print("I'm working...")
-
-
-schedule.every().day.at("15:14").do(job)
+	date = datetime.date.today()
+	time = datetime.datetime.strptime('1200','%H%M').time()
+	shifttime = datetime.datetime.combine(date, time)
+	patientIDList = check_shift_form(shifttime)
+	nameList = []
+	checkList = []
+	checkList.extend(range(1, 9))
+	for patient_ID in patientIDList[:]:
+		checkList.remove(patient_ID)
+	for id in checkList:
+		patientName = resident_DAO.get_resident_name_by_resident_id(id)[0]['name']
+		nameList.append(patientName)
 	
-while 1:
-	current_time=datetime.datetime.now()
-	hour = current_time.hour
-	minute = current_time.minute
-	second = current_time.second
-	microsecond = current_time.microsecond
-	if((hour ==19) and (minute==0) and (second == 0)):
-	# secondList = [10,20,30,40,50,0]
-	# if((second in secondList)):
-		date = datetime.date.today()
-		time = datetime.datetime.strptime('1200','%H%M').time()
-		shifttime = datetime.datetime.combine(date, time)
-		patientIDList = check_shift_form(shifttime)
-		nameList = []
-		checkList = []
-		checkList.extend(range(1, 9))
-		for patient_ID in patientIDList[:]:
-			checkList.remove(patient_ID)
-		for id in checkList:
-			patientName = resident_DAO.get_resident_name_by_resident_id(id)[0]['name']
-			nameList.append(patientName)
-		
-		if(len(nameList) > 0):
-			text = "\n".join(nameList)
-			link = "http://stb-broker.lvely.net/eosforms"
-			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text + "\n\nClick here to access the shift form:\n" + link)
-			
-	elif((hour ==7) and (minute==0) and (second == 0)):
-		yesterday = datetime.datetime.now() - timedelta(days=1)
-		date = yesterday.strftime('%y-%m-%d')
-		# time = datetime.datetime.strptime('2000','%H%M').time()
-		# shifttime = datetime.datetime.combine(date, time)
-		shifttime = date + " 20:00:00"
-		patientIDList = check_shift_form(shifttime)
-		nameList = []
-		checkList = []
-		checkList.extend(range(1, 9))
-		for patient_ID in patientIDList[:]:
-			checkList.remove(patient_ID)
-		for id in checkList:
-			patientName = resident_DAO.get_resident_name_by_resident_id(id)[0]['name']
-			nameList.append(patientName)
-		
-		if(len(nameList) > 0):
-			text = "\n".join(nameList)
-			link = "http://stb-broker.lvely.net/eosforms"
-			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text + "\n\nClick here to access the form:\n" + link)
-		
-		schedule.run_pending()
-		time.sleep(1)
+	if(len(nameList) > 0):
+		text = "\n".join(nameList)
+		link = "http://stb-broker.lvely.net/eosforms"
+		send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text + "\n\nClick here to access the shift form:\n" + link)
 
-		
-if __name__ == '__main__':
-    main()
+schedule.every().day.at("19:00").do(job)
+schedule.every().day.at("07:00").do(job)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
