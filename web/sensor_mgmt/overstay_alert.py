@@ -25,6 +25,9 @@ from DAOs.sensor_log_DAO import sensor_log_DAO
 
 class overstay_alert(object):
     """
+    NOTE: IF THIS IS THE ONLY THING YOU READ: SEE overstay_alert.get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, sigma=2)\
+            - Using the default values for mm_pure and tm_pure is fine
+
     ------  POINTWISE DETECTION:
                 2 main methods for checking, given an exact time, how long resident has been in his/her room/toilet
                 NOTE: in room only works with residents with a main door sensor!!
@@ -694,6 +697,56 @@ class overstay_alert(object):
         plt.grid(True)
         plt.show()
 
+    @staticmethod
+    def get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, sigma=2):
+        """ Returns a dict with a constant standard deviation, and anomalies found
+        NOTE: YOU SHOULD PUT MAX AND MIN DATETIMES INTO HERE, OR AT LEAST 7 DAYS WORTH OF DATA!!!! 
+
+            ------- INPUTS:
+                    rids (list)    -- list of resident ids
+                    sdt (datetime) -- start datetime
+                    edt (datetime) -- end datetime
+                    mm_pure (bool) -- If true, use only motiion sensors to evaluate time in main room
+                    tm_pure (bool) -- If true, use only motion sensors to evaluate time and visits in/to toilet
+                    window (int)   -- Size of moving window, default 7
+                    sigma (int)    -- Number of standard deviations to consider a point an anomaly, default 2
+
+            
+            -------- RETURNS: 
+                    Returns a dictionary with key of rid (int) with a value of an OrderedDict with 3 keys: "inRoom", "inBath", "nbath"
+                    respectively corresponding to secs_in_room, secs_in_bath, n_visits_bath
+
+                    (dict)          --    {<<rid>>: {"inRoom": <<OrderedDict: k=datetime v=value>>,
+                                                     "inBath": <<OrderedDict: k=datetime v=value>>,
+                                                     "nBath": <<OrderedDict: k=datetime v=value>>,
+                                                    }
+                                           }
+
+                                        {'stationary standard_deviation': <<float>>,
+                                            'anomalies_dict':  }
+        """
+        ret_dict = {}
+
+        # RESULTS >> 'date'  'secs_room'   'secs_bath'    'nvisit_bath'
+        results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, mm_pure=mm_pure, tm_pure=tm_pure, print_summary=True)
+        for idx,rid in enumerate(rids):
+            x_dates  = pd.Series([d['date'] for d in results[idx]])
+
+            y_iroom = pd.Series([d['secs_room'] for d in results[idx]])
+            iroom_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_iroom, window_size=window, sigma=sigma)
+
+            y_ibath = pd.Series([d['secs_bath'] for d in results[idx]])
+            ibath_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_ibath, window_size=window, sigma=sigma)
+
+            y_nvisit = pd.Series([d['nvisit_bath'] for d in results[idx]])
+            nvisit_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_nvisit, window_size=window, sigma=sigma)
+
+            ret_dict[rid] = {"inRoom": iroom_a['anomalies_dict'],
+                             "inBath": ibath_a['anomalies_dict'],
+                             "nbath": nvisit_a['anomalies_dict']}
+
+        return ret_dict
+
     # TESTING METHODS ============================================
     @staticmethod
     def test_plot_in_toilet_check(rid, sdt, edt, jump_mins=5):
@@ -795,10 +848,10 @@ class overstay_alert(object):
         return results
 
     @staticmethod
-    def test_anomaly_by_averages(rids, sdt, edt, tm_pure=True, print_summary=True, sigma=2, window=7, applying_rolling_std=True):
+    def test_anomaly_by_averages(rids, sdt, edt, mm_pure=True, tm_pure=True, print_summary=True, sigma=2, window=7, applying_rolling_std=True):
 
         # RESULTS >> 'date'  'secs_room'   'secs_bath'    'nvisit_bath'
-        results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, mm_pure=True, tm_pure=True, print_summary=True)
+        results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, mm_pure=mm_pure, tm_pure=tm_pure, print_summary=True)
 
         for idx,rid in enumerate(rids):
             print(f"==================== RID: {rid} ==================================================")
@@ -834,13 +887,20 @@ if __name__ == '__main__':
     # edt = datetime.datetime.strptime('2018-10-28 00:00:00', '%Y-%m-%d %H:%M:%S')
     # overstay_alert.test_plot_in_toilet_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
 
-    # ============================== TESTING ANOMALY DETECTION =========================================
+    # ============================== TESTING ANOMALY DETECTION WITH PLOT =========================================
+    # rids = [rid for rid,rname in rdict.items()]
+    # sdt = datetime.datetime.strptime('2018-08-01 00:00:00', '%Y-%m-%d %H:%M:%S')
+    # edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
+    # overstay_alert.test_anomaly_by_averages(rids, sdt, edt, mm_pure=True, tm_pure=True, print_summary=True, sigma=2, window=7, applying_rolling_std=True)
+    # print("this may take up to 30 secs...")
+
+
+    # ============================== TESTING ANOMALY DETECTION NO PLOT =========================================
     rids = [rid for rid,rname in rdict.items()]
     sdt = datetime.datetime.strptime('2018-08-01 00:00:00', '%Y-%m-%d %H:%M:%S')
     edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
-
-    overstay_alert.test_anomaly_by_averages(rids, sdt, edt, tm_pure=True, print_summary=True, sigma=2, window=7, applying_rolling_std=True)
-    print("this may take up to 30 secs...")
+    rdict = overstay_alert.get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, sigma=2)
+    print(rdict)
 
     
 
