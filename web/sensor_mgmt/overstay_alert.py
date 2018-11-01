@@ -27,6 +27,7 @@ class overstay_alert(object):
     """
     NOTE: IF THIS IS THE ONLY THING YOU READ: SEE overstay_alert.get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, sigma=2)\
             - Using the default values for mm_pure and tm_pure is fine
+            - Method is also ment to be run after the day itself. say you want to check 10/10/2018, wait until 11/10/2018 00:00:00, then run with edt = 10/10/2018
 
     ------  POINTWISE DETECTION:
                 2 main methods for checking, given an exact time, how long resident has been in his/her room/toilet
@@ -701,6 +702,7 @@ class overstay_alert(object):
     def get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, sigma=2):
         """ Returns a dict with a constant standard deviation, and anomalies found
         NOTE: YOU SHOULD PUT MAX AND MIN DATETIMES INTO HERE, OR AT LEAST 7 DAYS WORTH OF DATA!!!! 
+            - Method is also ment to be run after the day itself. say you want to check 10/10/2018, wait until 11/10/2018 00:00:00, then run with edt = 10/10/2018
 
             ------- INPUTS:
                     rids (list)    -- list of resident ids
