@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import datetime
 import shift_log_DAO
 import resident_DAO
+import schedule
+import time
 
 token = '687512562:AAGEoEH8wpDU3PK5TU0X3lar40FIfDetAHY'
 teleurl = 'https://api.telegram.org/bot' + token + '/'
@@ -26,16 +28,19 @@ def check_shift_form(shifttime):
 		patientIDList.append(patientID)
 	return patientIDList
 	
+def job():
+    print("I'm working...")
 
 
-
+schedule.every().day.at("15:14").do(job)
+	
 while 1:
 	current_time=datetime.datetime.now()
 	hour = current_time.hour
 	minute = current_time.minute
 	second = current_time.second
 	microsecond = current_time.microsecond
-	if((hour ==18) and (minute==0) and (second == 0)):
+	if((hour ==19) and (minute==0) and (second == 0)):
 	# secondList = [10,20,30,40,50,0]
 	# if((second in secondList)):
 		date = datetime.date.today()
@@ -53,10 +58,10 @@ while 1:
 		
 		if(len(nameList) > 0):
 			text = "\n".join(nameList)
-			link = "http://13.228.71.248/eosforms"
+			link = "http://stb-broker.lvely.net/eosforms"
 			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text + "\n\nClick here to access the shift form:\n" + link)
 			
-	elif((hour ==6) and (minute==0) and (second == 0)):
+	elif((hour ==7) and (minute==0) and (second == 0)):
 		yesterday = datetime.datetime.now() - timedelta(days=1)
 		date = yesterday.strftime('%y-%m-%d')
 		# time = datetime.datetime.strptime('2000','%H%M').time()
@@ -74,5 +79,12 @@ while 1:
 		
 		if(len(nameList) > 0):
 			text = "\n".join(nameList)
-			link = "http://13.228.71.248/eosforms"
+			link = "http://stb-broker.lvely.net/eosforms"
 			send_message_with_reply(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text + "\n\nClick here to access the form:\n" + link)
+		
+		schedule.run_pending()
+		time.sleep(1)
+
+		
+if __name__ == '__main__':
+    main()

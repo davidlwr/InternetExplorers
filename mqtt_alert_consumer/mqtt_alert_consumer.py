@@ -89,7 +89,6 @@ def log_msg(filename, msg):
 dwelling_to_nodeid = {"room 1": 2005, "room 2": 2006}
 
 uuid_rname =    { "2005-d-01": "Poh Kim Pew",
-                  "2005-m-01": "Poh Kim Pew",
                   "2005-m-02": "Poh Kim Pew",
                   "2006-d-01": "Lo Khuik Fah Joy",
                   "2006-m-02": "Lo Khuik Fah Joy",
@@ -138,7 +137,7 @@ def process_msg(topic, message):
             
             if data_type == "data" and rname != None:
                 if key == "motion": action_motion(event=value, rname=uuid_rname[uuid])
-                if key == "door":   action_door(event=value, rname=uuid_rname[uuid])
+                # if key == "door":   action_door(event=value, rname=uuid_rname[uuid])
 
     except Exception as e:
         msg = f"PROCESS MESSAGE FAILURE >> Exception: '{str(e)}, Msg: {message}'"
@@ -153,35 +152,46 @@ def action_motion(event, rname):
         date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         text=f'Assistance Alert: {rname} at ' + date_time
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
-        alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, text, "Assistance", "No")
+        alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, rname, text, "Assistance", "No")
 
         alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
-        print(alerts)
-        keyboardBottom = [[alert['alert_text']] for alert in alerts]
+        latest_list = get_latest_alerts(alerts)
+        keyboardBottom = [[alert] for alert in latest_list]
         reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
         response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markupBottom)
         print(response.json()['result']['message_id'])
         message_id = response.json()['result']['message_id']
         # delete_message_with_reply(DUTY_NURSE_CHAT_ID, message_id)
 
-def action_door(event, rname):
-    if event == 255:
-        print("called action_door motion")
-        reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
-        date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        text=f'Assistance Alert: {rname} at ' + date_time
-        send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
-        alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, text, "Assistance", "No")
+# def action_door(event, rname):
+    # if event == 255:
+        # print("called action_door motion")
+        # reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
+        # date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # text=f'Assistance Alert: {rname} at ' + date_time
+        # send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
+        # alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, text, "Assistance", "No")
 
-        alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
-        keyboardBottom = [[alert['alert_text']] for alert in alerts]
-        reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
-        response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markupBottom)
-        print(response.json()['result']['message_id'])
-        message_id = response.json()['result']['message_id']
+        # alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
+        # keyboardBottom = [[alert['alert_text']] for alert in alerts]
+        # print([alert['alert_text']] for alert in alerts)
+        # reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
+        # response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markupBottom)
+        # print(response.json()['result']['message_id'])
+        # message_id = response.json()['result']['message_id']
         # delete_message_with_reply(DUTY_NURSE_CHAT_ID, message_id)
 
 
+def get_latest_alerts(alerts):
+    latest_list = []
+    check_list = []
+    for alert in reversed(alerts):
+        alert_text = alert['alert_text']
+        rname = alert['rname']
+        if rname not in check_list:
+            check_list.append(rname)
+            latest_list.append(alert_text)
+    return latest_list
 
 # Call back functions ============================================================================================================
 def on_connect(client, userdata, flags, rc):
@@ -236,37 +246,7 @@ def on_log(client, userdata, level, buf):
     log_msg(LOGGING_FILE, message)
 
 
-# def on_message(client, userdata, message):
-#     payload = message.payload.decode('utf-8')
-#     string = 'ON MESSAGE'.ljust(25) + f" >> Topic: '{message.topic}', Qos: '{message.qos}', Payload: '{payload}'"
-    
-#     # Log 
-#     log_msg(LOGGING_FILE, string)
-#     log_msg(CSV_FILE, f', \"{message.topic}\", \"{payload}\"')
 
-#     # Process / Send to DB
-#     # process_msg(topic=message.topic, message=payload)
-#     topic=message.topic
-#     message=payload
-#      # process_msg(topic=message.topic, message=payload)
-    
-#     try:
-#         # Load JSON
-#         jdict = json.loads(message)
-        
-#         topic = topic.split("/")
-#         if len(topic) == 1 and topic[0] == "test" and len(jdict) == 3:         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
-#             if 'nodeid' in jdict and 'event' in jdict and 'uuid' in jdict:     # Ensure this is the right message
-#                 nodeid = jdict['nodeid']    # int
-#                 event  = jdict['event']     # int
-#                 uuid   = jdict['uuid']      # str
-
-#                 if nodeid == NODEID_MOTION: action_motion(event=event)
-#                 if nodeid == NODEID_DOOR: action_door(event=event)
-
-#     except Exception as e:
-#         msg = f"PROCESS MESSAGE FAILURE >> Exception: '{str(e)}, Msg: {message}'"
-#         log_msg(LOGGING_FILE, msg)
 def on_message(client, userdata, message):
     payload = message.payload.decode('utf-8')
     string = 'ON MESSAGE'.ljust(25) + f" >> Topic: '{message.topic}', Qos: '{message.qos}', Payload: '{payload}'"
@@ -304,3 +284,12 @@ except KeyboardInterrupt:
     log_msg(LOGGING_FILE, "KEYBOARD INTERRUPT >> ")
     client.disconnect()
     client.loop_stop()
+
+# def main():
+    # latest_list = ['hi','sus','steady']
+    # keyboardBottom = [[alert] for alert in latest_list]
+    # reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
+    # print(reply_markupBottom)
+
+# if __name__ == '__main__':
+    # main()

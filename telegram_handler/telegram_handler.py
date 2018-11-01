@@ -16,6 +16,17 @@ from DAOs import sensor_hist_DAO
 
 DUTY_NURSE_CHAT_ID = -251433967
 
+def get_latest_alerts(alerts):
+    latest_list = []
+    check_list = []
+    for alert in reversed(alerts):
+        alert_text = alert['alert_text']
+        rname = alert['rname']
+        if rname not in check_list:
+            check_list.append(rname)
+            latest_list.append(alert_text)
+    return latest_list
+
 def button(bot, update):
 
 	# keyboardtext = update.message.text 
@@ -48,8 +59,10 @@ def button(bot, update):
 
 		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, query['message']['text'])
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
+		
 		if len(alerts) > 0:
-			keyboardBottom = [[alert['alert_text']] for alert in alerts]
+			latest_list = get_latest_alerts(alerts)
+			keyboardBottom = [[alert] for alert in latest_list]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
 		else:
@@ -64,7 +77,8 @@ def button(bot, update):
 		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg) 
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
-			keyboardBottom = [[alert['alert_text']] for alert in alerts]
+			latest_list = get_latest_alerts(alerts)
+			keyboardBottom = [[alert] for alert in latest_list]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
 		else:
@@ -79,7 +93,8 @@ def button(bot, update):
 		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg) 
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
-			keyboardBottom = [[alert['alert_text']] for alert in alerts]
+			latest_list = get_latest_alerts(alerts)
+			keyboardBottom = [[alert] for alert in latest_list]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
 		else:
@@ -93,7 +108,8 @@ def button(bot, update):
 		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg)
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
-			keyboardBottom = [[alert['alert_text']] for alert in alerts]
+			latest_list = get_latest_alerts(alerts)
+			keyboardBottom = [[alert] for alert in latest_list]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
 		else:
@@ -108,7 +124,8 @@ def button(bot, update):
 		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, text)
 		alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 		if len(alerts) > 0:
-			keyboardBottom = [[alert['alert_text']] for alert in alerts]
+			latest_list = get_latest_alerts(alerts)
+			keyboardBottom = [[alert] for alert in latest_list]
 			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 			bot.send_message(query.message.chat_id, "You still have these incomplete tasks:", reply_markup=reply_markupBottom)
 		else:
@@ -146,15 +163,14 @@ def shiftform(bot, update):
 		nameList.append(patientName)
 	if(len(nameList) > 0):
 			text = "\n".join(nameList)
-			link = "http://13.228.71.248/eosforms"
+			link = "http://stb-broker.lvely.net/eosforms"
 			bot.send_message(DUTY_NURSE_CHAT_ID, "You have not completed your shift logs for the following residents:\n" + text + "\n\nClick here to access the shift form:\n" + link)
 	
 def help(bot, update):
 	update.message.reply_text("Use /start to test this bot.")
 
 def sensoralert(bot, update):
-	
-	downList = []
+	downList = {}
 	for ss in Sensor_mgmt.get_all_sensor_status_v2(True):
 		id = ss[0]
 		loc = sensor_DAO.get_location_by_node_id(id)
@@ -168,13 +184,13 @@ def sensoralert(bot, update):
 			residentName = residentNameRaw[0]['name']
 			if 1 in ss[1]:
 				error = "Sensor Issue: Disconnected" + "\nLocation: " + residentName + " " + location + "\nType: " + type
-				downList.append(error)
+				downList.update({residentName : error})
 			elif 2 in ss[1]:
 				error = "Sensor Issue: Low Battery" + "\nLocation: " + residentName + " " + location + "\nType: " + type
-				downList.append(error)
+				downList.update({residentName : error})
 			elif 3 in ss[1]:
 				error = "Sensor Issue: Warning"+ "\nLocation: " + residentName + " " + location + "\nType: " + type
-				downList.append(error)
+				downList.update({residentName : error})
 	sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
 	sensorAlertList = []
 	for sensor_alert in sensor_alerts:
@@ -185,14 +201,15 @@ def sensoralert(bot, update):
 		if sensor_alert_text not in downList: 
 			alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, sensor_alert_text)
 	if(len(downList) > 0):
-		for downSS in downList:
-			if downSS not in sensorAlertList:
-				text = downSS 
+		for key, value in downList.items():
+			if value not in sensorAlertList:
+				text = value
 				bot.send_message(DUTY_NURSE_CHAT_ID, text)
 				date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-				alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, text, "Sensor", "No")
+				alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, key, text, "Sensor", "No")
 				alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
-				keyboardBottom = [[alert['alert_text']] for alert in alerts]
+				latest_list = get_latest_alerts(alerts)
+				keyboardBottom = [[alert] for alert in latest_list]
 				reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 				bot.send_message(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markup=reply_markupBottom)
 
@@ -212,13 +229,13 @@ def text_reply(bot, update):
 
 	reply_markupDefault = InlineKeyboardMarkup(keyboardDefault)
 	
-	keyboardSensor = [[InlineKeyboardButton("Fixed", callback_data='fixed'), InlineKeyboardButton("False Alarm", callback_data='False Alarm')]]	
-	reply_markupSensor = InlineKeyboardMarkup(keyboardSensor)
+	# keyboardSensor = [[InlineKeyboardButton("Fixed", callback_data='fixed'), InlineKeyboardButton("False Alarm", callback_data='False Alarm')]]	
+	# reply_markupSensor = InlineKeyboardMarkup(keyboardSensor)
 	
 	query = update.callback_query
 	hitext = update.message.text
 	if exists(hitext) and "Sensor" in hitext:
-		bot.send_message(update.message.chat_id, hitext, reply_markup=reply_markupSensor)
+		bot.send_message(update.message.chat_id, hitext)
 	else:
 		bot.send_message(update.message.chat_id, hitext, reply_markup=reply_markupDefault)
 		

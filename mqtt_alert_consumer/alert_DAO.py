@@ -9,9 +9,9 @@ table_name = 'stbern.alert_log'
 
 def get_alerts_by_id(chat_id):
     '''
-    Returns a resident (in a dict) based on node_id (in int)
+    Returns alert_text and rname by id
     '''
-    query = "SELECT alert_text FROM {} WHERE chat_id = {} AND response_status = 'No'".format(table_name, chat_id)
+    query = "SELECT alert_text, rname FROM {} WHERE chat_id = {} AND response_status = 'No'".format(table_name, chat_id)
     # chat_id = {} AND 
     # Get connection
     factory = connection_manager()
@@ -21,14 +21,13 @@ def get_alerts_by_id(chat_id):
     try:
         cursor.execute(query)
         results = cursor.fetchall()
-        print(len(results))
         return results
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
 
 def get_sensor_alerts(chat_id, alert_type):
     '''
-    Returns a resident (in a dict) based on node_id (in int)
+    Returns sensor alert_text and by id
     '''
     query = "SELECT alert_text FROM {} WHERE chat_id = %s AND alert_type = %s AND response_status = %s".format(table_name)
     values = (chat_id, alert_type, "No")
@@ -47,12 +46,12 @@ def get_sensor_alerts(chat_id, alert_type):
     finally: factory.close_all(cursor=cursor, connection=connection)
 
 
-def insert_alert(chat_id, date, alert_text, alert_type, response_status):
+def insert_alert(chat_id, date, rname, alert_text, alert_type, response_status):
     '''
     Returns the id of the inserted resident if successful
     '''
-    query = 'INSERT INTO {} (chat_id, date, alert_text, alert_type, response_status) VALUES (%s, %s, %s, %s, %s)'.format(table_name)
-    values = (chat_id, date, alert_text, alert_type, response_status)
+    query = 'INSERT INTO {} (chat_id, date, rname, alert_text, alert_type, response_status) VALUES (%s, %s, %s, %s, %s, %s)'.format(table_name)
+    values = (chat_id, date, rname, alert_text, alert_type, response_status)
 
     factory = connection_manager()
     connection = factory.connection
@@ -65,7 +64,7 @@ def insert_alert(chat_id, date, alert_text, alert_type, response_status):
     finally: factory.close_all(cursor=cursor, connection=connection)
 
 def update_alert(chat_id, alert_text):
-    print("alerting")
+    
     '''
     Update the status of the alert if successful
     '''
@@ -74,12 +73,12 @@ def update_alert(chat_id, alert_text):
     factory = connection_manager()
     connection = factory.connection
     cursor = connection.cursor()
-
+    print("alerting")
     try:
         cursor.execute(query, values)
         return cursor.lastrowid
     except: raise
-    finally: factory.close_all(cursor=cursor, connection=connection)    
+    finally: factory.close_all(cursor=cursor, connection=connection)
 
 def delete_alert(chat_id, alert_text):
     '''
@@ -96,3 +95,9 @@ def delete_alert(chat_id, alert_text):
         return cursor.lastrowid
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
+
+# def main():
+    # print(get_alerts_by_id(-251433967))
+
+# if __name__ == '__main__':
+    # main()
