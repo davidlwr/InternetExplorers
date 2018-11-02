@@ -9,6 +9,7 @@ RUN pip install telebot
 RUN pip install python-telegram-bot==11.1.0
 RUN pip install mysqlclient
 RUN pip install PyMySQL
+RUN pip install pandas==0.22.0
 
 CMD ["python", "/mqtt_alert_consumer.py"]
 

@@ -12,7 +12,7 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 # from dbhelper import DBHelper
 import alert_DAO
 import resident_DAO
-import sensor_hist_DAO
+from DAOs import sensor_hist_DAO
 
 from pprint import pprint
 import time
@@ -90,13 +90,13 @@ def log_msg(filename, msg):
 # db.setup()
 dwelling_to_nodeid = {"room 1": 2005, "room 2": 2006}
 
-uuid_rname =    { "2005-d-01": "Poh Kim Pew",
-                  "2005-m-02": "Poh Kim Pew",
-                  "2006-d-01": "Lo Khuik Fah Joy",
-                  "2006-m-02": "Lo Khuik Fah Joy",
-                  "2100-room 3-m-02": "Lai Yee Chun",
-                  "2100-room 4-m-02": "Lopez Beatrice Angelina"
-                }
+# uuid_rname =    { "2005-d-01": "Poh Kim Pew",
+                  # "2005-m-02": "Poh Kim Pew",
+                  # "2006-d-01": "Lo Khuik Fah Joy",
+                  # "2006-m-02": "Lo Khuik Fah Joy",
+                  # "2100-room 3-m-02": "Lai Yee Chun",
+                  # "2100-room 4-m-02": "Lopez Beatrice Angelina"
+                # }
 def process_msg(topic, message):
     '''
     Process json msgs from mqtt broker. Insert only event update msgs
@@ -133,18 +133,19 @@ def process_msg(topic, message):
                 uuid = f"{dwelling_to_nodeid[dwelling_id]}-{sensor_id}"
             else:
                 uuid = f"{hub_id}-{dwelling_id}-{sensor_id}"
-
+            residentName = ""
             # SPLIT INTO SYSMON AND DATA
+            
             raw_resident_id = sensor_hist_DAO.get_id_by_uuid(uuid)
             if len(raw_resident_id)> 0:
                 residentid = raw_resident_id[0]['resident_id']
                 residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
-                rname = residentNameRaw[0]['name']
-            else:
-                rname = None
+                residentName = residentNameRaw[0]['name']
+            
+
             
             if data_type == "data" and rname != None:
-                if key == "motion": action_motion(event=value, rname=uuid_rname[uuid])
+                if key == "motion": action_motion(event=value, rname=residentName)
                 # if key == "door":   action_door(event=value, rname=uuid_rname[uuid])
 
     except Exception as e:
@@ -294,10 +295,7 @@ except KeyboardInterrupt:
     client.loop_stop()
 
 # def main():
-    # latest_list = ['hi','sus','steady']
-    # keyboardBottom = [[alert] for alert in latest_list]
-    # reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
-    # print(reply_markupBottom)
+    # def process_msg(topic, message):
 
 # if __name__ == '__main__':
     # main()
