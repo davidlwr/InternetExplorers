@@ -204,29 +204,36 @@ def sensoralert(bot, update):
 			residentName = residentNameRaw[0]['name']
 			if 1 in ss[1]:
 				error = "Sensor Issue: Disconnected" + "\nLocation: " + residentName + " " + location + "\nType: " + type
-				downList.update({residentName : error})
+				downList.update({error : residentName})
 			elif 2 in ss[1]:
 				error = "Sensor Issue: Low Battery" + "\nLocation: " + residentName + " " + location + "\nType: " + type
-				downList.update({residentName : error})
+				downList.update({error : residentName})
 			elif 3 in ss[1]:
 				error = "Sensor Issue: Warning"+ "\nLocation: " + residentName + " " + location + "\nType: " + type
-				downList.update({residentName : error})
+				downList.update({error : residentName})
 	sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
 	sensorAlertList = []
 	for sensor_alert in sensor_alerts:
 		sensor_alert_text = sensor_alert['alert_text']
 		sensorAlertList.append(sensor_alert_text)
-	# if(len(downList) > 0):
-		# text = "\n".join(downList)
-		if sensor_alert_text not in downList: 
+		if sensor_alert_text not in downList.keys(): 
 			alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, sensor_alert_text)
+			alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
+			latest_list = get_latest_alerts(alerts)
+			sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
+			for sensor_alert in sensor_alerts:
+				sensor_alert_text = sensor_alert['alert_text']
+				latest_list.append(sensor_alert_text)
+			keyboardBottom = [[alert] for alert in latest_list]
+			reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
+			bot.send_message(DUTY_NURSE_CHAT_ID, "Sensor issue has been rectified for:\n" + sensor_alert_text, reply_markupBottom)
 	if(len(downList) > 0):
 		for key, value in downList.items():
-			if value not in sensorAlertList:
-				text = value
+			if key not in sensorAlertList:
+				text = key
 				bot.send_message(DUTY_NURSE_CHAT_ID, text)
 				date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-				alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, key, text, "Sensor", "No")
+				alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, value, text, "Sensor", "No")
 				alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
 				latest_list = get_latest_alerts(alerts)
 				sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
@@ -236,6 +243,7 @@ def sensoralert(bot, update):
 				keyboardBottom = [[alert] for alert in latest_list]
 				reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 				bot.send_message(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markup=reply_markupBottom)
+				
 
 def exists(inputText):
 	alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)

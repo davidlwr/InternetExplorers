@@ -11,6 +11,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 # from dbhelper import DBHelper
 import alert_DAO
+import resident_DAO
+import sensor_hist_DAO
 
 from pprint import pprint
 import time
@@ -133,7 +135,13 @@ def process_msg(topic, message):
                 uuid = f"{hub_id}-{dwelling_id}-{sensor_id}"
 
             # SPLIT INTO SYSMON AND DATA
-            rname = uuid_rname[uuid] if uuid in uuid_rname else None
+            raw_resident_id = sensor_hist_DAO.get_id_by_uuid(uuid)
+            if len(raw_resident_id)> 0:
+                residentid = raw_resident_id[0]['resident_id']
+                residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
+                rname = residentNameRaw[0]['name']
+            else:
+                rname = None
             
             if data_type == "data" and rname != None:
                 if key == "motion": action_motion(event=value, rname=uuid_rname[uuid])
