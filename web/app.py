@@ -15,9 +15,9 @@ if sys.platform == 'linux':
     server.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://internetexplorer:int3rn3t@stbern.cdc1tjbn622d.ap-southeast-1.rds.amazonaws.com:3306/stbern'
 # server.config['SERVER_NAME'] = 'IExStBern'
 db = SQLAlchemy(server)
-
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 # default app
-app = dash.Dash(__name__, server=server, url_base_pathname='/insertsomeotherrandomstringhere')
+app = dash.Dash(__name__, server=server, external_stylesheets=external_stylesheets, url_base_pathname='/insertsomeotherrandomstringhere/')
 # server = app.server
 app.config.suppress_callback_exceptions = True
 csspath1 = ''

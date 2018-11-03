@@ -11,16 +11,17 @@ import plotly.plotly as py
 
 # internal imports
 from app import app
-from apps import input_data, send_email
+from apps import input_data
+from apps.send_email import EmailCreator
 from apps.input_shiftlogs import input_shiftlogs
 from DAOs import resident_DAO
 from DAOs.sensor_DAO import sensor_DAO
 from sensor_mgmt import JuvoAPI, sensor_mgmt
 
-
 plotly.tools.set_credentials_file(username='ie.st.bern', api_key='DX9NwpU7QG0a53uhLIkj')
 
 locationMap = input_data.input_data.get_location_options()
+graphs_saved = []
 data_update_interval = 10 * 1000
 graph_update_interval = 10 * 1000
 
@@ -360,17 +361,8 @@ app.layout = html.Div([
                 html.Div(id='logs_output', className='col-md-12')
             ], className='row'),
             html.Div([
-                dcc.Textarea(
-                    id='text_input',
-                    placeholder='Enter a value...',
-                    value='Please review the graph',
-                    style={'width': '50%', 'height': '150px'},
-                    className='col-md-4'
-                ),
-                html.Div(id='email_output')
-            ], className='row'),
-            html.Div([
-                html.Button(id='submit-button', children='Submit', className='col-md-1')
+                html.Button('Save Graph', id='logs_save_button', className='col-md-1'),
+                html.Div(id='logs_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='logs_graph'),
         html.Hr(),
@@ -525,7 +517,39 @@ app.layout = html.Div([
             html.Div([
                 html.Div(id='location_output', className='col-md-12')
             ], className='row')
-        ], id='activity_graph')
+        ], id='activity_graph'),
+        html.Hr(),
+        html.Div([
+            html.Div([
+                html.H3('Email Saved Graphs')
+            ], className='row'),
+            html.Div([
+                dcc.Textarea(
+                    id='text_input',
+                    placeholder='write email body...',
+                    style={'width': '50%', 'height': '150px'},
+                    className='col-md-4'
+                ),
+                html.Div([
+                    html.Div(id='graph_numbers', className='col-md-4',
+                             style={'color': 'blue', 'fontSize': 14}),
+                    html.Button('Clear Graphs', id='clear_graphs'),
+                    html.Div(id='cleared_graphs')
+                ], className='col-md-6')
+            ], className='row'),
+            html.Div([
+                dcc.ConfirmDialogProvider(
+                    children=html.Button(
+                        'Send Email',
+                        className='col-md-1'
+                    ),
+                    id='send_email',
+                    message='Are you sure you want to send the email?'
+                ),
+                # html.Button('Send Email', id='send_email', className='col-md-1'),
+                html.Div(id='email_output', className='col-md-4')
+            ], className='row')
+        ])
     ], className='row-fluid')
     # ])
     # this is where the page content goes
@@ -669,7 +693,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                             # print(dc_period)
                             moving_averages_7['moving_average'].loc[
                                 (moving_averages_7['gw_date_only'] > dc_period[0]) & (
-                                            moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                                        moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
                     ###
                     # print(moving_averages_7)
                     draw_data.append({'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
@@ -708,7 +732,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                             # print(dc_period)
                             moving_averages_21['moving_average'].loc[
                                 (moving_averages_21['gw_date_only'] > dc_period[0]) & (
-                                            moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
+                                        moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
                     ###
                     draw_data.append(
                         {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
@@ -760,7 +784,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                 # print(dc_period)
                                 moving_averages_7['moving_average'].loc[
                                     (moving_averages_7['gw_date_only'] > dc_period[0]) & (
-                                                moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                                            moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
                         ###
                         draw_data.append(
                             {'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
@@ -800,7 +824,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                 # print(dc_period)
                                 moving_averages_21['moving_average'].loc[
                                     (moving_averages_21['gw_date_only'] > dc_period[0]) & (
-                                                moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
+                                            moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
                         ###
                         draw_data.append(
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
@@ -852,7 +876,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                 # print(dc_period)
                                 moving_averages_7['moving_average'].loc[
                                     (moving_averages_7['gw_date_only'] > dc_period[0]) & (
-                                                moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                                            moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
                         ###
                         draw_data.append(
                             {'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
@@ -893,7 +917,7 @@ def update_graph_02(input_resident, start_date, end_date, filter_input, offset_c
                                 # print(dc_period)
                                 moving_averages_21['moving_average'].loc[
                                     (moving_averages_21['gw_date_only'] > dc_period[0]) & (
-                                                moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
+                                            moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
                         ###
                         draw_data.append(
                             {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
@@ -1070,14 +1094,6 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
                 }
             }
         }
-        # url = py.plot(draw_data, auto_open=False, filename='email-report-graph-1')
-
-        # print(url)
-        # if filter_input == 'Night':
-        #     print("Entered HERE")
-        #     images = base64.b64encode(py.image.get(figure_to_email))
-        #     # send_email.send_email(url)
-        #     send_email.send_email(images)
 
         ret_divs.append(dcc.Graph(id='logs_plot',
                                   figure={
@@ -1109,15 +1125,14 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
 
 
 @app.callback(
-    Output(component_id='email_output', component_property='children'),
-    [Input('submit-button', 'n_clicks')],
+    Output(component_id='logs_graph_save_output', component_property='children'),
+    [Input('logs_save_button', 'n_clicks')],
     [State(component_id='resident_input_logs', component_property='value'),
      State('filter_input_day_night', 'value'),
      State('filter_input_temp_bp_pulse', 'value'),
      State('date_picker_logs', 'start_date'),
-     State('date_picker_logs', 'end_date'),
-     State('text_input', 'value')])
-def update_graph_04_email(n_clicks, input_resident, filter_input, filter_type, start_date, end_date, text_input):
+     State('date_picker_logs', 'end_date')])
+def update_graph_04_email(n_clicks, input_resident, filter_input, filter_type, start_date, end_date):
     # print(f"Update Graph 04. IR:{input_resident} {type(input_resident)}, FI:{filter_input} {type(filter_input)}")
     if len(input_resident) == 0:
         return ''
@@ -1189,11 +1204,11 @@ def update_graph_04_email(n_clicks, input_resident, filter_input, filter_type, s
 
         # print(url)
         print("Entered HERE")
-        images = base64.b64encode(py.image.get(figure_to_email))
-        # send_email.send_email(url)
-        send_email.send_email(images, text_input)
+        image = base64.b64encode(py.image.get(figure_to_email))
+        graphs_saved.append(image)
+        # send_email.send_email(images, text_input)
 
-        return "Email has been sent"
+        return "Graph has been saved"
 
     except Exception as e:
         print('ERROR: ', end='')
@@ -1329,6 +1344,38 @@ def update_graph_06(input_residents, start_date, end_date):
         print('ERROR: ', end='')
         print(e)
         return ''
+
+
+@app.callback(
+    Output('email_output', 'children'),
+    [Input('send_email', 'submit_n_clicks'),
+     Input('cleared_graphs', 'children')],
+    [State('text_input', 'value')])
+def send_email(n_clicks, graphs_cleared, text_input):
+    if graphs_cleared:
+        return ''
+    if len(graphs_saved) == 0 and text_input is None:
+        return ''
+    print("Initiating SMTP...")
+    email_creator = EmailCreator()
+    email_creator.send_email(graphs_saved, text_input)
+    return "Email has been sent"
+
+
+@app.callback(
+    Output('graph_numbers', 'children'),
+    [Input('logs_graph_save_output', 'children'),
+     Input('cleared_graphs', 'children')])
+def set_number_of_graphs_saved(n_clicks, cleared_graphs):
+    return 'No. of Graphs Saved: {}'.format(len(graphs_saved))
+
+
+@app.callback(
+    Output('cleared_graphs', 'children'),
+    [Input('clear_graphs', 'n_clicks')])
+def set_number_of_graphs_saved(n_clicks):
+    graphs_saved.clear()
+    return ""
 
 
 # next callbacks automatically updates the resident names live for each graph
