@@ -133,19 +133,18 @@ def process_msg(topic, message):
                 uuid = f"{dwelling_to_nodeid[dwelling_id]}-{sensor_id}"
             else:
                 uuid = f"{hub_id}-{dwelling_id}-{sensor_id}"
-            residentName = ""
             # SPLIT INTO SYSMON AND DATA
             
             raw_resident_id = sensor_hist_DAO.get_id_by_uuid(uuid)
-            if len(raw_resident_id)> 0:
-                residentid = raw_resident_id[0]['resident_id']
-                residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
-                residentName = residentNameRaw[0]['name']
+            # if len(raw_resident_id)> 0:
+            residentid = raw_resident_id[0]['resident_id']
+            residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
+            rname = residentNameRaw[0]['name']
             
 
             
             if data_type == "data" and rname != None:
-                if key == "motion": action_motion(event=value, rname=residentName)
+                if key == "motion": action_motion(event=value, rname=rname)
                 # if key == "door":   action_door(event=value, rname=uuid_rname[uuid])
 
     except Exception as e:
