@@ -228,8 +228,8 @@ class Sensor_mgmt(object):
             list of sensors, status codes, and optionally battery levels:
             NOTE: Battery level can be 'None' if no records are found
 
-            [ [Sensor.Entity, [Status, Codes, battLVL]],
-              [Sensor.Entity, [Status, Codes, None]]...
+            [ [uuid, [Status, Codes], [battLVL]],
+              [uuid, [Status, Codes], [None]]...
             ]
 
             See list of status codes
