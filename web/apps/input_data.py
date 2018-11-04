@@ -74,7 +74,7 @@ class input_data(object):
     #             input_raw_data = pd.concat([input_raw_data, temp_df], ignore_index=True)
     #         except:
     #             print('something wrong with ' + filename)
-    
+
     # convert timestamp to remove the extra time from sensor timeout
     # only applicable for motion sensors
 
@@ -598,7 +598,9 @@ class input_data(object):
         if current_sys_time is None: # used in testing - pass in a different time for simulation
             current_sys_time = datetime.datetime.now()
 
-        juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
+            juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 23, 34, 12)
+        else:
+            juvo_date_in_use = current_sys_time
 
         current_sys_date = current_sys_time.date()
         three_weeks_ago = current_sys_date + datetime.timedelta(days=-21)
@@ -632,16 +634,18 @@ class input_data(object):
             tuple_list = japi.get_qos_by_day(target, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
             if tuple_list:
                 qos_df = pd.DataFrame(list(tuple_list), columns=['date_timestamp', 'qos'])
+                # exclude 0 for mean calculation
+                temp_series = qos_df['qos'].replace(0, np.NaN)
+                qos_mean = temp_series.mean()
+                # print(qos_mean)
+                qos_threshold = 50
+                if qos_mean < qos_threshold:
+                    alerts_of_interest.append(f"Quality of sleep lower than {qos_threshold}%")
             else:
-                print('tuple list returned None with non-zero target: ' + str(target))
+                # print('tuple list returned None with non-zero target: ' + str(target))
+                qos_df['qos'] = []
+                qos_df['date_timestamp'] = []
 
-            # exclude 0 for mean calculation
-            temp_series = qos_df['qos'].replace(0, np.NaN)
-            qos_mean = temp_series.mean()
-            # print(qos_mean)
-            qos_threshold = 50
-            if qos_mean < qos_threshold:
-                alerts_of_interest.append(f"Quality of sleep lower than {qos_threshold}%")
         else:
             # print('resident has no vital signs info from juvo')
             qos_df['qos'] = []
@@ -835,7 +839,7 @@ class input_data(object):
         vitals_dict = vitals_json['data']['epoch_metrics']
         vitals_juvo_df = pd.DataFrame(vitals_dict)
         if vitals_juvo_df.empty:
-            print("empty data returned from juvo")
+            # print("empty data returned from juvo")
             return pd.DataFrame()
         # print(vitals_juvo_df.info())
 
@@ -905,7 +909,7 @@ class input_data(object):
         # print(vitals_juvo_df.info())
 
         if vitals_juvo_df.empty:
-            print("empty data returned from juvo")
+            # print("empty data returned from juvo")
             return pd.DataFrame()
 
         heart_rate_df = vitals_juvo_df[['vital_id', 'sensor_status', 'heart_rate', 'high_movement_rejection_heartbeat', 'local_start_time', 'local_end_time']]
