@@ -22,6 +22,7 @@ from DAOs.connection_manager import connection_manager
 from DAOs.sensor_DAO import sensor_DAO
 from DAOs.sysmon_log_DAO import sysmon_log_DAO
 from DAOs.sensor_log_DAO import sensor_log_DAO
+from DAOs.shift_log_DAO import shift_log_DAO
 
 class overstay_alert(object):
     """
@@ -53,6 +54,11 @@ class overstay_alert(object):
     MOTION_START = 255
     MOTION_END   = 0
 
+    # THRESHOLDS TEMP and PULSE
+    temperature_max 		= 37.6
+    temperature_min 		= 35.5
+    pulse_pressure_max 	    = 62.5        # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2710466/
+    
     # RETURN CODES:
     NO_MAIN_DOOR = -1    # Unable to run algo, as no main door sensor found
     DC_MAIN_DOOR = -2    # Unable to run algo, main doow is down. NOTE: no real action needed, CHECKWARN should already be sent
@@ -631,7 +637,7 @@ class overstay_alert(object):
                                                                         if (y_i > avg_i + (sigma*std)) | (y_i < avg_i - (sigma*std))])}
 
     @staticmethod
-    def explain_anomalies_rolling_std(x, y, window_size, sigma=1.0):
+    def explain_anomalies_rolling_std(x, y, window_size, sigma=2.0):
         """ Helps in exploring the anamolies using rolling standard deviation
         Args:
         -----
@@ -660,7 +666,7 @@ class overstay_alert(object):
 
     # This function is repsonsible for displaying how the function performs on the given dataset.
     @staticmethod
-    def plot_results(x, y, window_size, sigma_value=1, text_xlabel="X Axis", text_ylabel="Y Axis", applying_rolling_std=False):
+    def plot_results(x, y, window_size, sigma_value=2.0, text_xlabel="X Axis", text_ylabel="Y Axis", applying_rolling_std=False):
         """ Helps in generating the plot and flagging the anamolies.
             Supports both moving and stationary standard deviation. Use the 'applying_rolling_std' to switch
             between the two.
@@ -699,7 +705,7 @@ class overstay_alert(object):
         plt.show()
 
     @staticmethod
-    def get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, sigma=2):
+    def get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, room_sigma=2.0, bath_sigma=2.0, visit_sigma=2.0):
         """ Returns a dict with a constant standard deviation, and anomalies found
         NOTE: YOU SHOULD PUT MAX AND MIN DATETIMES INTO HERE, OR AT LEAST 7 DAYS WORTH OF DATA!!!! 
             - Method is also ment to be run after the day itself. say you want to check 10/10/2018, wait until 11/10/2018 00:00:00, then run with edt = 10/10/2018
@@ -729,23 +735,38 @@ class overstay_alert(object):
         """
         ret_dict = {}
 
+        # Handle "inRoom", "inBath", "nVisitBath"
         # RESULTS >> 'date'  'secs_room'   'secs_bath'    'nvisit_bath'
         results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, mm_pure=mm_pure, tm_pure=tm_pure, print_summary=True)
+        shift_logs = shift_log_DAO.get_all_temp_pulse(sdt=sdt, edt=sdt)
+
+        
         for idx,rid in enumerate(rids):
             x_dates  = pd.Series([d['date'] for d in results[idx]])
 
             y_iroom = pd.Series([d['secs_room'] for d in results[idx]])
-            iroom_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_iroom, window_size=window, sigma=sigma)
+            iroom_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_iroom, window_size=window, sigma=room_sigma)
 
             y_ibath = pd.Series([d['secs_bath'] for d in results[idx]])
-            ibath_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_ibath, window_size=window, sigma=sigma)
+            ibath_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_ibath, window_size=window, sigma=bath_sigma)
 
             y_nvisit = pd.Series([d['nvisit_bath'] for d in results[idx]])
-            nvisit_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_nvisit, window_size=window, sigma=sigma)
+            nvisit_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_nvisit, window_size=window, sigma=visit_sigma)
+
+            # Handle shift form anomalies
+            curr_shift_logs = shift_logs[shift_logs['patient_id'] == rid]
+
+            #   TEMPERATURE
+            temp_a = [(row.datetime,row.temperature) for idx,row in curr_shift_logs.iterrows() if row.temperature > overstay_alert.temperature_max or row.temperature < overstay_alert.temperature_min]
+
+            #   PULSE RATE
+            pulse_a = [(row.datetime,row.pulse_rate) for idx,row in curr_shift_logs.iterrows() if row.pulse_rate > overstay_alert.pulse_pressure_max]
 
             ret_dict[rid] = {"inRoom": iroom_a['anomalies_dict'],
                              "inBath": ibath_a['anomalies_dict'],
-                             "nbath": nvisit_a['anomalies_dict']}
+                             "nbath": nvisit_a['anomalies_dict'],
+                             "temp": temp_a,
+                             "pulse": pulse_a}
 
         return ret_dict
 
@@ -850,26 +871,39 @@ class overstay_alert(object):
         return results
 
     @staticmethod
-    def test_anomaly_by_averages(rids, sdt, edt, mm_pure=True, tm_pure=True, print_summary=True, sigma=2, window=7, applying_rolling_std=True):
+    def test_anomaly_by_averages(rids, sdt, edt, mm_pure=True, tm_pure=True, print_summary=True, room_sigma=2.0, bath_sigma=2.0, visit_sigma=2.0, window=7, applying_rolling_std=True):
 
         # RESULTS >> 'date'  'secs_room'   'secs_bath'    'nvisit_bath'
         results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, mm_pure=mm_pure, tm_pure=tm_pure, print_summary=True)
+        shift_logs = shift_log_DAO.get_all_temp_pulse(sdt=sdt, edt=edt)
 
         for idx,rid in enumerate(rids):
             print(f"==================== RID: {rid} ==================================================")
             x_dates  = pd.Series([d['date'] for d in results[idx]])
 
             y_iroom  = pd.Series([d['secs_room'] for d in results[idx]])
-            print("Info of secs room anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_iroom, window_size=window, sigma=sigma)))
-            overstay_alert.plot_results(x_dates, y=y_iroom, window_size=window, text_xlabel=f"RID {rid} - Datetime", sigma_value=sigma, text_ylabel="secs room", applying_rolling_std=True)
+            print("Info of secs room anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_iroom, window_size=window, sigma=room_sigma)))
+            overstay_alert.plot_results(x_dates, y=y_iroom, window_size=window, text_xlabel=f"RID {rid} - Datetime", sigma_value=room_sigma, text_ylabel="secs room", applying_rolling_std=True)
 
             y_ibath  = pd.Series([d['secs_bath'] for d in results[idx]])
-            print("Info of secs bath anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_ibath, window_size=window, sigma=sigma)))
-            overstay_alert.plot_results(x_dates, y=y_ibath, window_size=window, text_xlabel=f"RID {rid} - Datetime", sigma_value=sigma, text_ylabel="secs bath", applying_rolling_std=True)
+            print("Info of secs bath anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_ibath, window_size=window, sigma=bath_sigma)))
+            overstay_alert.plot_results(x_dates, y=y_ibath, window_size=window, text_xlabel=f"RID {rid} - Datetime", sigma_value=bath_sigma, text_ylabel="secs bath", applying_rolling_std=True)
 
             y_nvisit = pd.Series([d['nvisit_bath'] for d in results[idx]])
-            print("Info of num vbath anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_nvisit, window_size=window, sigma=sigma)))
-            overstay_alert.plot_results(x_dates, y=y_nvisit, window_size=window, text_xlabel=f"RID {rid} - Datetime", sigma_value=sigma, text_ylabel="visits bath", applying_rolling_std=True)
+            print("Info of num vbath anomalies model:{}".format(overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_nvisit, window_size=window, sigma=visit_sigma)))
+            overstay_alert.plot_results(x_dates, y=y_nvisit, window_size=window, text_xlabel=f"RID {rid} - Datetime", sigma_value=visit_sigma, text_ylabel="visits bath", applying_rolling_std=True)
+
+            # Handle shift form anomalies
+            curr_shift_logs = shift_logs[shift_logs['patient_id'] == rid]
+
+            #   TEMPERATURE
+            temp_a = [(row.datetime,row.temperature) for idx,row in curr_shift_logs.iterrows() if row.temperature > overstay_alert.temperature_max or row.temperature < overstay_alert.temperature_min]
+
+            #   PULSE RATE
+            pulse_a = [(row.datetime,row.pulse_rate) for idx,row in curr_shift_logs.iterrows() if row.pulse_rate > overstay_alert.pulse_pressure_max]
+
+            print("ANOMALIES WITH Temperature: ", temp_a)
+            print("Anomalies with Pulse Rate:  ", pulse_a)
 
             print()
 
@@ -890,19 +924,19 @@ if __name__ == '__main__':
     # overstay_alert.test_plot_in_toilet_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
 
     # ============================== TESTING ANOMALY DETECTION WITH PLOT =========================================
-    # rids = [rid for rid,rname in rdict.items()]
-    # sdt = datetime.datetime.strptime('2018-08-01 00:00:00', '%Y-%m-%d %H:%M:%S')
-    # edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
-    # overstay_alert.test_anomaly_by_averages(rids, sdt, edt, mm_pure=True, tm_pure=True, print_summary=True, sigma=2, window=7, applying_rolling_std=True)
-    # print("this may take up to 30 secs...")
-
-
-    # ============================== TESTING ANOMALY DETECTION NO PLOT =========================================
     rids = [rid for rid,rname in rdict.items()]
     sdt = datetime.datetime.strptime('2018-08-01 00:00:00', '%Y-%m-%d %H:%M:%S')
     edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
-    rdict = overstay_alert.get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, sigma=2)
-    print(rdict)
+    print("this may take up to 30 secs...")
+    overstay_alert.test_anomaly_by_averages(rids, sdt, edt, mm_pure=True, tm_pure=True, print_summary=True, window=7, applying_rolling_std=True)
+
+
+    # ============================== TESTING ANOMALY DETECTION NO PLOT =========================================
+    # rids = [rid for rid,rname in rdict.items()]
+    # sdt = datetime.datetime.strptime('2018-08-01 00:00:00', '%Y-%m-%d %H:%M:%S')
+    # edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
+    # rdict = overstay_alert.get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, sigma=2)
+    # print(rdict)
 
     
 
