@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 from dateutil import parser
 from dateutil import tz
+import pandas as pd
 
 if __name__ == '__main__':  sys.path.append("..")
 from DAOs.sensor_DAO import sensor_DAO
@@ -432,7 +433,8 @@ class JuvoAPI(object):
                         "vital_id":4,
                         "local_start_time":"2018-03-06T18:45:00Z",
                         "local_end_time":"2018-03-06T18:50:00Z",
-                        "heart_rate":0.0,"breathing_rate":0.0,
+                        "heart_rate":0.0,
+                        "breathing_rate":0.0,
                         "sensor_status":"Out of bed",
                         "high_movement_rejection_breathing":false,
                         "high_movement_rejection_heartbeat":false
@@ -461,6 +463,25 @@ class JuvoAPI(object):
         
         # Successfull call
         return r.json()
+
+    @classmethod
+    def extract_heart_breath_from_vitals(cls, json):
+        """
+        Returns two pandas dataframes
+        heart  >> [{"sdt":sdt, "edt":edt, "heart_rate":hrt}]
+        breath >> [{"sdt":sdt, "edt":edt, "breath_rate":brt}]
+        """
+        heart  = []
+        breath = []
+        for j in json['data']['epoch_metrics']:
+            print(j)
+            sdt = cls.sudo_utc_datetime(j['local_start_time'])
+            edt = cls.sudo_utc_datetime(j['local_end_time'])
+            hrt = j['heart_rate']
+            brt = j['breathing_rate']
+            heart.append({"sdt":sdt, "edt":edt, "heart_rate":hrt})
+            breath.append({"sdt":sdt, "edt":edt, "breath_rate":brt})
+        return pd.DataFrame(heart), pd.DataFrame(breath)
 
 
     # Specific functions ================================================================================================

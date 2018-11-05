@@ -344,6 +344,51 @@ class sensor_DAO(object):
         finally:
             factory.close_all(cursor=cursor, connection=connection)
 
+    @staticmethod
+    def get_owned_sensors(rid, dt=None):
+        '''
+        Returns dict:
+        {"uuid": [pStart, pEnd, type, location, juvo target]}
+        '''
+        feeddict = [rid]
+        query = f"SELECT * FROM {sensor_DAO.soh_table_name} AS t1 INNER JOIN {sensor_DAO.table_name} AS t2 ON t1.uuid = t2.uuid "
+        query += f" WHERE t1.`{sensor_DAO.soh_resident_id}` = %s "
+        if dt != None: 
+            query += f" AND {sensor_DAO.soh_period_start} < %s"
+            feeddict.append(dt)
+        query += f" ORDER BY `{sensor_DAO.soh_period_start}` ASC"       # Sort by start periods 
+
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+        cursor = connection.cursor()
+
+        # Read results and return dict
+        try:
+            cursor.execute(query, feeddict)
+            result = cursor.fetchall()
+            records = defaultdict(list)
+            if result != None:
+                for r in result:    # Reading records into dict records
+                    rid    = r[sensor_DAO.soh_resident_id]
+                    uuid   = r[sensor_DAO.soh_uuid]
+                    pStart = r[sensor_DAO.soh_period_start]
+                    pEnd = r[sensor_DAO.soh_period_end]
+                    type = r[Sensor.type_tname]
+                    loc  = r[Sensor.location_tname]
+                    jt   = r[Sensor.juvo_target_tname]
+                    records[uuid].append((pStart,pEnd,type,loc,jt))
+            
+            # Reeading for certain last
+            if dt == None:
+                sensors = {uuid: [ls[2],ls[3],ls[4]] for uuid,hists in records.items() for ls in hists if ls[1] == None}
+            else:
+                sensors = {uuid: [ls[2],ls[3],ls[4]] for uuid,hists in records.items() for ls in hists if (ls[0]<dt and (ls[1]==None or ls[1]>dt))}
+            return sensors
+        except:
+            raise
+        finally:
+            factory.close_all(cursor=cursor, connection=connection)
 
     @staticmethod
     def get_current_owner(uuid):

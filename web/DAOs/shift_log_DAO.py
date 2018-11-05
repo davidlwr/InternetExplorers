@@ -142,6 +142,31 @@ class shift_log_DAO(object):
         finally:
             factory.close_all(cursor=cursor, connection=connection)
 
+    @staticmethod
+    def get_all_temp_pulse(sdt=None, edt=None):
+        """
+        Returns all logs in the shift forms DB, sorted by date
+
+        ----- RETURNS: 
+                pd.Series. Cols: "temperature", "pulse_rate", "datetime"
+        """
+        feeddict = []
+        query = f"SELECT {Shift_log.datetime_tname}, {Shift_log.temp_tname}, {Shift_log.patient_id_tname}, \
+                  ({Shift_log.sbp_tname} - {Shift_log.dbp_tname}) AS 'pulse_rate' "
+        query += f"FROM {shift_log_DAO.table_name} "
+
+        if sdt != None and edt != None:
+            query += f"WHERE {Shift_log.datetime_tname} >= %s AND {Shift_log.datetime_tname} <= %s "
+            feeddict = [sdt,edt]
+
+        query += f" ORDER BY {Shift_log.datetime_tname} ASC"
+
+        # Get connection
+        factory = connection_manager()
+        connection = factory.connection
+
+        return pd.read_sql_query(query, connection, params=feeddict)
+
 # # TEST-1 insert
 # sl_dao = shift_log_DAO()
 # obj = Shift_log(datetime.datetime.now(), 101, 20)

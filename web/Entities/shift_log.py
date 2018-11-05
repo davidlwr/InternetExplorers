@@ -12,10 +12,10 @@ class Shift_log(object):
     num_near_falls_tname = "num_near_falls"
     food_consumption_tname = "food_consumption"
     num_toilet_visit_tname = "num_toilet_visit"
-    temp_tname = "temp"
-    sbp_tname = "sbp"
-    dbp_tname = "dbp"
-    pulse_tname = "pulse"
+    temp_tname = "temperature"
+    sbp_tname = "systolic_bp"
+    dbp_tname = "diastolic_bp"
+    pulse_tname = "pulse_rate"
 
     FOOD_CONSUMPTION_MAPPING = {0: "Insufficient",
                                 1: "Moderate",
