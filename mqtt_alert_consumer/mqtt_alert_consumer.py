@@ -161,9 +161,9 @@ def action_motion(event, rname):
         text=f'Assistance Alert: {rname} at ' + date_time
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
         alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, rname, text, "Assistance", "No")
-
-        alerts = alert_DAO.get_alerts_by_id(DUTY_NURSE_CHAT_ID)
-        latest_list = get_latest_alerts(alerts)
+        
+        residentNameList = resident_DAO.get_list_of_residentNames()
+        latest_list = get_latest_alerts(residentNameList)
         keyboardBottom = [[alert] for alert in latest_list]
         reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
         response = send_message_with_reply(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markupBottom)
@@ -190,15 +190,16 @@ def action_motion(event, rname):
         # delete_message_with_reply(DUTY_NURSE_CHAT_ID, message_id)
 
 
-def get_latest_alerts(alerts):
+def get_latest_alerts(residentNameList):
+    print(residentNameList)
     latest_list = []
-    check_list = []
-    for alert in reversed(alerts):
-        alert_text = alert['alert_text']
-        rname = alert['rname']
-        if rname not in check_list:
-            check_list.append(rname)
-            latest_list.append(alert_text)
+    for resident in residentNameList:
+        residentName = resident['name']
+        resident_latest_alert_raw = alert_DAO.get_latest_alert_by_id(DUTY_NURSE_CHAT_ID, residentName)
+        if len(resident_latest_alert_raw) > 0: 
+            resident_latest_alert = resident_latest_alert_raw[0]
+            if resident_latest_alert['response_status'] == 'No':
+                latest_list.append(resident_latest_alert['alert_text'])
     return latest_list
 
 # Call back functions ============================================================================================================
@@ -294,7 +295,8 @@ except KeyboardInterrupt:
     client.loop_stop()
 
 # def main():
-    # def process_msg(topic, message):
+   # residentNameList = resident_DAO.get_list_of_residentNames()
+   # print(get_latest_alerts(residentNameList))
 
 # if __name__ == '__main__':
     # main()
