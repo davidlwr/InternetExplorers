@@ -181,8 +181,12 @@ class sensor_log_DAO(object):
         # Get connection
         factory = connection_manager()
         connection = factory.connection
-
-        return pd.read_sql_query(query, connection)
+        try:
+            return pd.read_sql_query(query, connection)
+        except:
+            raise
+        finally:
+            factory.close_all(connection=connection)
 
 
     @staticmethod
