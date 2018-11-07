@@ -247,6 +247,10 @@ app.layout = html.Div([
             ], className='col-md-5 col-xs-12'),
             html.Div([
                 html.Div(id='toilet_numbers_output', className='col-md-12')
+            ], className='row'),
+            html.Div([
+                html.Button('Save Graph', id='toilet_save_button', className='col-md-1'),
+                html.Div(id='toilet_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='toilet_numbers_graph'),
         html.Hr(),
@@ -297,6 +301,10 @@ app.layout = html.Div([
             ], className='row'),
             html.Div([
                 html.Div(id='visit_duration_output', className='col-md-12')
+            ], className='row'),
+            html.Div([
+                html.Button('Save Graph', id='visitDuration_save_button', className='col-md-1'),
+                html.Div(id='visitDuration_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='visit_duration_graph'),
         html.Hr(),
@@ -416,6 +424,10 @@ app.layout = html.Div([
             ], className='row'),
             html.Div([
                 html.Div(id='vital_signs_output', className='col-md-12')
+            ], className='row'),
+            html.Div([
+                html.Button('Save Graph', id='vitals_save_button', className='col-md-1'),
+                html.Div(id='vitals_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='vital_signs_graph'),
         html.Hr(),
@@ -458,6 +470,10 @@ app.layout = html.Div([
             ], className='row'),
             html.Div([
                 html.Div(id='qos_output', className='col-md-12')
+            ], className='row'),
+            html.Div([
+                html.Button('Save Graph', id='sleep_save_button', className='col-md-1'),
+                html.Div(id='sleep_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='qos_graph'),
         html.Hr(),
@@ -516,6 +532,10 @@ app.layout = html.Div([
             ], className='row'),
             html.Div([
                 html.Div(id='location_output', className='col-md-12')
+            ], className='row'),
+            html.Div([
+                html.Button('Save Graph', id='activity_save_button', className='col-md-1'),
+                html.Div(id='activity_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='activity_graph'),
         html.Hr(),
@@ -525,9 +545,9 @@ app.layout = html.Div([
             ], className='row'),
             html.Div([
                 dcc.Textarea(
-                    id='text_input',
-                    placeholder='write email body...',
-                    style={'width': '50%', 'height': '150px'},
+                    id='send_to_input',
+                    placeholder='Recipient\'s email address',
+                    style={'width': '50%', 'height': '30px'},
                     className='col-md-4'
                 ),
                 html.Div([
@@ -536,6 +556,22 @@ app.layout = html.Div([
                     html.Button('Clear Graphs', id='clear_graphs'),
                     html.Div(id='cleared_graphs')
                 ], className='col-md-6')
+            ], className='row'),
+            html.Div([
+                dcc.Textarea(
+                    id='subject_input',
+                    placeholder='subject',
+                    style={'width': '50%', 'height': '30px'},
+                    className='col-md-4'
+                )
+            ], className='row'),
+            html.Div([
+                dcc.Textarea(
+                    id='text_input',
+                    placeholder='write email body...',
+                    style={'width': '50%', 'height': '150px'},
+                    className='col-md-4'
+                )
             ], className='row'),
             html.Div([
                 dcc.ConfirmDialogProvider(
@@ -624,6 +660,396 @@ def update_graph_01(input_resident, input_location, start_date, end_date, group_
                                   animate=True)
                         )
         return ret_divs
+    except Exception as e:
+        print('ERROR: ', end='')
+        print(e)
+        return ''
+
+
+@app.callback(
+    Output(component_id='activity_graph_save_output', component_property='children'),
+    [Input('activity_save_button', 'n_clicks')],
+    [State(component_id='resident_input', component_property='value'),
+     State('location_input', 'value'),
+     State('date_picker', 'start_date'),
+     State('date_picker', 'end_date'),
+     State('group_checkbox_activity', 'values')])
+def update_graph_01_email(n_clicks, input_resident, input_location, start_date, end_date, group_checkbox):
+    '''
+        Generates graph based on timestamps and whether the latest sensor reading is on or off
+        Shaded area indicates detected movement
+    '''
+    if input_resident is None:
+        return ''
+
+    try:
+        # add one day to the entered end date as a workaround to allow one day picks (since entered dates are at time 00:00:00)
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        # print('debug ' + str(type(end_date)))
+        df = pd.DataFrame()
+        df['recieved_timestamp'] = []
+        df['event'] = []
+        if input_location and input_resident:
+            df = input_data.input_data.get_relevant_data(input_location, start_date, end_date, input_resident,
+                                                         grouped=group_checkbox)
+
+        figure_to_email = {
+            'data': [{
+                'x': df['recieved_timestamp'],
+                'y': df['event'],
+                'type': 'line',
+                'name': input_location,
+                'line': dict(shape='hv'),
+                'fill': 'tozeroy'
+            }],
+            'layout': {
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'title': 'Periods with motion detected',
+                'xaxis': {
+                    'range': [start_date, end_date],
+                    'title': 'Timestamps'
+                },
+                'yaxis': {
+                    'title': 'Motion detected?',
+                    'range': [0, 1]
+                }
+            }
+        }
+        # url = py.plot(draw_data, auto_open=False, filename='email-report-graph-1')
+
+        # print(url)
+        print("Generating Resident Activity image...")
+        image = base64.b64encode(py.image.get(figure_to_email))
+        graphs_saved.append(image)
+
+        return "Graph has been saved."
+
+    except Exception as e:
+        print('ERROR: ', end='')
+        print(e)
+        return ''
+
+
+@app.callback(
+    Output(component_id='toilet_graph_save_output', component_property='children'),
+    [Input('toilet_save_button', 'n_clicks')],
+    [State(component_id='resident_input_toilet_numbers', component_property='value'),
+     State('date_picker_toilet_numbers', 'start_date'),
+     State('date_picker_toilet_numbers', 'end_date'),
+     State('filter_input_toilet_numbers', 'value'),
+     State('offset_checkbox_toilet_numbers', 'values'),  # if incoming list is empty means don't offset
+     State('ignore_checkbox_toilet_numbers', 'values'),
+     State('group_checkbox_toilet_numbers', 'values'),
+     State('seven_checkbox_toilet_numbers', 'values'),
+     State('twentyone_checkbox_toilet_numbers', 'values')])
+def update_graph_02_email(n_clicks, input_resident, start_date, end_date, filter_input, offset_checkbox,
+                          ignore_checkbox,
+                          group_checkbox, seven_checkbox, twentyone_checkbox):
+    # print(f"Update Graph 02, IR:{input_resident} {type(input_resident)}, FI:{filter_input} {type(filter_input)}")
+    if n_clicks is None:
+        return ""
+
+    try:
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        draw_data = []
+        if filter_input == 'None':  # default option
+            for r in input_resident:
+                r_name = resident_DAO.get_resident_name_by_resident_id(r)
+                df = input_data.input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r,
+                                                                  ignore_short_durations=ignore_checkbox,
+                                                                  grouped=group_checkbox)
+                # print(df)
+                draw_data.append({'x': df['gw_date_only'], 'y': df['event'], 'mode': 'lines+markers', 'name': r_name})
+                if seven_checkbox:
+                    # get moving averages
+                    moving_averages_7 = input_data.input_data.get_visit_numbers_moving_average(r, days=7,
+                                                                                               ignore_short_durations=ignore_checkbox,
+                                                                                               grouped=group_checkbox)
+
+                    # filter relevant dates
+                    moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (
+                            moving_averages_7['gw_date_only'] >= start_date)]
+
+                    # print(moving_averages_7.info())
+                    ### remove dc periods
+                    sdt = start_date
+                    edt = end_date
+                    if isinstance(sdt, str):
+                        sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                    if isinstance(edt, str):
+                        edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                    try:
+                        sdt = start_date.to_pydatetime()
+                        edt = end_date.to_pydatetime()
+                    except:
+                        pass
+                    u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                    dc_list = None
+                    if u:
+                        dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                    if dc_list:
+                        for dc_period in dc_list:
+                            # print(dc_period)
+                            moving_averages_7['moving_average'].loc[
+                                (moving_averages_7['gw_date_only'] > dc_period[0]) & (
+                                        moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                    ###
+                    # print(moving_averages_7)
+                    draw_data.append({'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
+                                      'mode': 'lines+markers', 'name': r_name + ' 7D MA'})
+                if twentyone_checkbox:
+                    # get moving averages
+                    moving_averages_21 = input_data.input_data.get_visit_numbers_moving_average(r, days=21,
+                                                                                                ignore_short_durations=ignore_checkbox,
+                                                                                                grouped=group_checkbox)
+
+                    # filter relevant dates
+                    moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (
+                            moving_averages_21['gw_date_only'] >= start_date)]
+
+                    ### remove dc periods
+                    sdt = start_date
+                    edt = end_date
+                    if isinstance(sdt, str):
+                        sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                    if isinstance(edt, str):
+                        edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                    try:
+                        sdt = start_date.to_pydatetime()
+                        edt = end_date.to_pydatetime()
+                    except:
+                        pass
+                    u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                    dc_list = None
+                    if u:
+                        dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                    if dc_list:
+                        for dc_period in dc_list:
+                            # print(dc_period)
+                            moving_averages_21['moving_average'].loc[
+                                (moving_averages_21['gw_date_only'] > dc_period[0]) & (
+                                        moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
+                    ###
+                    draw_data.append(
+                        {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
+                         'mode': 'lines+markers', 'name': r_name + ' 21D MA'})
+
+        else:
+            # if user chose both, both if statements below will execute
+            if filter_input != 'Night':  # if not night means have to display for 'Day'
+                for r in input_resident:
+                    r_name = resident_DAO.get_resident_name_by_resident_id(r)
+                    df = input_data.input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r,
+                                                                      time_period='Day',
+                                                                      ignore_short_durations=ignore_checkbox,
+                                                                      grouped=group_checkbox)
+                    draw_data.append(
+                        {'x': df['gw_date_only'], 'y': df['event'], 'mode': 'lines+markers', 'name': r_name + ' - Day'})
+                    if seven_checkbox:
+                        # get moving averages
+                        moving_averages_7 = input_data.input_data.get_visit_numbers_moving_average(r, days=7,
+                                                                                                   time_period='Day',
+                                                                                                   ignore_short_durations=ignore_checkbox,
+                                                                                                   grouped=group_checkbox)
+
+                        # filter relevant dates
+                        moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (
+                                moving_averages_7['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_7['moving_average'].loc[
+                                    (moving_averages_7['gw_date_only'] > dc_period[0]) & (
+                                            moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
+                        draw_data.append(
+                            {'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
+                             'mode': 'lines+markers', 'name': r_name + ' 7D MA Day'})
+                    if twentyone_checkbox:
+                        # get moving averages
+                        moving_averages_21 = input_data.input_data.get_visit_numbers_moving_average(r, days=21,
+                                                                                                    time_period='Day',
+                                                                                                    ignore_short_durations=ignore_checkbox,
+                                                                                                    grouped=group_checkbox)
+
+                        # filter relevant dates
+                        moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (
+                                moving_averages_21['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_21['moving_average'].loc[
+                                    (moving_averages_21['gw_date_only'] > dc_period[0]) & (
+                                            moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
+                        draw_data.append(
+                            {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
+                             'mode': 'lines+markers', 'name': r_name + ' 21D MA Day'})
+
+            if filter_input != 'Day':  # if not day means have to display for 'Night'
+                for r in input_resident:
+                    r_name = resident_DAO.get_resident_name_by_resident_id(r)
+                    df = input_data.input_data.get_num_visits_by_date(start_date, end_date, 'm-02', r,
+                                                                      time_period='Night',
+                                                                      offset=offset_checkbox,
+                                                                      ignore_short_durations=ignore_checkbox,
+                                                                      grouped=group_checkbox)  # offset only relevant at night
+                    draw_data.append({'x': df['gw_date_only'], 'y': df['event'], 'mode': 'lines+markers',
+                                      'name': r_name + ' - Night'})
+                    if seven_checkbox:
+                        # get moving averages
+                        moving_averages_7 = input_data.input_data.get_visit_numbers_moving_average(r, days=7,
+                                                                                                   time_period='Night',
+                                                                                                   offset=offset_checkbox,
+                                                                                                   ignore_short_durations=ignore_checkbox,
+                                                                                                   grouped=group_checkbox)
+
+                        # filter relevant dates
+                        moving_averages_7 = moving_averages_7.loc[(moving_averages_7['gw_date_only'] < end_date) & (
+                                moving_averages_7['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_7['moving_average'].loc[
+                                    (moving_averages_7['gw_date_only'] > dc_period[0]) & (
+                                            moving_averages_7['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
+                        draw_data.append(
+                            {'x': moving_averages_7['gw_date_only'], 'y': moving_averages_7['moving_average'],
+                             'mode': 'lines+markers', 'name': r_name + ' 7D MA Night'})
+                    if twentyone_checkbox:
+                        # get moving averages
+                        moving_averages_21 = input_data.input_data.get_visit_numbers_moving_average(r, days=21,
+                                                                                                    time_period='Night',
+                                                                                                    offset=offset_checkbox,
+                                                                                                    ignore_short_durations=ignore_checkbox,
+                                                                                                    grouped=group_checkbox)
+
+                        # filter relevant dates
+                        moving_averages_21 = moving_averages_21.loc[(moving_averages_21['gw_date_only'] < end_date) & (
+                                moving_averages_21['gw_date_only'] >= start_date)]
+
+                        ### remove dc periods
+                        sdt = start_date
+                        edt = end_date
+                        if isinstance(sdt, str):
+                            sdt = datetime.datetime.strptime(sdt, "%Y-%m-%d")
+                        if isinstance(edt, str):
+                            edt = datetime.datetime.strptime(edt, "%Y-%m-%d")
+
+                        try:
+                            sdt = start_date.to_pydatetime()
+                            edt = end_date.to_pydatetime()
+                        except:
+                            pass
+                        u = sensor_mgmt.Sensor_mgmt.get_toilet_uuid(r)
+
+                        dc_list = None
+                        if u:
+                            dc_list = sensor_mgmt.Sensor_mgmt.get_down_periods_motion(u, sdt, edt)
+
+                        if dc_list:
+                            for dc_period in dc_list:
+                                # print(dc_period)
+                                moving_averages_21['moving_average'].loc[
+                                    (moving_averages_21['gw_date_only'] > dc_period[0]) & (
+                                            moving_averages_21['gw_date_only'] < dc_period[1])] = np.NaN
+                        ###
+                        draw_data.append(
+                            {'x': moving_averages_21['gw_date_only'], 'y': moving_averages_21['moving_average'],
+                             'mode': 'lines+markers', 'name': r_name + ' 21D MA Night'})
+
+        figure_to_email = {
+            'data': draw_data,
+            'layout': {
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'title': 'Number of toilet visits',
+                'xaxis': {
+                    'title': 'Date'
+                },
+                'yaxis': {
+                    'title': 'Number'
+                }
+            }
+        }
+        print("Generating Toilet Visits image...")
+        image = base64.b64encode(py.image.get(figure_to_email))
+        graphs_saved.append(image)
+
+        return "Graph has been saved."
+
     except Exception as e:
         print('ERROR: ', end='')
         print(e)
@@ -1016,6 +1442,57 @@ def update_graph_03(input_resident, input_location, start_date, end_date):
 
 
 @app.callback(
+    Output(component_id='visitDuration_graph_save_output', component_property='children'),
+    [Input('visitDuration_save_button', 'n_clicks')],
+    [State(component_id='resident_input_visit_duration', component_property='value'),
+     State(component_id='location_input_visit_duration', component_property='value'),
+     State('date_picker_visit_duration', 'start_date'),
+     State('date_picker_visit_duration', 'end_date')])
+def update_graph_03_email(n_clicks, input_resident, input_location, start_date, end_date):
+    # print(f"Update Graph 03. IR:{input_resident}, {type(input_resident)} IL:{input_location} {type(input_location)}")
+    if n_clicks is None:
+        return ''
+
+    try:
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        draw_data = []
+        for r in input_resident:
+            r_name = resident_DAO.get_resident_name_by_resident_id(r)
+            if input_location:
+                df = input_data.input_data.get_visit_duration_and_start_time(start_date, end_date, input_location, r)
+                # print(df.head())
+                draw_data.append(
+                    {'x': df['recieved_timestamp'], 'y': df['visit_duration'], 'mode': 'markers', 'name': r_name})
+
+        figure_to_email = {
+            'data': draw_data,
+            'layout': {
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'title': 'Duration of activity of residents',
+                'xaxis': {
+                    'title': 'Start datetime of visit'
+                },
+                'yaxis': {
+                    'title': 'Duration of visit (seconds)'
+                }
+            }
+        }
+        print("Generating Visit Duration image...")
+        image = base64.b64encode(py.image.get(figure_to_email))
+        graphs_saved.append(image)
+
+        return "Graph has been saved."
+
+    except Exception as e:
+        print('ERROR: ', end='')
+        print(e)
+        return ''
+
+
+@app.callback(
     Output(component_id='logs_output', component_property='children'),
     [Input(component_id='resident_input_logs', component_property='value'),
      Input('filter_input_day_night', 'value'),
@@ -1203,12 +1680,13 @@ def update_graph_04_email(n_clicks, input_resident, filter_input, filter_type, s
         # url = py.plot(draw_data, auto_open=False, filename='email-report-graph-1')
 
         # print(url)
-        print("Entered HERE")
+        print("Generating Shift Log Image...")
         image = base64.b64encode(py.image.get(figure_to_email))
         graphs_saved.append(image)
-        # send_email.send_email(images, text_input)
 
-        return "Graph has been saved"
+        return '''Graph for {}'s {} with Day/Night filter: {} between {} and {} has been saved'''.format(
+            resident_DAO.get_resident_name_by_resident_id(input_resident), filter_type, filter_input, start_date,
+            temp_date.date())
 
     except Exception as e:
         print('ERROR: ', end='')
@@ -1286,6 +1764,70 @@ def update_graph_05(input_residents, input_vital_signs, start_date, end_date):
 
 
 @app.callback(
+    Output('vitals_graph_save_output', component_property='children'),
+    [Input('vitals_save_button', 'n_clicks')],
+    [State('resident_input_vital_signs', 'value'),
+     State('vital_sign_selector', 'value'),
+     State('date_picker_vital_signs', 'start_date'),
+     State('date_picker_vital_signs', 'end_date')])
+def update_graph_05_email(n_clicks, input_residents, input_vital_signs, start_date, end_date):
+    # print(f"Update Graph 05. IR:{input_residents} {type(input_residents)}, IVS:{input_vital_signs} {type(input_vital_signs)}")
+    # NOTE: input_residents here are the node_ids
+    if n_clicks is None:
+        return ''
+
+    try:
+        # add one day to the entered end date as a workaround to allow one day picks (since entered dates are at time 00:00:00)
+        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = modified_date  # datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        draw_data = []
+        if 'heart_rate' in input_vital_signs:
+            for r in input_residents:
+                r_name = resident_DAO.get_resident_name_by_resident_id(r)
+                df = input_data.input_data.retrieve_heart_rate_info(r, start_date, end_date)
+                if isinstance(df, str):
+                    continue
+                draw_data.append({'x': df['local_start_time'], 'y': df['heart_rate'], 'mode': 'markers',
+                                  'name': r_name + ' ' + 'heart_rate'})
+        if 'breathing_rate' in input_vital_signs:
+            for r in input_residents:
+                r_name = resident_DAO.get_resident_name_by_resident_id(r)
+                df = input_data.input_data.retrieve_breathing_rate_info(r, start_date, end_date)
+                if isinstance(df, str):
+                    continue
+                draw_data.append({'x': df['local_start_time'], 'y': df['breathing_rate'], 'mode': 'markers',
+                                  'name': r_name + ' ' + 'breathing_rate'})
+
+        figure_to_email = {
+            'data': draw_data,
+            'layout': {
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'title': 'Vital signs information of elderly',
+                'xaxis': {
+                    'title': 'Start datetime of recorded vitals'
+                },
+                'yaxis': {
+                    'title': 'Vitals reading values (/min)'
+                }
+            }
+        }
+
+        print("Generating Vital Signs Image...")
+        image = base64.b64encode(py.image.get(figure_to_email))
+        graphs_saved.append(image)
+
+        return 'Graph Saved'
+
+    except Exception as e:
+        print('ERROR: ', end='')
+        print(e)
+        return ''
+
+
+@app.callback(
     Output('qos_output', component_property='children'),
     [Input('resident_input_qos', 'value'),
      Input('date_picker_qos', 'start_date'),
@@ -1347,35 +1889,128 @@ def update_graph_06(input_residents, start_date, end_date):
 
 
 @app.callback(
+    Output('sleep_graph_save_output', component_property='children'),
+    [Input('sleep_save_button', 'n_clicks')],
+    [State('resident_input_qos', 'value'),
+     State('date_picker_qos', 'start_date'),
+     State('date_picker_qos', 'end_date')])
+def update_graph_06_email(n_clicks, input_residents, start_date, end_date):
+    # print(f"Update Graph 06. IR:{input_residents} {type(input_residents)}")
+    if n_clicks is None:
+        return ''
+
+    try:
+        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        temp_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        modified_date = temp_date + datetime.timedelta(days=1)
+        end_date = modified_date  # datetime.datetime.strftime(modified_date, '%Y-%m-%d')
+        japi = JuvoAPI.JuvoAPI()
+        draw_data = []
+        for r in input_residents:
+            # first get the target (using API for future refactor)
+            curr_target = sensor_DAO.get_juvo_target_from_resident_id(r)
+            r_name = resident_DAO.get_resident_name_by_resident_id(r)
+            tuple_list = japi.get_qos_by_day(curr_target, start_date, end_date)
+            try:
+                qos_df = pd.DataFrame(list(tuple_list), columns=['date_timestamp', 'qos'])
+                draw_data.append(
+                    {'x': qos_df['date_timestamp'], 'y': qos_df['qos'], 'mode': 'markers', 'name': r_name + ' - qos'})
+            except TypeError as e:
+                pass  # just don't add to draw data
+
+        figure_to_email = {
+            'data': draw_data,
+            'layout': {
+                'paper_bgcolor': 'rgba(0,0,0,0)',
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'title': 'Sleep quality information of elderly (Juvo)',
+                'xaxis': {
+                    'title': 'Date'
+                },
+                'yaxis': {
+                    'title': 'Sleep quality (%)'
+                }
+            }
+        }
+
+        print("Generating Sleep Quality Image...")
+        image = base64.b64encode(py.image.get(figure_to_email))
+        graphs_saved.append(image)
+
+        return 'Graph Saved'
+
+    except Exception as e:
+        print('ERROR: ', end='')
+        print(e)
+        return ''
+
+
+@app.callback(
     Output('email_output', 'children'),
     [Input('send_email', 'submit_n_clicks'),
-     Input('cleared_graphs', 'children')],
-    [State('text_input', 'value')])
-def send_email(n_clicks, graphs_cleared, text_input):
-    if graphs_cleared:
+     Input('cleared_graphs', 'value')],
+    [State('text_input', 'value'),
+     State('subject_input', 'value'),
+     State('send_to_input', 'value')])
+def send_email(n_clicks, graphs_cleared, text_input, subject_input, recipient):
+    if graphs_cleared == "cleared" and len(graphs_saved) == 0 and (text_input is None or text_input == "") and (
+            subject_input is None or subject_input == "") and (recipient is None or recipient == ""):
         return ''
-    if len(graphs_saved) == 0 and text_input is None:
+    if len(graphs_saved) == 0 and (text_input is None or text_input == "") and (
+            subject_input is None or subject_input == "") and (recipient is None or recipient == ""):
         return ''
+    if recipient is None or recipient == "":
+        return 'Please input recipient\'s email address'
     print("Initiating SMTP...")
     email_creator = EmailCreator()
-    email_creator.send_email(graphs_saved, text_input)
+    email_creator.send_email(graphs_saved, text_input, subject_input, recipient)
     return "Email has been sent"
+
+
+@app.callback(
+    Output('send_to_input', 'value'),
+    [Input('email_output', 'children')])
+def post_email_sent_clear_recipient_text(email_output):
+    if email_output == "Email has been sent":
+        return ""
+
+
+@app.callback(
+    Output('subject_input', 'value'),
+    [Input('email_output', 'children')])
+def post_email_sent_clear_body_text(email_output):
+    if email_output == "Email has been sent":
+        return ""
+
+
+@app.callback(
+    Output('text_input', 'value'),
+    [Input('email_output', 'children')])
+def post_email_sent_clear_body_text(email_output):
+    if email_output == "Email has been sent":
+        return ""
 
 
 @app.callback(
     Output('graph_numbers', 'children'),
     [Input('logs_graph_save_output', 'children'),
-     Input('cleared_graphs', 'children')])
-def set_number_of_graphs_saved(n_clicks, cleared_graphs):
+     Input('toilet_graph_save_output', 'children'),
+     Input('visitDuration_graph_save_output', 'children'),
+     Input('vitals_graph_save_output', 'children'),
+     Input('sleep_graph_save_output', 'children'),
+     Input('activity_graph_save_output', 'children'),
+     Input('cleared_graphs', 'value')])
+def set_number_of_graphs_saved(logs_graph, toilet_graph, visitDuration_graph_save_output, vitals_graph_save_output,
+                               sleep_graph_save_output, activity_graph, cleared_graphs):
     return 'No. of Graphs Saved: {}'.format(len(graphs_saved))
 
 
 @app.callback(
-    Output('cleared_graphs', 'children'),
+    Output('cleared_graphs', 'value'),
     [Input('clear_graphs', 'n_clicks')])
-def set_number_of_graphs_saved(n_clicks):
+def clear_graphs(n_clicks):
     graphs_saved.clear()
-    return ""
+    return "cleared"
 
 
 # next callbacks automatically updates the resident names live for each graph

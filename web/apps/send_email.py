@@ -23,7 +23,7 @@ class EmailCreator(object):
                 '')
 
     @staticmethod
-    def send_email(images, text_input):
+    def send_email(images, text_input, subject_input, recipient):
         print("sending email...")
         # email_body = ''
         # _ = template
@@ -38,12 +38,20 @@ class EmailCreator(object):
 
         # print(email_body)
         email_user = 'ie.st.bern@gmail.com'
-        email_send = 'ie.st.bern@gmail.com'
+        email_cc_reply_to = 'jedtan17@gmail.com'
+        email_send = recipient
         subject = 'Python SMTP'
 
         msg = MIMEMultipart()
-        msg['From'] = email_user
-        msg['Subject'] = subject
+        msg['From'] = "Dr Joseph Lee <ie.st.bern@gmail.com>"
+
+        if subject_input:
+            msg['Subject'] = subject_input
+        else:
+            msg['Subject'] = ""
+
+        msg['Cc'] = email_cc_reply_to
+        msg.add_header('reply-to', email_cc_reply_to)
         if text_input:
             body = text_input
         else:
@@ -73,5 +81,5 @@ class EmailCreator(object):
         server.starttls()
         server.login(email_user, 'iestbern123')
 
-        server.sendmail(email_user, email_send, text)
+        server.sendmail(email_user, [email_cc_reply_to, email_send], text)
         server.quit()
