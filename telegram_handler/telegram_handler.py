@@ -238,7 +238,7 @@ def text_reply(bot, update):
 	if exists(hitext) and "Sensor" in hitext:
 		bot.send_message(update.message.chat_id, hitext)
 	else:
-		bot.send_message(update.message.chat_id, hitext, reply_markup=reply_markupDefault)
+		bot.send_message(update.message.chat_id, hitext, reply_markup=reply_markupDefault, parse_mode = markdown)
 		
 def error(bot, update, error):
 	"""Log Errors caused by Updates."""

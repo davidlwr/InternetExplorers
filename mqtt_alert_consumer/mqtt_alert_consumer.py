@@ -56,7 +56,7 @@ teleurl = 'https://api.telegram.org/bot' + token + '/'
 DUTY_NURSE_CHAT_ID = -251433967
 
 def send_message_with_reply(chat, text, reply_markup):
-    params = {'chat_id' : chat, 'text': text, 'reply_markup': json.dumps(reply_markup)}
+    params = {'chat_id' : chat, 'text': text, 'reply_markup': json.dumps(reply_markup), 'parse_mode' : 'markdown'}
     response = requests.post(teleurl + 'sendMessage', data=params)
     return response
 
@@ -158,7 +158,7 @@ def action_motion(event, rname):
         # ts = time.time()
         reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
         date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        text=f'Assistance Alert: {rname} at ' + date_time
+        text=f'*Assistance Alert: {rname}* at ' + date_time
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
         alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, rname, text, "Assistance", "No")
         
