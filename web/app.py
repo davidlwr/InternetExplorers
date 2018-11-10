@@ -38,7 +38,7 @@ class DateConverter(BaseConverter):
 server.url_map.converters['date'] = DateConverter
 
 # default app
-app = dash.Dash(__name__, server=server, url_base_pathname='/insertsomeotherrandomstringhere')
+app = dash.Dash(__name__, server=server, url_base_pathname='/insertsomeotherrandomstringhere/')
 # server = app.server
 app.config.suppress_callback_exceptions = True
 csspath1 = ''
