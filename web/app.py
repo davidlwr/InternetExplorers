@@ -37,8 +37,10 @@ class DateConverter(BaseConverter):
 
 server.url_map.converters['date'] = DateConverter
 
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
 # default app
-app = dash.Dash(__name__, server=server, url_base_pathname='/insertsomeotherrandomstringhere')
+app = dash.Dash(__name__, server=server, external_stylesheets=external_stylesheets, url_base_pathname='/insertsomeotherrandomstringhere/')
 # server = app.server
 app.config.suppress_callback_exceptions = True
 csspath1 = ''
