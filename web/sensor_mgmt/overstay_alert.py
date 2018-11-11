@@ -738,7 +738,7 @@ class overstay_alert(object):
         # Handle "inRoom", "inBath", "nVisitBath"
         # RESULTS >> 'date'  'secs_room'   'secs_bath'    'nvisit_bath'
         results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, mm_pure=mm_pure, tm_pure=tm_pure, print_summary=True)
-        shift_logs = shift_log_DAO.get_all_temp_pulse(sdt=sdt, edt=sdt)
+        shift_logs = shift_log_DAO.get_all_temp_pulse(sdt=sdt, edt=edt)
 
         
         for idx,rid in enumerate(rids):
