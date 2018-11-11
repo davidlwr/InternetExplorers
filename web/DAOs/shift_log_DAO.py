@@ -167,12 +167,15 @@ class shift_log_DAO(object):
 
         return pd.read_sql_query(query, connection, params=feeddict)
 
-# # TEST-1 insert
-# sl_dao = shift_log_DAO()
-# obj = Shift_log(datetime.datetime.now(), 101, 20)
-# print("Inserting obj: " + str(obj))
-# sl_dao.insert_shift_log(obj)
 
-# # TEST-2 set min max
-# sl_dao.set_min_max_datetime()
-# print("min - max datetime in dao: {}, {}".format(sl_dao.min_datetime, sl_dao.max_datetime))
+if __name__ == "__main__":
+    all_results = shift_log_DAO.get_all_temp_pulse()
+
+    edt = datetime(2018,10,29)
+    sdt = edt - timedelta(days=1)
+    pastday_results = shift_log_DAO.get_all_temp_pulse(sdt=sdt, edt=edt)
+
+    print(f"# all no params: {len(all_results)}")
+    print(f"# past day: {len(pastday_results)}")
+    print(edt)
+    print(pastday_results)
