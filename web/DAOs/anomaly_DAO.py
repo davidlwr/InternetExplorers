@@ -1,5 +1,5 @@
 import datetime, os, sys
-from DAOs.connection_manager import connection_manager
+from connection_manager import connection_manager
 import string
 
 
@@ -9,7 +9,7 @@ def get_list_of_anomalies(startDate, endDate):
     '''
     Returns list of anomalies (each anomaly is a dictionary)
     '''
-    query = 'SELECT * FROM {} where date >= %s and date <= %s'.format(table_name)
+    query = 'SELECT * FROM {} where date >= %s and date <= %s order by date'.format(table_name)
     
     values = (startDate, endDate)
     # Get connection
@@ -21,10 +21,7 @@ def get_list_of_anomalies(startDate, endDate):
         cursor.execute(query, values)
         results = cursor.fetchall()
         # have to try printing this
-        if results:
-            return results
-        else:
-            return None
+        return results
     except:
         raise
     finally:
@@ -35,7 +32,7 @@ def insert_anomaly(date, resident_id, category, type, description, read):
     '''
     Returns the id of the inserted resident if successful
     '''
-    dob = dob.strftime('%Y-%m-%d')
+
     query = 'INSERT INTO {} (date, resident_id, category, type, description, read) VALUES (%s, %s, %s, %s, %s, %s)'.format(
         table_name)
     values = (date, resident_id, category, type, description, read)
@@ -72,3 +69,8 @@ def update_anomaly(date, resident_id, category, type, description):
         raise
     finally:
         factory.close_all(cursor=cursor, connection=connection)
+
+if __name__ == '__main__':
+    insert_anomaly('2018-10-30', 1, "vitals", "bp", "high", "yes")
+
+
