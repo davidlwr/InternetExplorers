@@ -38,69 +38,49 @@ a.deco-none {
 	<div class="panel panel-default" >
 		<div class="panel-body" style="background-color:#f1f4f7">
 		
-			<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12"><br><br>
-                {{ form.csrf_token }}
-                {{ render_field(form.startDate) }}
+			<div class="col-xs-12"><br><br>
+				{{ form.csrf_token }}
+				{{ render_field(form.startDate) }}
 				{{ render_field(form.endDate) }}
-                <br>
+				<br>
 				<div class="form-group"> <br><button type=submit class="btn btn-primary">Submit</button><br><br></div>
 			</div>
 		</div>
 	</div>
 </form>
-<div class="row">
 
-	<div class="col-lg-12">
-		
-			<div class="panel-heading">
-				<div class="col-lg-6 col-xs-4" align="left">
-				<td style="text-align:left;">Anomalies</td></div>
-				<div class="col-lg-6 col-xs-6" align="right">
-				
-			</div>
-			<div class="panel-body" style="height:300px;background-color:#fff; display:none;">
-				<div class="col-xs-12 text-center">
-					<div class="panel panel-default">
-						<div class="panel-heading">
-							<div class="row">
-								<div class="col-xs-12 text-center">
-									<div class="table-responsive">
-										<table class="table">
-											<thead style = "text-align:center">
-												<tr style = "text-align:center">
-													<th style = "text-align:center">Date</th>
-													<th style = "text-align:center">Resident Name</th>
-													<th style = "text-align:center">Category</th>
-													<th style = "text-align:center">Type</th>
-													<th style = "text-align:center">Description</th>
-												</tr>
-											</thead>
-											<tbody>
-												{% for anomaly in anomalies %}
-												<tr>
-												<td>{{ anomaly[0]}}</td>
-												<td>{{ anomaly[1]}}</td>
-												<td>{{ anomaly[2]}}</td>
-												<td>{{ anomaly[3]}}</td>
-												<td>{{ anomaly[4]}}</td>
-												</tr>
-												{% endfor %}
-											</tbody>
-										</table>
-									</div>
-								</div>
-							</div>
-						</div>
+<div class="row"></div>
 
-					</div>
-				</div>
-
-
-			</div>
+<div class="panel panel-default" >
+	<div class="panel-body">
+	<h4><b>Anomalies</b></h4>
+		<div class="table-responsive">
+			<table class="table">
+				<thead>
+					<tr>
+						<th style = "text-align:center">Date</th>
+						<th style = "text-align:center">Resident Name</th>
+						<th style = "text-align:center">Category</th>
+						<th style = "text-align:center">Type</th>
+						<th style = "text-align:center">Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for anomaly in anomalies %}
+					<tr class='clickable-row' data-href="./overview/{{ anomaly['resident_id'] }}/{{ anomaly['date']}}#{{ anomaly['category']}}">
+					<td>{{ anomaly['date']}}</td>
+					<td>{{ anomaly['name']}}</td>
+					<td>{{ anomaly[category]}}</td>
+					<td>{{ anomaly['type']}}</td>
+					<td>{{ anomaly['description']}}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
 		</div>
-		
 	</div>
 </div>
+
 
 {% endblock %}
 {% block footer%}
