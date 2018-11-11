@@ -1,10 +1,14 @@
-from flask import render_template, Flask, request, url_for
+from flask import render_template, Flask, request, flash, Markup, redirect, url_for
 from flask_wtf import Form
 from wtforms import StringField, PasswordField, SubmitField, RadioField, FloatField
 from wtforms.fields.html5 import DateField
 from wtforms_sqlalchemy.fields import QuerySelectField
 from flask_sqlalchemy import SQLAlchemy
 from wtforms.validators import InputRequired
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output, Event
+from datetime import timedelta
 import flask_login
 import datetime
 import plotly
@@ -17,101 +21,85 @@ if __name__ == '__main__':
 	sys.path.append(".")
 	import input_data
 	from app import app, server
-	from DAOs import resident_DAO, sensor_hist_DAO
-	from sensor_mgmt.sensor_mgmt import Sensor_mgmt, JuvoAPI
-	from DAOs.sensor_DAO import sensor_DAO
-	from Entities import resident
+	from DAOs import anomaly_DAO, resident_DAO
 else:
 	from apps import input_data
 	from app import app, server
-	from DAOs import resident_DAO, sensor_hist_DAO
-	from sensor_mgmt.sensor_mgmt import Sensor_mgmt, JuvoAPI
-	from DAOs.sensor_DAO import sensor_DAO
-	from Entities import resident
+	from DAOs import anomaly_DAO, resident_DAO
+	
+	
+class AnomalyForm(Form):
 
+	startDate = DateField('startDate', format='%Y-%m-%d', validators=[InputRequired('Please enter Start Date!')])
+	endDate = DateField('endDate', format='%Y-%m-%d', validators=[InputRequired('Please enter End Date!')])
+    # weight = FloatField('Monthly weight updates (kg)')
+    # num_falls = SelectField('No. of falls for past 6 months',
+                            # choices=[(0, '0'), (1, '1'), (2, '2-3'), (3, '>=4')], coerce=int, default=0)
+    # injury_sustained = SelectField('Injury sustained from falls past 6 months',
+                                   # choices=[(0, 'None'), (1, 'Minor'), (2, 'Major'), (3, 'Hospitalized')], coerce=int,
+                                   # default=0)
+    # medical_conditions = SelectField('Number of Medical Conditions',
+                                     # choices=[(0, '0'), (1, '1-2'), (2, '3-4'), (3, '>=5')], coerce=int, default=0)
+    # medication_amount = SelectField('Number of Medications',
+                                    # choices=[(0, '0'), (1, '1-5'), (2, '6-10'), (3, '>=11')], coerce=int, default=0)
+
+    # vision = SelectField('Vision (based on observation)',
+                         # choices=[(0, 'No impairment (with/ without eye glasses)'),
+                                  # (1, 'Unable to assess/ Blurring of vision'), (2, '1 side - Unilateral blindness'),
+                                  # (3, '2 side - Bilateral blindness')], coerce=int, default=0)
+    # hearing = SelectField('Hearing Ability (based on observation)',
+                          # choices=[(0, 'No impairment (with/ without hearing aid)'),
+                                   # (1, 'Unable to assess/ Poor hearing (with/ without hearing aid)'),
+                                   # (2, '1 side - Unilateral deafness'),
+                                   # (3, '2 side - Bilateral deafness')], coerce=int, default=0)
+    # mobility = SelectField('Mobility',
+                           # choices=[(0, 'Unable to move or transfer'), (1, 'Moves with no gait disturbances'),
+                                    # (2, 'Moves or transfer with assistance'),
+                                    # (3, 'Moves with unsteady gait needs full assistance')], coerce=int, default=1)
+    # pain = SelectField('Pain affecting level of function',
+                       # choices=[(0, ' No pain'), (1, 'Musculoskeletal/ Joint Pain'),
+                                # (2, 'Generalized pain (e.g. abdominal, headache, etc.)'),
+                                # (3, 'Critical Pain in other parts')], coerce=int, default=0)
+    # dependent = SelectField('Elimination',
+                            # choices=[(0, 'Totally Dependent'), (1, 'Needs assistance with Toileting'),
+                                     # (2, 'Frequent toileting habits/ Independent with frequency'),
+                                     # (3, 'Independent with Incontinence ')], coerce=int, default=2)
+    # dependency = StringField(
+        # 'If dependency is increasing, please describe what type', render_kw={"placeholder": "E.g. toilet usage assistance, mobility assistance, daily activities, etc. "})
+	submit = SubmitField('Submit')
+	
 # settle routing
 @server.route("/anomalies", methods=['GET', 'POST'])
 @flask_login.login_required
 def showOverviewAnomalies():
-	'''
-	This method prepares all the necessary variables to pass into the html for display
-	Each resident will have the following:
-	Name ('name'), List of Toilet Alerts ('toilet_alerts'),
-			List of Sleep Alerts (WIP), Overall Alert Level ('alert_highest')
-	NOTE: jinja templates do not allow for import of python modules, so all calculation will be done here
-	'''
-	 # RETURN STATUS CODES
-	INVALID_SENSOR = -1
-	OK             = 0     # Can be OK and LOW_BATT at the same time
-	DISCONNECTED   = 1
-	LOW_BATT       = 2
-	CHECK_WARN     = 3    # Potentially down
-   
-	
-	residents_raw = resident_DAO.get_list_of_residents()
-	
-	
+	form = AnomalyForm()
+	if request.method == 'POST':
+		if form.validate_on_submit():
+			startDate = form.startDate.data
+			endDate = form.endDate.data
+			anomalies_raw = anomaly_DAO.get_list_of_anomalies(startDate, endDate)
+			print(anomalies_raw)
+			
 
-	residents = []
-	noSensorResidents = []
-	date_in_use = datetime.datetime.now() # datetime.datetime(2018, 4, 19, 23, 34, 12) # TODO: change to current system time once live data is available
-	juvo_date_in_use = datetime.datetime.now() # datetime.datetime(2018, 8, 12, 22, 34, 12) # TODO: change to current system time once live data is available
-	for resident in residents_raw:
-		r = {}
-		r['name'] = resident['name']
-		r['node_id'] = resident['node_id']
-		residentid = resident_DAO.get_resident_id_by_resident_name(resident['name'])
-		uuids = sensor_hist_DAO.get_uuids_by_id(residentid['resident_id']) #listofuuids
-		if len(uuids)==0: 
-			noSensorResidents.append(r)
+			anomalies = []
+			for anomaly in anomalies_raw:
+				r = {}
+				r['date'] = anomaly['date']
+				r['resident_id'] = anomaly['resident_id']
+				r['category'] = anomaly['category']
+				r['type'] = anomaly['type']
+				r['description'] = anomaly['description']
+				r['read'] = anomaly['read']
+				residentName = resident_DAO.get_resident_name_by_resident_id(anomaly['resident_id'])
+				r['name'] = residentName
+				anomalies.append(r)
+			return render_template('anomalies.html', form=form, anomalies = anomalies)	
 		else:
-			infoList = []
-			downCount = 0
-			upCount = 0
-			totalCount = 0
-			for uuid in uuids:
-				
-				id = uuid['uuid']
-				_status = Sensor_mgmt.get_sensor_status_v2(id, True)
-				statusNumList = _status[0]
-				batterystatusList = _status[1]
-				statusNum = statusNumList[0]
-				batterystatus = '-'
-				
-				if(len(batterystatusList) > 0):
-					batterystatus = batterystatusList[0]
-				status = ""
-				if statusNum == 0: 
-					status = "Up"
-					upCount += 1
-					totalCount +=1
-				else: 
-					if statusNum == 3:
-						status = "Warning"
-					else:
-						status = "Down"
-					downCount += 1
-					totalCount +=1
-				loc = sensor_DAO.get_location_by_node_id(id)
-				location = loc[0]['location']
-				rawtype = sensor_DAO.get_type_by_node_id(id)
-				type = rawtype[0]['type']
-				if status == "Up" and batterystatus == '-' : 
-					if location == 'bed':
-						batterystatus = "Plugged"
-					else: 
-						batterystatus = 100
-				elif status == "Down" and batterystatus == '-':
-					batterystatus = "Unplugged"
-				info = (id,type, location, batterystatus, status)
-				infoList.append(info)
-			r['infoList'] = infoList
-			r['downCount'] = downCount
-			r['upCount'] = upCount
-			r['totalCount'] = totalCount
-			residents.append(r)
-	return render_template('anomalies.html', residents = residents, noSensorResidents = noSensorResidents, downCount = downCount)
-
+			print("error here2")
+			return render_template('anomalies.html', form=form)
+	else:
+		print("error here3")
+		return render_template('anomalies.html', form=form)
 
 if __name__ == '__main__':
 	showOverviewAnomalies()
