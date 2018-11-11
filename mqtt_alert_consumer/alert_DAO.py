@@ -82,13 +82,13 @@ def insert_alert(chat_id, date, rname, alert_text, alert_type, response_status):
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
 
-def update_alert(chat_id, alert_text):
+def update_alert(chat_id, alert_text, purpose):
     
     '''
     Update the status of the alert if successful
     '''
-    query = "UPDATE {} SET response_status = %s WHERE chat_id = %s AND alert_text = %s".format(table_name)
-    values = ('Yes', chat_id, alert_text)
+    query = "UPDATE {} SET response_status = %s, purpose = %s WHERE chat_id = %s AND alert_text = %s".format(table_name)
+    values = ('Yes', purpose, chat_id, alert_text)
     factory = connection_manager()
     connection = factory.connection
     cursor = connection.cursor()
@@ -115,8 +115,8 @@ def delete_alert(chat_id, alert_text):
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
 
-def main():
-    print(get_alerts_by_id(-251433967))
+# def main():
+    # print(get_alerts_by_id(-251433967))
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+    # main()

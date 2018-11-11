@@ -59,7 +59,7 @@ def button(bot, update):
 						  chat_id=query.message.chat_id,
 						  message_id=query.message.message_id)
 
-		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, query['message']['text'])
+		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, query['message']['text'], query.data)
 		residentNameList = resident_DAO.get_list_of_residentNames()
 		latest_list = get_latest_alerts(residentNameList)
 		
@@ -76,7 +76,7 @@ def button(bot, update):
 						  chat_id=query.message.chat_id,
 						  message_id=query.message.message_id)
 
-		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg) 
+		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg, query.data) 
 		residentNameList = resident_DAO.get_list_of_residentNames()
 		latest_list = get_latest_alerts(residentNameList)
 		
@@ -93,7 +93,7 @@ def button(bot, update):
 						  chat_id=query.message.chat_id,
 						  message_id=query.message.message_id)
 
-		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg) 
+		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg, query.data)  
 		residentNameList = resident_DAO.get_list_of_residentNames()
 		latest_list = get_latest_alerts(residentNameList)
 		
@@ -109,7 +109,7 @@ def button(bot, update):
 		bot.edit_message_text(initialMsg + "\n\nUsing Toilet\n\nPurpose of visit: {}".format(query.data),
 						  chat_id=query.message.chat_id,
 						  message_id=query.message.message_id)
-		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg)
+		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, initialMsg, query.data) 
 		residentNameList = resident_DAO.get_list_of_residentNames()
 		latest_list = get_latest_alerts(residentNameList)
 		
@@ -238,7 +238,7 @@ def text_reply(bot, update):
 	if exists(hitext) and "Sensor" in hitext:
 		bot.send_message(update.message.chat_id, hitext)
 	else:
-		bot.send_message(update.message.chat_id, hitext, reply_markup=reply_markupDefault, parse_mode = markdown)
+		bot.send_message(update.message.chat_id, hitext, reply_markup=reply_markupDefault)
 		
 def error(bot, update, error):
 	"""Log Errors caused by Updates."""
