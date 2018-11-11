@@ -4,7 +4,7 @@ import datetime
 from DAOs import resident_DAO, anomaly_DAO
 from sensor_mgmt import overstay_alert
 
-debug_current_time = datetime.datetime(2018, 10, 29) # NOTE: set to None for production
+debug_current_time = datetime.datetime(2018, 9, 29) # NOTE: set to None for production
 category_strings = {}
 category_strings['temperature'] = "vitals"
 category_strings['pulse_pressure'] = "vitals"
@@ -25,7 +25,7 @@ def job():
     print("rids: ", rids)
 
     # check for bedroom overstay, temperature and pulse pressure anomalies
-    overstay_dict = overstay_alert.overstay_alert.get_anomalies(rids, sdt, current_time)
+    overstay_dict = overstay_alert.overstay_alert.get_anomalies(rids, sdt, current_time, night_filter=True)
     # print("overstay_dict", overstay_dict)
     for rid in rids:
         individual_overstay_dict = overstay_dict[rid]
@@ -43,11 +43,11 @@ def job():
                     print("Inserting to db...")
                     # print(ta_time.date())
                     # print(ta_val)
-                    desc_text = "Anomalous temperature detected!"
+                    desc_text = "Anomalous temperature (" + str(ta_val) + chr(176) + "C) detected!"
                     if ta_val >= overstay_alert.overstay_alert.temperature_max:
-                        desc_text = "High temperature detected!"
+                        desc_text = "High temperature (" + str(ta_val) + chr(176) + "C) detected!"
                     elif ta_val <= overstay_alert.overstay_alert.temperature_min:
-                        desc_text = "Low temperature detected!"
+                        desc_text = "Low temperature (" + str(ta_val) + chr(176) + "C) detected!"
                     try:
                         anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['temperature'], 'temperature', desc_text, 0)
                     except:
@@ -59,7 +59,7 @@ def job():
             for pa_time, pa_val in pulse_anomalies:
                 if pa_time.date() == previous_day_dt.date():
                     print("Inserting to db...")
-                    desc_text = "Anomalous pulse pressure detected!"
+                    desc_text = "Anomalous pulse pressure (" + str(pa_val) + "mmHg) detected!"
                     try:
                         anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['pulse_pressure'], 'pulse pressure', desc_text, 0)
                     except:
@@ -79,7 +79,15 @@ def job():
 
         if toilet_usage_anomalies:
             print("handling " + str(rid) + "'s toilet usage anomalies")
-            
+            # print(toilet_usage_anomalies)
+            for tua_time, tua_val in toilet_usage_anomalies.items():
+                if tua_time.date() == previous_day_dt.date():
+                    print("Inserting to db")
+                    desc_text = "Anomalous night toilet usage detected"
+                    try:
+                        anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['toilet_usage'], 'night toilet usage', desc_text, 0)
+                    except:
+                        print("Exception occurred at toilet usage anomalies")
 
 
     print("Done one job")

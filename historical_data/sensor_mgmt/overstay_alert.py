@@ -54,10 +54,13 @@ class overstay_alert(object):
     MOTION_START = 255
     MOTION_END   = 0
 
+    NIGHT_START = datetime.time(22, 30)
+    NIGHT_END   = datetime.time(6, 30)
+
     # THRESHOLDS TEMP and PULSE
-    temperature_max         = 37.6
-    temperature_min         = 35.5
-    pulse_pressure_max      = 62.5        # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2710466/
+    temperature_max 		= 37.6
+    temperature_min 		= 35.5
+    pulse_pressure_max 	    = 62.5        # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2710466/
     
     # RETURN CODES:
     NO_MAIN_DOOR = -1    # Unable to run algo, as no main door sensor found
@@ -307,6 +310,8 @@ class overstay_alert(object):
             time_in_room = 0
             time_in_bath = 0
             nvisits_bath = 0
+            nvisits_morn = 0
+            nvisits_nite = 0
 
             # Pull out all logs within the current date
             curr_logs = logs_dt[(logs_dt['recieved_timestamp'] >= curr_sdt) & (logs_dt['recieved_timestamp'] <= curr_edt)]
@@ -321,12 +326,12 @@ class overstay_alert(object):
 
             # Get time in toilet
             if td_uuid != None and tm_pure == False:
-                time_in_bath, nvisits_bath = overstay_alert.sub_bath_w_door(curr_logs, sdict, curr_sdt, curr_edt)
+                time_in_bath, nvisits_bath, nvisits_morn, nvisits_nite = overstay_alert.sub_bath_w_door(curr_logs, sdict, curr_sdt, curr_edt)
             else:
-                time_in_bath, nvisits_bath = overstay_alert.sub_bath_wo_door(curr_logs, sdict, curr_sdt, curr_edt)
+                time_in_bath, nvisits_bath, nvisits_morn, nvisits_nite = overstay_alert.sub_bath_wo_door(curr_logs, sdict, curr_sdt, curr_edt)
 
             # Add summary values to ret_dict
-            ret_list.append({"date":curr_sdt, "secs_room":time_in_room, "secs_bath":time_in_bath, "nvisit_bath":nvisits_bath})
+            ret_list.append({"date":curr_sdt, "secs_room":time_in_room, "secs_bath":time_in_bath, "nvisit_bath":nvisits_bath, "nvisit_morn": nvisits_morn, "nvisit_nite": nvisits_nite})
 
             # Increment curr_date
             curr_sdt += timedelta(days=1)
@@ -460,6 +465,8 @@ class overstay_alert(object):
         # Summary values
         time_in_bath = 0
         nvisits_bath = 0
+        nvisits_morn = 0
+        nvisits_nite = 0
 
         # Iterate logs in ascending datetime order. Generate summary values >> Greedy algo
         prev_td = None
@@ -476,6 +483,8 @@ class overstay_alert(object):
                     if row.event == overstay_alert.DOOR_OPEN:
                         time_in_bath += (row.recieved_timestamp - curr_sdt).total_seconds()
                         nvisits_bath += 1
+                        if row.recieved_timestamp >= overstay_alert.NIGHT_START: nvisits_nite += 1
+                        elif row.recieved_timestamp <= overstay_alert.NIGHT_END: nvisits_morn += 1
 
                 # If current door event is OPEN and previous door event is CLOSE
                 elif (row.event == overstay_alert.DOOR_OPEN and prev_td.event == overstay_alert.DOOR_CLOSE):
@@ -486,11 +495,15 @@ class overstay_alert(object):
                             if prev_tm.event == overstay_alert.MOTION_START and prev_tm.recieved_timestamp > prev_td.recieved_timestamp: 
                                 time_in_bath += (row.recieved_timestamp - prev_td.recieved_timestamp).total_seconds()
                                 nvisits_bath += 1
+                                if row.recieved_timestamp >= overstay_alert.NIGHT_START: nvisits_nite += 1
+                                elif row.recieved_timestamp <= overstay_alert.NIGHT_END: nvisits_morn += 1
 
                             # Motion close after door close and before door open
                             elif prev_tm.event == overstay_alert.MOTION_END and prev_tm.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT) < row.recieved_timestamp:
                                 time_in_bath += (row.recieved_timestamp - prev_td.recieved_timestamp).total_seconds()
                                 nvisits_bath += 1
+                                if row.recieved_timestamp >= overstay_alert.NIGHT_START: nvisits_nite += 1
+                                elif row.recieved_timestamp <= overstay_alert.NIGHT_END: nvisits_morn += 1
 
                             # Motion start before door close, within a 4 minute window
                             elif prev_tm.event == overstay_alert.MOTION_START and prev_tm.recieved_timestamp < prev_td.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT):
@@ -499,12 +512,16 @@ class overstay_alert(object):
                                     if prev_mm.event == overstay_alert.MOTION_START and prev_mm.recieved_timestamp < prev_td.recieved_timestamp:
                                         time_in_bath += (row.recieved_timestamp - prev_td.recieved_timestamp).total_seconds()
                                         nvisits_bath += 1
+                                        if row.recieved_timestamp >= overstay_alert.NIGHT_START: nvisits_nite += 1
+                                        elif row.recieved_timestamp <= overstay_alert.NIGHT_END: nvisits_morn += 1
 
                                     # last main room motion was end, and was refreshed before main door closed
                                     elif prev_mm.event == overstay_alert.MOTION_END: 
                                         if prev_mm.recieved_timestamp - timedelta(minutes=overstay_alert.MOTION_TIMEOUT) < prev_td.recieved_timestamp:
                                             time_in_bath += (row.recieved_timestamp - prev_td.recieved_timestamp).total_seconds()
                                             nvisits_bath += 1
+                                            if row.recieved_timestamp >= overstay_alert.NIGHT_START: nvisits_nite += 1
+                                            elif row.recieved_timestamp <= overstay_alert.NIGHT_END: nvisits_morn += 1
                 prev_td = row
 
             # If toilet Motion                
@@ -519,17 +536,23 @@ class overstay_alert(object):
                         if prev_tm.event == overstay_alert.MOTION_END and prev_tm.recieved_timestamp > (prev_td.recieved_timestamp + timedelta(minutes=overstay_alert.MOTION_TIMEOUT)):  
                             time_in_bath += (curr_edt - prev_td.recieved_timestamp).total_seconds()
                             nvisits_bath += 1
+                            if row.recieved_timestamp >= overstay_alert.NIGHT_START: nvisits_nite += 1
+                            elif row.recieved_timestamp <= overstay_alert.NIGHT_END: nvisits_morn += 1
                         elif prev_tm.event == overstay_alert.MOTION_START and prev_tm.recieved_timestamp > prev_td.recieved_timestamp:
                             time_in_bath += (curr_edt - prev_td.recieved_timestamp).total_seconds()
                             nvisits_bath += 1
+                            if row.recieved_timestamp >= overstay_alert.NIGHT_START: nvisits_nite += 1
+                            elif row.recieved_timestamp <= overstay_alert.NIGHT_END: nvisits_morn += 1
 
-        return time_in_bath, nvisits_bath
+        return time_in_bath, nvisits_bath, nvisits_morn, nvisits_nite
 
     @staticmethod
     def sub_bath_wo_door(curr_logs, sdict, curr_sdt, curr_edt):
         # Summary values
         time_in_bath = 0
         nvisits_bath = 0
+        nvisits_morn = 0
+        nvisits_nite = 0
 
         # Iterate logs in ascending datetime order. Generate summary values >> Greedy algo
         prev_tm = None
@@ -541,6 +564,8 @@ class overstay_alert(object):
                 # EVENT START
                 if row.event == overstay_alert.MOTION_START: 
                     nvisits_bath += 1
+                    if row.recieved_timestamp.time() >= overstay_alert.NIGHT_START: nvisits_nite += 1
+                    elif row.recieved_timestamp.time() <= overstay_alert.NIGHT_END: nvisits_morn += 1
 
                     # Motion log 225 then 225?? treat previous start as being 4 mins long
                     if type(prev_tm) != type(None):
@@ -562,7 +587,7 @@ class overstay_alert(object):
             if prev_tm.event == overstay_alert.MOTION_START:
                 time_in_bath += (curr_edt - prev_tm.recieved_timestamp).total_seconds()
 
-        return time_in_bath, nvisits_bath
+        return time_in_bath, nvisits_bath, nvisits_morn, nvisits_nite
 
     # SUB FORMATTING HELPER METHODS =============================
     @staticmethod
@@ -705,7 +730,7 @@ class overstay_alert(object):
         plt.show()
 
     @staticmethod
-    def get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, room_sigma=2.0, bath_sigma=2.0, visit_sigma=2.0):
+    def get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, room_sigma=2.0, bath_sigma=2.0, visit_sigma=2.0, night_filter=False):
         """ Returns a dict with a constant standard deviation, and anomalies found
         NOTE: YOU SHOULD PUT MAX AND MIN DATETIMES INTO HERE, OR AT LEAST 7 DAYS WORTH OF DATA!!!! 
             - Method is also ment to be run after the day itself. say you want to check 10/10/2018, wait until 11/10/2018 00:00:00, then run with edt = 10/10/2018
@@ -718,6 +743,7 @@ class overstay_alert(object):
                     tm_pure (bool) -- If true, use only motion sensors to evaluate time and visits in/to toilet
                     window (int)   -- Size of moving window, default 7
                     sigma (int)    -- Number of standard deviations to consider a point an anomaly, default 2
+                    night_filter (bool) -- If true, count # toilet visits between NIGHT_START and NIGHT_END. NOTE: may be weird if called during night 
 
             
             -------- RETURNS: 
@@ -737,10 +763,9 @@ class overstay_alert(object):
 
         # Handle "inRoom", "inBath", "nVisitBath"
         # RESULTS >> 'date'  'secs_room'   'secs_bath'    'nvisit_bath'
-        results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, mm_pure=mm_pure, tm_pure=tm_pure, print_summary=True)
+        results = overstay_alert.test_check_activities_by_date(rids, sdt, edt, mm_pure=mm_pure, tm_pure=tm_pure)
         shift_logs = shift_log_DAO.get_all_temp_pulse(sdt=sdt, edt=edt)
 
-        
         for idx,rid in enumerate(rids):
             x_dates  = pd.Series([d['date'] for d in results[idx]])
 
@@ -750,12 +775,18 @@ class overstay_alert(object):
             y_ibath = pd.Series([d['secs_bath'] for d in results[idx]])
             ibath_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_ibath, window_size=window, sigma=bath_sigma)
 
-            y_nvisit = pd.Series([d['nvisit_bath'] for d in results[idx]])
+            if night_filter == False:
+                y_nvisit = pd.Series([d['nvisit_bath'] for d in results[idx]])
+            else:
+                nvisits = pd.DataFrame([{"morn":d['nvisit_morn'], "nite":d['nvisit_nite']} for d in results[idx]])
+                nvisits['nvisit_night'] = nvisits.nite + nvisits.morn.shift(-1) # Combine curr night with next morn for this dates nvisits
+                nvisits.nvisit_night.fillna(nvisits['nite'])                     # last row will be NaN, because of the shift, replace with just night
+                y_nvisit = nvisits.nite
+
             nvisit_a = overstay_alert.explain_anomalies_rolling_std(x=x_dates, y=y_nvisit, window_size=window, sigma=visit_sigma)
 
             # Handle shift form anomalies
             curr_shift_logs = shift_logs[shift_logs['patient_id'] == rid]
-            # print(curr_shift_logs)
 
             #   TEMPERATURE
             temp_a = [(row.datetime,row.temperature) for idx,row in curr_shift_logs.iterrows() if row.temperature > overstay_alert.temperature_max or row.temperature < overstay_alert.temperature_min]
@@ -829,18 +860,19 @@ class overstay_alert(object):
         plt.show()
         
     @staticmethod
-    def test_check_activities_by_date(rids, sdt, edt, print_summary=False, mm_pure=False, tm_pure=True, plot=False):
+    def test_check_activities_by_date(rids, sdt, edt, print_summary=None, mm_pure=False, tm_pure=True, plot=False):
         
-        results = [] # 'date'  'secs_room'   'secs_bath'    'nvisit_bath'
+        results = [] # 'date'  'secs_room'   'secs_bath'    'nvisit_bath'   'nvisit_morn'   'nvisit_nite'
         times   = []
 
         for rid in rids:
             start_time = time.clock()
-            ret_list = ret_list = overstay_alert.check_activities_by_date(rid=rid, sdt=sdt, edt=edt, mm_pure=mm_pure, tm_pure=tm_pure)
+            ret_list = overstay_alert.check_activities_by_date(rid=rid, sdt=sdt, edt=edt, mm_pure=mm_pure, tm_pure=tm_pure)
             results.append(ret_list)
             times.append(time.clock() - start_time)
 
-        if print_summary == True:
+        if print_summary == None: pass
+        elif print_summary == True:
             summary = []
             for i in range(0, len(rids)):
                 n_days = 0
@@ -925,19 +957,20 @@ if __name__ == '__main__':
     # overstay_alert.test_plot_in_toilet_check(rid=rid, sdt=sdt, edt=edt, jump_mins=jump_mins)
 
     # ============================== TESTING ANOMALY DETECTION WITH PLOT =========================================
-    rids = [rid for rid,rname in rdict.items()]
-    sdt = datetime.datetime.strptime('2018-08-01 00:00:00', '%Y-%m-%d %H:%M:%S')
-    edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
-    print("this may take up to 30 secs...")
-    overstay_alert.test_anomaly_by_averages(rids, sdt, edt, mm_pure=True, tm_pure=True, print_summary=True, window=7, applying_rolling_std=True)
-
-
-    # ============================== TESTING ANOMALY DETECTION NO PLOT =========================================
     # rids = [rid for rid,rname in rdict.items()]
     # sdt = datetime.datetime.strptime('2018-08-01 00:00:00', '%Y-%m-%d %H:%M:%S')
     # edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
-    # rdict = overstay_alert.get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, sigma=2)
-    # print(rdict)
+    # print("this may take up to 30 secs...")
+    # overstay_alert.test_anomaly_by_averages(rids, sdt, edt, mm_pure=True, tm_pure=True, print_summary=True, window=7, applying_rolling_std=True)
+
+
+    # ============================== TESTING ANOMALY DETECTION NO PLOT =========================================
+    rids = [rid for rid,rname in rdict.items()]
+    rids = [4]
+    sdt = datetime.datetime.strptime('2018-10-01 00:00:00', '%Y-%m-%d %H:%M:%S')
+    edt = datetime.datetime.strptime('2018-10-30 00:00:00', '%Y-%m-%d %H:%M:%S')
+    rdict = overstay_alert.get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, night_filter=True)
+    print(rdict)
 
     
 
