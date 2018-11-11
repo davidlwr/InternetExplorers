@@ -1,5 +1,5 @@
 import datetime, os, sys
-from connection_manager import connection_manager
+from DAOs.connection_manager import connection_manager
 import string
 
 
@@ -28,14 +28,13 @@ def get_list_of_anomalies(startDate, endDate):
         factory.close_all(cursor=cursor, connection=connection)
 
 
-def insert_anomaly(date, resident_id, category, type, description, read):
+def insert_anomaly(date, resident_id, category, type, description, response):
     '''
     Returns the id of the inserted resident if successful
     '''
 
-    query = 'INSERT INTO {} (date, resident_id, category, type, description, read) VALUES (%s, %s, %s, %s, %s, %s)'.format(
-        table_name)
-    values = (date, resident_id, category, type, description, read)
+    query = 'INSERT INTO {} (date, resident_id, category, type, description, response) VALUES (%s, %s, %s, %s, %s, %s)'.format(table_name)
+    values = (date, resident_id, category, type, description, response)
 
     # Get connection
     factory = connection_manager()
@@ -55,8 +54,8 @@ def update_anomaly(date, resident_id, category, type, description):
     '''
     Returns a resident (in a dict) based on resident_id (in int)
     '''
-    query = 'UPDATE {} SET `read` = %s WHERE date = %s and resident_id = %s and category = %s and type = %s and description = %s'.format(table_name)
-    val = ("Yes", date, resident_id, category, type, description)
+    query = 'UPDATE {} SET `response` = %s WHERE date = %s and resident_id = %s and category = %s and type = %s and description = %s'.format(table_name)
+    val = (1, date, resident_id, category, type, description)
     # Get connection
     factory = connection_manager()
     connection = factory.connection
@@ -70,7 +69,7 @@ def update_anomaly(date, resident_id, category, type, description):
     finally:
         factory.close_all(cursor=cursor, connection=connection)
 
-if __name__ == '__main__':
-    insert_anomaly('2018-10-30', 1, "vitals", "bp", "high", "yes")
+# if __name__ == '__main__':
+    # insert_anomaly('2018-10-30', 1, "vitals", "bp", "high", 0)
 
 
