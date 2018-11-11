@@ -4,7 +4,7 @@ import datetime
 from DAOs import resident_DAO
 from sensor_mgmt import overstay_alert
 
-debug_current_time = datetime.datetime(2018, 10, 28) # NOTE: set to None for production
+debug_current_time = datetime.datetime(2018, 10, 30) # NOTE: set to None for production
 
 def job():
     current_time = datetime.datetime.now()
@@ -24,22 +24,36 @@ def job():
     # print("overstay_dict", overstay_dict)
     for rid in rids:
         individual_overstay_dict = overstay_dict[rid]
-        print(individual_overstay_dict)
+        # print(individual_overstay_dict)
         temp_anomalies = individual_overstay_dict['temp']
         pulse_anomalies = individual_overstay_dict['pulse']
         room_stay_anomalies = individual_overstay_dict['inRoom']
+        toilet_usage_anomalie = individual_overstay_dict['nbath']
         
         if temp_anomalies:
-            print(str(rid) + "'s temp anomalies")
-            print(temp_anomalies)
+            print("handling" + str(rid) + "'s temp anomalies")
+            # print(temp_anomalies)
+            for ta_time, ta_val in temp_anomalies:
+                if ta_time.date() == previous_day_dt.date():
+                    print("Inserting to db...")
+                    # print(ta_time.date())
+                    # print(ta_val)
             
         if pulse_anomalies:
-            print(str(rid) + "'s pulse anomalies")
-            print(pulse_anomalies)
+            print("handling" + str(rid) + "'s pulse anomalies")
+            # print(pulse_anomalies)
+            for pa_time, pa_val in pulse_anomalies:
+                if pa_time.date() == previous_day_dt.date():
+                    print("Inserting to db...")
+                    
             
         if room_stay_anomalies:
-            print(str(rid) + "'s room stay anomalies")
-            print(room_stay_anomalies)
+            print("handling" + str(rid) + "'s room stay anomalies")
+            # print(room_stay_anomalies)
+            for rsa_time, rsa_val in room_stay_anomalies.items():
+                if rsa_time.date() == previous_day_dt.date():
+                    print("Inserting to db...")
+            
         
         
     print("Done one job")
