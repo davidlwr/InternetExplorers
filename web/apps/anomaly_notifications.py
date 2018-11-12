@@ -6,6 +6,7 @@ from DAOs.connection_manager import connection_manager
 
 @server.route('/anomaly_notifications', methods=['GET', 'POST'])
 def anomaly_notifications():
+    # need check whether need start date and end dates or not
     factory = connection_manager()
     connection = factory.connection
     cursor = connection.cursor()
@@ -43,7 +44,7 @@ def anomaly_notifications_count():
         else:
             return ''
     except:
-        print("Exceptions occurred in anomaly_notifications")
+        print("Exceptions occurred in anomaly_notifications_count")
         # raise
         # return some number to fail safely
         return str(-1)
@@ -51,3 +52,27 @@ def anomaly_notifications_count():
         factory.close_all(cursor=cursor, connection=connection)
         
     return str(len(result))
+    
+@server.route('/anomaly_notifications_read', methods=['POST'])
+def mark_anomaly_read():
+    input_msg = request.get_json()
+    
+    # update the database to mark as read
+    factory = connection_manager()
+    connection = factory.connection
+    cursor = connection.cursor()
+    
+    try:
+        # maybe validate the parameters in the JSON here first
+        query_text = 'UPDATE stbern.anomaly SET `response` = 1 WHERE date = %s and rid = %s and type = %s and description = %s'
+        values = (input_msg['date'], input_msg['resident_id'], input_msg['type'], input_msg['desc_text']) # need double check table column names and json keys
+        
+        cursor.execute(query_text, values)
+        connection.commit()
+    except:
+        print("Exceptions occurred at anomaly_notifications_read")
+    
+    finally:
+        factory.close_all(cursor=cursor, connection=connection)
+    
+    return str(input_msg)
