@@ -104,22 +104,25 @@ class input_shiftlogs(object):
         try:
             result_data = result_data.loc[all_days_range]
         except KeyError as e:
-            erroroutput = pd.DataFrame()
-            erroroutput['num_falls'] = []
-            erroroutput['num_near_falls'] = []
-            erroroutput['food_consumption'] = []
-            erroroutput['temperature'] = []
-            erroroutput['systolic_bp'] = []
-            erroroutput['diastolic_bp'] = []
-            erroroutput['pulse_pressure'] = []
-            erroroutput['pulse_rate'] = []
-            erroroutput['date_only'] = []
-        # result_data.fillna(0, inplace=True)
+            print("Caught error at input shift logs get logs by date")
+            
+            result_data = pd.DataFrame()
+            result_data['num_falls'] = []
+            result_data['num_near_falls'] = []
+            result_data['food_consumption'] = []
+            result_data['temperature'] = []
+            result_data['diastolic_bp'] = []
+            result_data['systolic_bp'] = []
+            result_data['pulse_pressure'] = []
+            result_data['pulse_rate'] = []
+            result_data['date_only'] = all_days_range
+            result_data.set_index('date_only', inplace=True)
+            result_data.fillna(0, inplace=True)
 
         # undo set index
         result_data.reset_index(inplace=True)
         result_data.rename(columns={'index': 'date_only'}, inplace=True)
-        # print("result data from get_num_visits_by_date\n", result_data)
+        # print("result data from get_logs_by_date\n", result_data)
         return result_data
 
     @staticmethod
@@ -181,6 +184,7 @@ class input_shiftlogs(object):
             try:
                 past_week_data.loc[date_range]
             except KeyError as e:
+                print("Caught KeyError input shiftlogs")
                 past_week_data = pd.DataFrame()
                 past_week_data['date_only'] = []
                 past_week_data['pulse_pressure'] = []

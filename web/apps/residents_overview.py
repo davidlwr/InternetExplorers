@@ -755,6 +755,8 @@ def detailedLayerTwoOverviewResidents(resident_id, currdate=None):
                     displayModeBar = False
                 )
         )
+        
+        # print(past_week_data_sl.info())
 
         pp_json = json.dumps(pp_graph, cls=plotly.utils.PlotlyJSONEncoder)
 
