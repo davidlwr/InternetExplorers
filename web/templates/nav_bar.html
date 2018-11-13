@@ -96,11 +96,26 @@
 			}
 	</script>
 	<script>
-		$(document).ready((function() {
-			refresh_notifications()
-			setInterval(refresh_notifications, 10000);	// prev 10000
-		}));
+		// for anomaly
+		function set_anomaly_message_count(n) {
+			$('#anomaly_num').text(n);
+		}
+		function refresh_anomaly_notifications() {
+			$.ajax("{{ url_for('anomaly_notifications') }}").done(
+				function(anomaly_texts) {
+					set_anomaly_message_count(anomaly_texts.length);
+				}
+			)
+		}
 	</script>
+	<script>
+			$(document).ready((function() {
+				refresh_notifications()
+				setInterval(refresh_notifications, 10000);	// prev 10000
+				refresh_anomaly_notifications();
+				setInterval(refresh_anomaly_notifications, 10000);
+			}));
+		</script>
     <style>
     @media only screen and (max-width: 767px) {
         .not-in-mobile{
@@ -123,6 +138,12 @@
 				<a class="navbar-brand" href="/"><span>St Bern</span><span class="not-in-mobile"> Healthcare</span></a>
 
 				<ul class="nav navbar-top-links navbar-right">
+					<li class="dropdown">
+						<a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
+							<em class="fa fa-exclamation-triangle"></em><span id="anomaly_num" class="label label-danger">0</span>
+						</a>
+						<ul id="anomaly_alerts" class="dropdown-menu dropdown-alerts"></ul>
+					</li>
 					<li class="dropdown"><a class="dropdown-toggle count-info" data-toggle="dropdown" href="#"> <!--add link to sensor mgmt page-->
 						<em class="fa fa-bell"></em><span id="sysmon_num" class="label label-danger">0</span>
 					</a>
