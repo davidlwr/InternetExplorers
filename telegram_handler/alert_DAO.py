@@ -45,6 +45,25 @@ def get_latest_alert_by_id(chat_id, rname):
     except: raise
     finally: factory.close_all(cursor=cursor, connection=connection)
 
+def get_alert_by_id(chat_id, alert_text):
+    '''
+    Returns alert_text and rname by id
+    '''
+    query = "SELECT date, rname FROM {} WHERE chat_id = %s AND alert_text = %s".format(table_name)
+    values = (chat_id, alert_text)
+    # chat_id = {} AND 
+    # Get connection
+    factory = connection_manager()
+    connection = factory.connection
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(query, values)
+        results = cursor.fetchall()
+        return results
+    except: raise
+    finally: factory.close_all(cursor=cursor, connection=connection)
+
 def get_sensor_alerts(chat_id, alert_type):
     '''
     Returns sensor alert_text and by id

@@ -10,6 +10,7 @@ import datetime
 import resident_DAO
 from sensor_mgmt.sensor_mgmt import Sensor_mgmt
 from DAOs.sensor_DAO import sensor_DAO
+from DAOs.sensor_log_DAO import sensor_log_DAO
 from DAOs import sensor_hist_DAO
 
 
@@ -60,6 +61,18 @@ def button(bot, update):
 						  message_id=query.message.message_id)
 
 		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, query['message']['text'], query.data)
+		#i need retrieve resident name and time_stamp from alerts
+		alert_raw = alert_DAO.get_alert_by_id(DUTY_NURSE_CHAT_ID, query['message']['text'])
+		alert_clean = alert_raw[0]
+		resident_name = alert_clean['rname']
+		received_timestamp = alert_clean['date']
+		resident_id_raw = resident_DAO.get_resident_id_by_resident_name(resident_name)
+		resident_id = resident_id_raw[0]['resident_id']
+		rawuuids = sensor_hist_DAO.get_uuids_by_id(resident_id)
+		for rawuuid in rawuuids:
+			uuid = rawuuid['uuid']
+			sensor_log_DAO.update_log(uuid, received_timestamp)
+		
 		residentNameList = resident_DAO.get_list_of_residentNames()
 		latest_list = get_latest_alerts(residentNameList)
 		
@@ -158,6 +171,18 @@ def shiftform(bot, update):
 def help(bot, update):
 	update.message.reply_text("Use /start to test this bot.")
 
+def testing(message):
+	alert_raw = alert_DAO.get_alert_by_id(DUTY_NURSE_CHAT_ID, message)
+	alert_clean = alert_raw[0]
+	resident_name = alert_clean['rname']
+	received_timestamp = alert_clean['date']
+	resident_id_raw = resident_DAO.get_resident_id_by_resident_name(resident_name)
+	resident_id = resident_id_raw[0]['resident_id']
+	rawuuids = sensor_hist_DAO.get_uuids_by_id(resident_id)
+	for rawuuid in rawuuids:
+		uuid = rawuuid['uuid']
+		sensor_log_DAO.update_log(uuid, received_timestamp)
+	
 # def sensoralert(bot, update):
 	# downList = {}
 	# for ss in Sensor_mgmt.get_all_sensor_status_v2(True):
@@ -252,16 +277,18 @@ def main():
 	updater.dispatcher.add_handler(CallbackQueryHandler(button))
 	updater.dispatcher.add_handler(MessageHandler(Filters.text, text_reply))
 	updater.dispatcher.add_handler(CommandHandler('help', help))
-	# updater.dispatcher.add_handler(CommandHandler('sensoralert', sensoralert))
+	
 	updater.dispatcher.add_handler(CommandHandler('shiftform', shiftform))
 	updater.dispatcher.add_error_handler(error)
-
+	
+	# updater.dispatcher.add_handler(CommandHandler('sensoralert', sensoralert))
 	# Start the Bot
 	updater.start_polling()
 
 	# Run the bot until the user presses Ctrl-C or the process receives SIGINT,
 	# SIGTERM or SIGABRT
 	updater.idle()
+	# testing('*Assistance Alert:* Poh Kim Pew at 2018-11-13 18:19:53')
 
 
 if __name__ == '__main__':

@@ -21,6 +21,21 @@ def get_resident_name_by_resident_id(resident_id):
 	except: raise
 	finally: factory.close_all(cursor=cursor, connection=connection)
 
+def get_resident_id_by_resident_name(resident_name):
+	query = 'SELECT resident_id FROM {} WHERE name = %s'.format(table_name)
+	# Get connection
+	factory = connection_manager()
+	connection = factory.connection
+	cursor = connection.cursor()
+
+	try:
+		cursor.execute(query, (resident_name, ))
+		results = cursor.fetchall()
+		if results: return results
+		else: return None
+	except: raise
+	finally: factory.close_all(cursor=cursor, connection=connection)
+
 def get_list_of_residentNames(filter_active=True, location_filter=None):
 	'''
 	Returns list of residents (each resident is a dictionary)
