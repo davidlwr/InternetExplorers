@@ -1,0 +1,126 @@
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+
+{% from "_classconverter.html" import getPanelColorFromDownCountLength %}
+{% extends 'nav_bar.html' %}
+{% block title %}Sensor Status{% endblock %}
+{% block additional_stylesheets %}
+<!--
+<script type="text/javascript" src="{{ url_for('static', filename='overview.js') }}"></script>
+-->
+<!--<link rel="stylesheet" href="{{ url_for('static', filename='overview.css') }}"> -->
+<link href="static/css/bootstrap.min.css" rel="stylesheet">
+<link href="static/css/font-awesome.min.css" rel="stylesheet">
+<link href="static/css/datepicker3.css" rel="stylesheet">
+<link href="static/css/styles.css" rel="stylesheet">
+
+<style>
+
+</style>
+{% endblock %}
+{% block content %}
+<!--<div class="col-lg-12">
+<h1 class="page-header">Residents Overview</h1>
+</div> -->
+<!-- /.col-lg-12 -->
+
+<div class="col-sm-push-0"> <!--overall-->
+	<div class="row">
+		<ol class="breadcrumb">
+			<li><a href="#">
+				<em class="fa fa-home"></em>
+			</a></li>
+			<li class="active">Sensor Status</li>
+		</ol>
+	</div><!--/.row-->
+	<div class="row">
+		<div class="col-lg-6">
+			<h1 class="page-header">Sensor Status</h1>
+		</div>
+		<div class="col-lg-6"><br>
+			<button class="pull-right btn btn-md btn-primary" type="button""><a href ="admin/sensor/new/" style="color:#fff">Add Sensors</a></button>
+		</div>	
+	</div><!--/.row-->
+
+
+</div><!--overall-->
+<div class="row">
+
+	<div class="col-lg-12">
+		{% for resident in residents %}
+		<div class="panel panel-{{ getPanelColorFromDownCountLength(resident['downCount']) }}"> <!--Toilet Panel-->
+			<div class="panel-heading" style="height:48px; font-size:19px; line-height:28px">
+				<div class="col-lg-6 col-xs-6" align="left">
+				<td style="text-align:left;font-weight:bolder">{{ resident['name']}}</td></div>
+				<div class="col-lg-6 col-xs-6" align="right">
+				<td style="text-align:right;">{{ resident['downCount']}}/{{resident['totalCount']}} Sensors Down</td>
+				<span class="pull-right clickable panel-toggle panel-collapsed" style="height:30px; width: 30px; line-height:28px"><em class="fa fa-toggle-down"></em></span>
+			</div></div>
+			<div class="panel-body" style="background-color:#fff; display:none;">
+				<div class="col-xs-12 text-center">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<div class="row">
+								<div class="col-xs-12 text-center">
+									<div class="table-responsive" style="font-size:16px">
+										<table class="table">
+											<thead style = "text-align:center; background: whitesmoke">
+												<tr style = "text-align:center">
+													<th style = "text-align:center">Sensor ID</th>
+													<th style = "text-align:center">Sensor Type</th>
+													<th style = "text-align:center">Sensor Location</th>
+													<th style = "text-align:center">Sensor Battery Level</th>
+													<th style = "text-align:center">Sensor Status</th>
+												</tr>
+											</thead>
+											<tbody>
+												{% for info in resident['infoList'] %}
+												<tr>
+												<td>{{ info[0]}}</td>
+												<td>{{ info[1]}}</td>
+												<td>{{ info[2]}}</td>
+												<td>{{ info[3]}}</td>
+												<td>{{ info[4]}}</td>
+												</tr>
+												{% endfor %}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		{% endfor %}
+		{% for noSensorResident in noSensorResidents %}
+			<div class="panel panel-default" align="left">
+				<div class="panel-heading" style="height:48px; font-size:19px; line-height:28px">
+					<div class="col-lg-6 col-xs-6" align="left">
+					<td style="text-align:left;font-weight:bolder">{{ noSensorResident['name']}}</td></div>
+					<div class="col-lg-6 col-xs-6" align="right">
+					<td style="text-align:right;">No Sensors Installed</td>
+				</div>
+			</div>
+		{% endfor %}
+	</div>
+</div>
+{% endblock %}
+{% block footer%}
+<script>
+$(document).ready(function(){
+	$('[data-toggle="tooltip"]').tooltip();
+});
+
+jQuery(document).ready(function($) {
+	$(".clickable-row").click(function() {
+		window.location = $(this).data("href");
+	});
+});
+</script>
+{% endblock%}

@@ -1,0 +1,28 @@
+{% extends 'nav_bar.html' %}
+{% block title %}Detailed Charts{% endblock %}
+{% block additional_stylesheets %}
+<style>
+.dash-iframe {
+    width:100%;
+	padding-left:7px;
+	margin:5px;
+}
+@media (min-width: 768px) {
+    dash-iframe {
+    position: inherit;
+    width: 80vw;
+	padding-left:7px;
+  }
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="col-sm-push-0" style="background-color:#fff">
+	<div class="row" style="background-color:#fff">
+			<div class="dash-iframe">
+				<iframe class="dash-iframe" style="height: 100vh;position: absolute;" src="/insertsomeotherrandomstringhere" frameborder="0" allowfullscreen></iframe>
+			</div>
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %} - IE</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.0/jquery-ui.js"></script>
+    <script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.13.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <!-- <script src="{{ url_for('static', filename='metis-menu.min.js') }}"></script> -->
+    <!-- <script src="{{ url_for('static', filename='sb-admin-2.js') }}"></script> -->
+    <link rel="stylesheet" href="https://unpkg.com/react-select@1.0.0-rc.3/dist/react-select.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/react-virtualized@9.9.0/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/react-virtualized-select@3.1.0/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/rc-slider@6.1.2/assets/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/dash-core-components@0.23.0/dash_core_components/react-dates@12.3.0.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="{{ url_for('static', filename='metis-menu.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='sb-admin-2.css') }}">
+    <!--<link rel="stylesheet" href="{{ url_for('static', filename='extra.css') }}"> set to reference url_for static css and put into git -->
+    {% block additional_stylesheets %}{% endblock %}
+    {% block scripts %} {% endblock %}
+</head>
+<body> <!-- common sidebar -->
+    <div id="wrapper">
+    <div class="navbar-default sidebar col-md-2 col-xs-2">
+    <div class="sidebar-nav navbar-collapse">
+        <ul class="nav" style="float:left;">
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/graphs">Graphs</a><br/>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/overview">Residents Overview</a><br/>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/reports">Shift Reports</a><br/>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/eosforms">End of Shift Forms</a><br/>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/raforms">Risk Assessment Form</a><br/>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/admin/resident">Manage User/Residents</a><br/>
+                </div>
+            </li>
+            <li class="nav-item">
+                <div class="nav-link">
+                    <a href="/logout">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+        <main class="col-md-10 ml-sm-auto col-lg-10">
+            {% block content %}{% endblock %}
+        </main>
+    <div id="footer">
+        {% block footer %} {% endblock %}
+    </div>
+    </div>
+</body>
+</html>

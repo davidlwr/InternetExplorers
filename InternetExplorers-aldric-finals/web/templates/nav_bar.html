@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <!-- Uncomment below for deployed app to track -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-125800418-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-125800418-1');
+    </script>
+    -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% endblock %} - St Bern Healthcare</title>
+    <!--<script src="https://blackrockdigital.github.io/startbootstrap-sb-admin-2/vendor/jquery/jquery.min.js"></script>
+    <script src="https://blackrockdigital.github.io/startbootstrap-sb-admin-2/vendor/bootstrap/js/bootstrap.min.js"></script>-->
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link href="https://fonts.googleapis.com/css?family=Montserrat:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<!--<script src="static/js/html5shiv.js"></script>
+	<script src="static/js/respond.min.js"></script>-->
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+	<script src="/static/js/jquery-1.11.1.min.js"></script>
+	<script src="/static/js/bootstrap.min.js"></script>
+	<script src="/static/js/chart.min.js"></script>
+	<script src="/static/js/chart-data.js"></script>
+	<script src="/static/js/easypiechart.js"></script>
+	<script src="/static/js/easypiechart-data.js"></script>
+	<script src="/static/js/bootstrap-datepicker.js"></script>
+	<script src="/static/js/custom.js"></script>
+	<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/static/css/font-awesome.min.css" rel="stylesheet">
+	<link href="/static/css/datepicker3.css" rel="stylesheet">
+	<link href="/static/css/styles.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"><!-- icons-->
+
+	<!--<script type="text/javascript">
+		$(document).ready(function () {
+			var url = window.location;
+			$('ul.nav a[href="'+ url +'"]').parent().addClass('active');
+			$('ul.nav a').filter(function() {
+				 return this.href == url;
+			}).parent().addClass('active');
+		});
+	</script>-->
+    <script>
+		function set_message_count(n) {
+			$('#sysmon_num').text(n);
+		}
+	</script>
+
+	<script>
+		function set_message_dropdown(types, s_headers, s_locations, s_types, dates) {
+			document.getElementById("sysmon_alerts").innerHTML = ""
+			for (var i = 0; i < types.length; i++) {
+				if (types[i] == "1") {  // Battery
+					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div><em class=\"fa fa-battery-quarter\"></em><b>" + s_headers[i] + "</b>" +
+																			"<div>" + s_locations[i] + "</div><div>" + s_types[i] + "</div>" +
+																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>" + 
+																			"<li class=\"divider\"></li>")
+				} else {				// Sensor Down
+					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div style=\"white-space:normal;\"><em class=\"fa fa-feed\"></em><b>" + s_headers[i] + "</b>" +
+																			"<div>" + s_locations[i] + "</div><div>" + s_types[i] + "</div>" +
+																			"</div></a></li>" + 
+																			"<li class=\"divider\"></li>")
+				}
+			}
+		}
+	</script>
+	<script>
+	function refresh_notifications() {
+				$.ajax("{{ url_for('notifications') }}").done(
+					function(type_txts) {
+						set_message_count(type_txts.length)
+						var types       = new Array();
+						var s_headers   = new Array();
+						var s_locations = new Array();
+						var s_types     = new Array();
+						var dates       = new Array();
+						for (var i = 0; i < type_txts.length; i++) {
+							types.push(type_txts[i].type)
+							s_headers.push(type_txts[i].s_header)
+							s_locations.push(type_txts[i].s_location)
+							s_types.push(type_txts[i].s_type)
+							dates.push(type_txts[i].date) 
+						}
+						set_message_dropdown(types, s_headers, s_locations, s_types, dates);
+					}
+				);
+			}
+	</script>
+	<script>
+		$(document).ready((function() {
+			refresh_notifications()
+			setInterval(refresh_notifications, 10000);	// prev 10000
+		}));
+	</script>
+    <style>
+    @media only screen and (max-width: 767px) {
+        .not-in-mobile{
+            display: none;
+        }
+    }
+	
+	.sidebar {
+	  display: block;
+	  padding: 0;
+	  display: none;
+	  box-shadow: none;
+	  background: #333; 
+	  color: #fff}
+
+	.sidebar ul {
+		margin: 20px 0px; }
+
+	.sidebar form {
+	  padding: 10px 0 0 0;
+	  margin: 10px 10px 20px 10px; }
+
+	@media (min-width: 768px) {
+	  .sidebar {
+		display: block;
+		position: fixed;
+		top: 60px;
+		bottom: 0;
+		left: 0;
+		z-index: 1000;
+		display: block;
+		margin: 0;
+		padding: 0;
+		overflow-x: hidden;
+		overflow-y: auto; }
+
+	  .navbar-header {
+		width: 100%; } }
+	.sidebar ul.nav a:hover, .sidebar ul.nav li.parent ul li a:hover {
+	  text-decoration: none;
+	  background-color: #30a5ff;
+	  color: #fff; }
+
+	.sidebar ul.nav .active a, .sidebar ul.nav li.parent a.active, .sidebar ul.nav .active > a:hover, .sidebar ul.nav li.parent a.active:hover, .sidebar ul.nav .active > a:focus, .sidebar ul.nav li.parent a.active:focus {
+	  color: #fff;
+	  background-color: #30a5ff; }
+
+	.sidebar ul.nav ul, .sidebar ul.nav ul li {
+	  list-style: none;
+	  list-style-type: none; }
+
+	.sidebar ul.nav li a {
+	  height: 50px;
+	  font-size: 15px;
+	  line-height: 2em;
+	  color: #fff; }
+
+	.sidebar ul.nav ul.children {
+	  width: auto;
+	  padding-top: 3px;
+	  color: #fff;
+	  margin: 0; }
+
+	.sidebar ul.nav ul.children li a {
+	  height: 40px;
+	  background: #333;
+	  padding-top: 3px;
+	  color: #fff; }
+
+	.sidebar ul.nav li.current a {
+	  background-color: #30a5ff;
+	  color: #fff !important; }
+
+	.sidebar ul.nav li.parent ul li a {
+	  border: none;
+	  display: block;
+	  padding-left: 30px;
+	  line-height: 40px;
+	  border-radius: 0; }
+
+	.sidebar ul.nav li.divider {
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		margin: 0px 0; }
+
+	.profile-sidebar {
+		padding: 10px 0;
+		border-bottom: 1px solid #e9ecf2; }
+
+    </style>
+    {% block additional_stylesheets %}{% endblock %}
+	{% block scripts %}
+	{% endblock %}
+</head>
+<body> <!-- common sidebar -->
+<nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#sidebar-collapse"><span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span></button>
+				<a class="navbar-brand" href="/"><span>St Bern</span><span class="not-in-mobile"> Healthcare</span></a>
+
+				<ul class="nav navbar-top-links navbar-right">
+					<li class="dropdown"><a class="dropdown-toggle count-info" data-toggle="dropdown" href="#"> <!--add link to sensor mgmt page-->
+						<em class="fa fa-bell"></em><span id="sysmon_num" class="label label-danger">0</span>
+					</a>
+						<ul id="sysmon_alerts" class="dropdown-menu dropdown-alerts">
+						</ul>
+					</li>
+
+					<!--<button type="button" class="btn btn-md btn-default"><a href="/logout"><em class="fa fa-sign-out fa-fw">&nbsp;</em> Logout </a></button>-->
+					<li class="dropdown"><a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
+						<em class="fa fa-user fa-fw">&nbsp;</em></a>
+                        <ul class="dropdown-menu dropdown-alerts">
+							<li><a href="/change_password_form"><!--add link to sensor mgmt page-->
+								<div><em class="fa fa-sign-out"></em> Change Password</div>
+							</a></li>
+							<li class="divider"></li>
+							<li><a href="/logout"><!--add link to sensor mgmt page-->
+								<div><em class="fa fa-power-off"></em> Logout</div>
+							</a></li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		</div><!-- /.container-fluid -->
+	</nav>
+
+	<div id="sidebar-collapse" class="col-sm-3 col-lg-2 sidebar" seamless="seamless" style="background-color:#333;font-color:#fff">
+		<div class="profile-sidebar">
+			<div class="profile-userpic">
+				<img src="{{ url_for('static', filename='heartbeat.png') }}" class="img-responsive" alt="">
+			</div>
+			<div class="profile-usertitle">
+				<div class="profile-usertitle-name" style="color:#ffffff">{{ current_user.username }}</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="divider" style="background-color:#333;font-color:#fff"></div>
+		<ul class="nav menu" style="color: #fff">
+		<script type="text/javascript">
+		$(document).ready(function () {
+			var url = window.location;
+			$('ul.nav a[href="'+ url +'"]').parent().addClass('active');
+			$('ul.nav a').filter(function() {
+				 return this.href == url;
+			}).parent().addClass('active');
+		});
+		</script>
+			<li><a href="/overview"><em class="fa fa-dashboard">&nbsp;</em> Dashboard</a></li> <!-- how to make dynamic active classes??? since using standardised navbar across-->
+			<li class="parent"><a data-toggle="collapse" href="#residents-view">
+				<em class="fa fa-navicon">&nbsp;</em> Resident Analysis<span data-toggle="collapse" href="#residents-view" class="icon pull-right"><em class="fa fa-plus"></em></span>
+				</a>
+				<ul class="children collapse" id="residents-view" style="font-color:white; padding-left:0">
+					<li class="parent"><a data-toggle="collapse" href="#resident-bkttm">
+						<span data-toggle="collapse" href="#residents-bkttm" class="icon"><em class="fa fa-plus"></em></span> Bukit Timah</a>
+						<ul class="children collapse" id="resident-bkttm" style="padding-left:5px">
+						   {% for r in all_residents(location_filter='bkttm') %}
+						<li>
+							<a href="/overview/{{ r['resident_id'] }}">{{ r['name'] }}</a>
+						</li>
+						{% endfor %}
+						</ul>
+					</li>
+					<li><a class="" href="#">
+						<span data-toggle="collapse" href="#residents-adm" class="icon"><em class="fa fa-plus"></em></span> Adam Road</a>
+					</li>
+				</ul>
+			</li>
+			<li><a href="/sensor_mgmt"><em class="fa fa-podcast">&nbsp;</em> Sensors Status</a></li>
+			<li><a href="/graphs"><em class="fa fa-bar-chart">&nbsp;</em> Graphs</a></li>
+			<li><a href="/anomalies"><em class="fa fa-exclamation-triangle">&nbsp;</em> Anomalies</a></li>
+			<li class="parent"><a data-toggle="collapse" href="#sub-item-1">
+				<em class="fa fa-wpforms">&nbsp;</em> Forms<span data-toggle="collapse" href="#sub-item-1" class="icon pull-right"><em class="fa fa-plus"></em></span>
+				</a>
+				<ul class="children collapse" id="sub-item-1" style="padding-left:0">
+					<li><a class="" href="/eosforms">
+							End of Shift Forms
+						</a>
+					</li>
+                <li><a class="" href="/raforms">Risk Assessment Forms<span class="fa arrow">&nbsp;</span></a>
+				</li>
+				</ul>
+			</li>
+            {% if current_user.staff_type == 'Admin' %}
+			<li class="parent"><a data-toggle="collapse" href="#sub-item-3"><em class="fa fa-wrench fa-fw">&nbsp;</em>Manage<span data-toggle="collapse" href="#sub-item-3" class="icon pull-right"><em class="fa fa-plus"></em></span></a>
+                <ul class="children collapse" id="sub-item-3" style="padding-left:0">
+                    {% for l in get_admin_management_paths() %}
+                    <li>
+                        <a href="{{ l[0] }}">{{ l[1] }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li> <!--or should be manage users / residents-->
+            {% endif %}
+            {% if current_user.staff_type == 'Staff' %}
+			<li class="parent"><a data-toggle="collapse" href="#sub-item-3"><em class="fa fa-wrench fa-fw">&nbsp;</em>Manage<span data-toggle="collapse" href="#sub-item-3" class="icon pull-right"><em class="fa fa-plus"></em></span></a>
+                <ul class="children collapse" id="sub-item-3" style="padding-left:0">
+                    {% for l in get_staff_management_paths() %}
+                    <li>
+                        <a href="{{ l[0] }}">{{ l[1] }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li> <!--or should be manage users / residents-->
+            {% endif %}
+			<!--<li><a href="login.html"><em class="fa fa-power-off">&nbsp;</em> Logout</a></li>-->
+	</div><!--/.sidebar-->
+
+	<div id="page-wrapper" class="col-sm-9 col-sm-offset-3 col-lg-10 col-lg-offset-2 main">
+            {% block content %}{% endblock %}
+        </div>
+        <div id="footer">
+            {% block footer %} {% endblock %}
+        </div>
+	</div>
+
+	</body>
+</html>

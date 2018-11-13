@@ -1,0 +1,63 @@
+{% from "_formhelpers.html" import render_login_field %}
+{% from "_formhelpers.html" import render_login_field2 %}
+{% from "_formhelpers.html" import render_login_field3 %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+<html>
+<head>
+    <title>St Bern Smart Healthcare - Login</title>
+	<link href="static/css/bootstrap.min.css" rel="stylesheet">
+	<link href="static/css/datepicker3.css" rel="stylesheet">
+	<link href="static/css/styles.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Montserrat:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+    <!--<link rel="stylesheet" href="https://unpkg.com/react-select@1.0.0-rc.3/dist/react-select.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/react-virtualized@9.9.0/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/react-virtualized-select@3.1.0/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/rc-slider@6.1.2/assets/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/dash-core-components@0.23.0/dash_core_components/react-dates@12.3.0.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://codepen.io/bricakeld/pen/qKZeGq.css">-->
+</head>
+
+<body>
+	<div class="row">
+		<div class="col-xs-10 col-xs-offset-1 col-sm-8 col-sm-offset-2 col-md-4 col-md-offset-4">
+		{% for message in get_flashed_messages() %}
+		<div class="alert alert-warning">
+			{{ message }}
+			<button type="button" class="close" data-dismiss="alert">&times;</button>
+		</div>
+		{% endfor %}
+			<div class="login-panel panel panel-default">
+			<img src="{{ url_for('static', filename='IE-logo-main.png')}}" style="width:100%">
+				<div class="panel-heading">Please Sign In	</div>
+				<div class="panel-body">
+
+				<form class="form-signin" method="POST">
+				{{ form.csrf_token }}
+                {{ form.hidden_tag() }}
+				<fieldset>
+					<div class="form-group">
+						<input class="form-control" placeholder="Username" name="username" type="text" autofocus="" required>
+					</div>
+					<div class="form-group">
+						<input class="form-control" placeholder="Password" name="password" type="password" value="" required>
+					</div>
+					<div class="checkbox">
+						<label>
+							<input name="remember" type="checkbox" value="Remember Me">Remember Me
+						</label>
+					</div>
+					<button class="btn btn-primary" type="submit">Sign in</button>
+				</fieldset>
+				</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+<script src="static/js/jquery-1.11.1.min.js"></script>
+<script src="static/js/bootstrap.min.js"></script>
+</body>
+</html>
