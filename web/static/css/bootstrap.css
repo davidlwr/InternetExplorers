@@ -5460,7 +5460,6 @@ button.list-group-item-danger.active:focus {
 }
 .panel-heading {
   padding: 10px 15px;
-  height: 250px;
   border-bottom: 1px solid transparent;
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
@@ -5992,7 +5991,7 @@ button.close {
   z-index: 1070;
   display: block;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-style: normal;
   font-weight: normal;
   line-height: 1.42857143;
@@ -6011,32 +6010,6 @@ button.close {
 
   line-break: auto;
 }
-/*added new here*/
-.tooltip .tooltiptext {
-    visibility: hidden;
-    width: 120px;
-    background-color: black;
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px 0;
-    position: absolute;
-    z-index: 1;
-    bottom: 100%;
-    left: 50%;
-    margin-left: -60px;
-    
-    /* Fade in tooltip - takes 1 second to go from 0% to 100% opac: */
-    opacity: 0;
-    transition: opacity 1s;
-}
-
-.tooltip:hover .tooltiptext {
-    visibility: visible;
-    opacity: 1;
-}
-/* end */
-
 .tooltip.in {
   filter: alpha(opacity=90);
   opacity: .9;
@@ -6782,19 +6755,3 @@ button.close {
   }
 }
 /*# sourceMappingURL=bootstrap.css.map */
-
-/*newly added*/
-
-pdnew{
-	margin-top:50px;
-	padding-top: 50px;
-	padding-left: 25px;
-	padding-bottom:50px
-}
-
-buff{
-	height:200px;
-	width:100%;
-}
-
-huge{font-size:40px}

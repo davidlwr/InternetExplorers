@@ -45,6 +45,18 @@ div.sticky {
 .sticky-element { z-index: 100; }
 .parent-of-sticky-element { position: relative; }
 
+.panel-green {
+  background: #3CB371;
+  color: #fff; }
+  
+.panel-orange {
+  background: #ffb53e;
+  color: #fff; }
+
+.panel-red {
+  background: #f9243f;
+  color: #fff; }
+
 </style>
 </head>
 {% endblock %}
@@ -70,7 +82,7 @@ div.sticky {
 	</div><!--/.row-->
 <div class="row" style="font-family:Montserrat">
     <div class="col-lg-12">
-        <div class="panel panel-default" > <!--Toilet Panel-->
+        <div class="panel panel-default" > 
             <div class="panel-heading">
 				Resident: <b>{{ resident['name'] }}</b>
 			</div>
@@ -89,25 +101,26 @@ div.sticky {
 <div class="row"> {# edit here for night toilet usage #}
     <div class="col-lg-12">
         <div class="panel panel-{{ getPanelColorFromAlertLength(resident['toilet_alerts']|length) }}"> <!--Toilet Panel-->
-            <div class="panel-heading">
-                Night Toilet Usage Details
-				<span class="pull-right clickable panel-toggle panel-collapsed"><em class="fa fa-toggle-down"></em></span>
+            <div class="panel-heading" style="height:49px; font-size:19px">
+                Night Toilet Usage Details</b>
+				<span class="pull-right clickable panel-toggle panel-collapsed" style="font-size: 14px; width: 32px; height: 32px; line-height:32px;">
+				<em class="fa fa-toggle-down" style="font-size: 16px"></em></span>
             </div>
 			<div class="clearfix">
             <div class="panel-body" style="height:490px;background-color:#fff;">
+			
+			
 				<div class="row">
                 <div class="col-lg-6 col-md-6 col-xs-12"><!--first night toilet usage graph-->
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <div class="row">
-                                <div class="col-xs-12 text-center" style="font-size:17">
-                                    Percentage of Night Toilet Usage<br/>
-                                </div>
+							<div class="col-xs-12 text-center" style="font-size:15">
+								<b>Percentage of Night Toilet Usage</b><br/>
                             </div>
                         </div>
+						
                         <div class="panel-body">
                             <div class="row">
-                                <div class="col-xs-12">
                                     <div id="night_toilet_ratio_chart" class="night_toilet_ratio_chart_class svg_container container-fluid"><!-- Plotly chart will be drawn inside this DIV --></div>
                                     <script>
 
@@ -194,7 +207,7 @@ div.sticky {
 
                                     Plotly.newPlot('night_toilet_ratio_chart', data, layout, {displayModeBar: false});
                                     </script>
-
+									</div>
                                 </div>
                                 <div class="col-xs-12">
                                     <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'info' }}">
@@ -352,8 +365,7 @@ div.sticky {
                                     }
                                 });
                                 </script>
-                            </div>
-							<div class="row">Night Toilet Usage in the past week: <b>{{ '%0.0f'|format((resident['number_of_night_toilet_usage_in_past_week'])|round(0)) }}</b>Times</span>
+                            </div>Night Toilet Usage in the past week: <b>{{ '%0.0f'|format((resident['number_of_night_toilet_usage_in_past_week'])|round(0)) }}</b>Times</span>
 							<div class="col-xs-12">
                                 <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_MA'] else 'info' }}">
 									<div class="panel-heading" style="text-align:center; font-size:16px">
@@ -368,10 +380,9 @@ div.sticky {
 									</div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+						</div>
+					</div>
+				</div>
 			</div>
         </div>
     </div>
@@ -380,9 +391,9 @@ div.sticky {
 <div class="row"> {# edit here for sleeping patterns #}
     <div class="col-lg-12">
         <div class="panel panel-{{ getPanelColorFromAlertLength(resident['sleep_alerts']|length) }}"> <!--Toilet Panel-->
-            <div class="panel-heading">
+            <div class="panel-heading" style="height:49px; font-size:19px">
                 Sleeping Pattern Details
-				<span class="pull-right clickable panel-toggle panel-collapsed"><em class="fa fa-toggle-down"></em></span>
+				<span class="pull-right clickable panel-toggle panel-collapsed"  style="font-size: 14px; width: 32px; height: 32px; line-height:32px;" ><em class="fa fa-toggle-down" style="font-size: 16px"></em></span>
             </div>
             <div class="panel-body" style="height:880px;background-color:#fff;">
                 <div class="col-lg-6 col-md-6 col-xs-12">
