@@ -61,12 +61,12 @@
 			for (var i = 0; i < types.length; i++) {
 				if (types[i] == "1") {  // Battery
 					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div><em class=\"fa fa-battery-quarter\"></em><b>" + s_headers[i] + "</b>" +
-																			"<div>" + s_locations[i] + "</div><div>" + s_types[i] + "</div>" +
+																			"<div style=\"white-space:normal\">" + s_locations[i] + "</div><div>" + s_types[i] + "</div>" +
 																			"<span class=\"pull-right text-muted small\">" + dates[i] + "</span></div></a></li>" + 
 																			"<li class=\"divider\"></li>")
 				} else {				// Sensor Down
 					document.getElementById("sysmon_alerts").innerHTML += ("<li><a href=\"{{ url_for('showOverviewSensors') }}\"><div style=\"white-space:normal;\"><em class=\"fa fa-feed\"></em><b>" + s_headers[i] + "</b>" +
-																			"<div>" + s_locations[i] + "</div><div>" + s_types[i] + "</div>" +
+																			"<div style=\"white-space:normal\">" + s_locations[i] + "</div><div>" + s_types[i] + "</div>" +
 																			"</div></a></li>" + 
 																			"<li class=\"divider\"></li>")
 				}
@@ -104,6 +104,17 @@
 			$.ajax("{{ url_for('anomaly_notifications') }}").done(
 				function(anomaly_texts) {
 					set_anomaly_message_count(anomaly_texts.length);
+					document.getElementById("anomaly_alerts").innerHTML = "";
+					for (var i = 0; i < anomaly_texts.length; i++) {
+						// update dropdown
+						document.getElementById("anomaly_alerts").innerHTML += 
+								("<li><a href=\"" + "{{ url_for('detailedLayerTwoOverviewResidents', resident_id=-1) }}".replace("-1", anomaly_texts[i].resident_id) + "\"><div style=\"white-space:normal\">"
+								+ "<div><b>" + anomaly_texts[i].type + " Anomaly - " + anomaly_texts[i].name + "</b></div>"
+								+ "<div>" + anomaly_texts[i].description + "</div>"
+								+ "<span class=\"pull-right text-muted small\">" + anomaly_texts[i].date.split(' ', 4).join(' ') + "</span>"
+								+ "</div></a></li>"
+								+ "<li class=\"divider\"></li>");
+					}
 				}
 			)
 		}

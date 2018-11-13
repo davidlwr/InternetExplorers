@@ -12,7 +12,8 @@ def anomaly_notifications():
     cursor = connection.cursor()
     
     try:
-        query_text = 'SELECT * FROM stbern.anomaly WHERE response = 0'
+        # query_text = 'SELECT * FROM stbern.anomaly WHERE response = 0'
+        query_text = 'SELECT resident.resident_id, name, date, category, type, description, response FROM stbern.anomaly LEFT JOIN resident on resident.resident_id = anomaly.resident_id WHERE response = 0'
         cursor.execute(query_text)
         result = cursor.fetchall()
         if result != None:
