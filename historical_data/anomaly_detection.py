@@ -49,7 +49,7 @@ def job():
                     elif ta_val <= overstay_alert.overstay_alert.temperature_min:
                         desc_text = "Low temperature (" + str(ta_val) + chr(176) + "C) detected!"
                     try:
-                        anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['temperature'], 'temperature', desc_text, 0)
+                        anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['temperature'], 'Temperature', desc_text, 0)
                     except:
                         print("Exception occurred at temp_anomalies")
 
@@ -61,7 +61,7 @@ def job():
                     print("Inserting to db...")
                     desc_text = "Anomalous pulse pressure (" + str(pa_val) + "mmHg) detected!"
                     try:
-                        anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['pulse_pressure'], 'pulse pressure', desc_text, 0)
+                        anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['pulse_pressure'], 'Pulse Pressure', desc_text, 0)
                     except:
                         print("Exception occurred at pulse_anomalies")
 
@@ -73,7 +73,7 @@ def job():
                     print("Inserting to db...")
                     desc_text = "Anomalous room activity duration detected"
                     try:
-                        anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['room_stay'], 'room stay', desc_text, 0)
+                        anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['room_stay'], 'Room Stay', desc_text, 0)
                     except:
                         print("Exception occurred at room stay anomalies")
 
@@ -85,7 +85,7 @@ def job():
                     print("Inserting to db")
                     desc_text = "Anomalous night toilet usage detected"
                     try:
-                        anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['toilet_usage'], 'night toilet usage', desc_text, 0)
+                        anomaly_DAO.insert_anomaly(previous_day_dt.strftime("%Y-%m-%d"), rid, category_strings['toilet_usage'], 'Night Toilet Usage', desc_text, 0)
                     except:
                         print("Exception occurred at toilet usage anomalies")
 
