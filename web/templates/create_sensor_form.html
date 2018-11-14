@@ -20,40 +20,11 @@
     background-image: none;
     color: black;
 }
-/* Style the tab */
-.tab {
-    overflow: hidden;
-    border: 1px solid #ccc;
-    background-color: #AED6F1;
-}
-
-/* Style the buttons inside the tab */
-.tab button {
-    background-color: inherit;
-    float: left;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 14px 16px;
-    transition: 0.3s;
-    font-size: 17px;
-}
-
-/* Change background color of buttons on hover */
-.tab button:hover {
-    background-color: #ddd;
-}
-
-/* Create an active/current tablink class */
-.tab button.active {
+/*
+li .active {
     background-color: #5DADE2;
-}
+}*/
 
-/* Style the tab content */
-.tabcontent {
-    display: none;
-    padding: 6px 12px;
-    border-top: none;
 </style>
 </head>
 <div class="row">
@@ -74,9 +45,20 @@
 	</div><!--/.row-->
 
 <br>
-<div class="tab">
-    <button class="tablinks" onclick="openCity(event, 'motion')">Add Motion/Door Sensor</button>
-    <button class="tablinks" onclick="openCity(event, 'bed')">Add Bed Sensor</button>
+<div class="col-lg-12">
+	<div class="panel panel-default">
+		<div class="panel-body tabs">
+			<div class="nav nav-tabs">
+				<li class="">
+					<a class="tablinks" onclick="openCity(event, 'motion')" data-toggle="tab"> Add Motion / Door Sensor </a>
+				</li>
+				<li class="">
+					<a class="tablinks" onclick="openCity(event, 'bed')" data-toggle="tab"> Add Bed Sensor</a>
+				</li>
+				<a href="/admin/sensor" style="color:black;" class="pull-right"><button type="button" class="btn btn-md btn-info">View/Edit Sensors</button></a>
+			</div>
+		</div>
+	</div>
 </div>
 <br>
 {% for message in get_flashed_messages() %}
@@ -85,24 +67,35 @@
     <button type="button" class="close" data-dismiss="alert">&times;</button>
 </div>
 {% endfor %}
-<a href="/admin/sensor" style="color:black;" class="pull-right"><button type="button" class="btn btn-md btn-info">View/Edit Sensors</button></a>
 <div class="clearfix"></div>
 <div id="motion" class="tabcontent">
-    <div class="panel panel-default" style="box-shadow:none;background-color:inherit;" >
+	<div class="col-lg-12 col-md-6">
+	<div class="panel panel-default">
+		<div class="panel panel-default" style="box-shadow:none;background-color:inherit;" >
         <div class="panel-body">
             {% if list1 == "1" %}
-            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+            <div class="col-lg-12">
                 <form role="form" method="POST" action="/createsensorform">
                     {{ form.csrf_token }}
+					<div class="col-lg-6">
                     {{ render_field(form.uuid) }}
                     {{ render_field(form.type) }}
+					</div>
+					<div class="col-lg-6">
                     {{ render_field(form.facility) }}
                     {{ render_field(form.location) }}
-                    {{ render_field(form.description) }}
+					</div>
+					<div class="col-lg-6">
                     {{ render_name_field(form.resident) }}
-					<div class="form-group">
-                        <button type=submit class="btn btn-primary">Submit</button>
-                    </div>
+					</div>
+					<div class="col-lg-6">
+					{{ render_field(form.description) }}
+					</div>
+                    <div class="col-lg-12">
+						<div class="form-group">
+							<button type=submit class="btn btn-primary">Submit</button>
+						</div>
+					</div>
                 </form>
             </div>
             {% else %}
@@ -113,23 +106,37 @@
             {% endif %}
         </div>
     </div>
+	</div>
+	</div>
 </div>
 
 <div class="clearfix"></div>
 <div id="bed" class="tabcontent">
+	<div class="col-lg-12 col-md-6">
+	<div class="panel panel-default">
     <div class="panel panel-success" style="box-shadow:none;background-color:inherit;" >
         <div class="panel-body">
             {% if list2 == "1" %}
-            <div class="col-md-6">
+            <div class="col-lg-12 col-md-6">	
                 <form role="form" method="POST" action="/createsensorform">
                     {{ form.csrf_token }}
+					<div class="col-lg-6">	
                     {{ render_field(form2.juvo_id) }}
+					</div>
+					<div class="col-lg-6">	
                     {{ render_field(form2.facility) }}
+					</div>
+					<div class="col-lg-6">
+					{{ render_name_field(form2.resident) }}					
+					</div>
+					<div class="col-lg-6">	
                     {{ render_field(form2.description) }}
-                    {{ render_name_field(form2.resident) }}
-                    <div class="form-group">
-						<button type=submit class="btn btn-primary">Submit</button>
-                    </div>
+					</div>
+					<div class="col-lg-12">
+						<div class="form-group">
+							<button type=submit class="btn btn-primary">Submit</button>
+						</div>
+					</div>
                 </form>
             </div>
             {% else %}
@@ -139,7 +146,9 @@
             </div>
             {% endif %}
         </div>
-    </div>
+	</div>
+	</div>
+</div>
 </div>
 
 <script>

@@ -2,8 +2,8 @@
 {# the + and - signs are used to remove whitespaces #}
 {%+ if _length == 0 -%}green{%+ endif -%}
 {%+ if _length == 1 -%}warning{%+ endif -%}
-{%+ if _length == 2 -%}red{%+ endif -%}
-{%+ if _length >= 3 -%}red{%+ endif -%}
+{%+ if _length == 2 -%}danger{%+ endif -%}
+{%+ if _length >= 3 -%}danger{%+ endif -%}
 {% endmacro %}
 
 {% macro getSWDFromAlertLength(_length) %}

@@ -375,12 +375,7 @@ a.label:hover, a.label:focus {
 .panel-blue {
   background: #30a5ff;
   color: #fff; }
-  
-.panel-green {
-  background: #3CB371;
-  color: #fff; }
-  
-  
+
 .panel-teal {
   background: #1ebfae;
   color: #fff; }
@@ -396,7 +391,7 @@ a.label:hover, a.label:focus {
 .dark-overlay {
   background: rgba(0, 0, 0, 0.05); }
 
-.panel-blue p, .panel-teal p, .panel-orange p, .panel-red p, .panel-green p {
+.panel-blue p, .panel-teal p, .panel-orange p, .panel-red p {
   color: rgba(255, 255, 255, 0.75); }
 
 .panel-heading {
@@ -414,9 +409,6 @@ a.label:hover, a.label:focus {
 .panel-footer {
   background: #fff;
   border-top: 1px solid #e9ecf2; }
-  
-.panel-danger .panel-footer, .panel-warning .panel-footer, .panel-success .panel-footer{
-  height: 420px;}
 
 .panel-widget {
   padding: 10px 0;
@@ -812,14 +804,14 @@ a.label:hover, a.label:focus {
 
 .sidebar ul.nav ul.children {
   width: auto;
-  padding: 0;
+  padding-top: 3px;
   color: #fff;
   margin: 0; }
 
 .sidebar ul.nav ul.children li a {
   height: 40px;
   background: #333;
-  padding: 0;
+  padding-top: 3px;
   color: #fff; }
 
 .sidebar ul.nav li.current a {
@@ -862,7 +854,6 @@ a.label:hover, a.label:focus {
 
 .profile-usertitle-name {
   font-size: 20px;
-  font-color: #fff;
   margin-bottom: 0px; }
 
 .profile-usertitle-status {
@@ -899,9 +890,9 @@ h1.page-header {
 .easypiechart {
   position: relative;
   text-align: center;
-  width: 70px;
-  height: 70px;
-  margin: 10px auto 10px auto; }
+  width: 120px;
+  height: 120px;
+  margin: 20px auto 10px auto; }
 
 .easypiechart .percent {
   display: block;

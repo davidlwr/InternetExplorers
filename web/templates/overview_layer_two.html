@@ -1,4 +1,4 @@
-pp<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,34 +23,26 @@ pp<!DOCTYPE html>
 -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
-<style>
-a.deco-none {
-    color: inherit;
-    text-decoration: inherit;
-}
-div.sticky {
-    position: -webkit-sticky;
-    position: sticky;
-    top: 20;
-    background-color: white;
-    padding: 50px;
-    font-size: 20px;
-}
-.sticktop {
-  position: -webkit-sticky;
-  position: sticky;
-  background-color: white;
-  top: 0.25rem;
-}
-.sticky-element { z-index: 100; }
-.parent-of-sticky-element { position: relative; }
-
-</style>
-</head>
 {% endblock %}
 {% block scripts %}
 {% endblock %}
 {% block content %}
+<style>
+
+.panel-green {
+  background: #3CB371;
+  color: #fff; }
+  
+.panel-warning {
+  background: #ffb53e;
+  color: #fff; }
+
+.panel-red {
+  background: #f9243f;
+  color: #fff; }
+
+</style>
+</head>
 <div class="col-sm-push-0"> <!--overall-->
 	<div class="row">
 		<ol class="breadcrumb" style="position:fixed; z-index:1000; padding-top:15px; width:100%">
@@ -88,26 +80,25 @@ div.sticky {
 </div>
 <div class="row"> {# edit here for night toilet usage #}
     <div class="col-lg-12">
-        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['toilet_alerts']|length) }}"> <!--Toilet Panel-->
-            <div class="panel-heading">
-                Night Toilet Usage Details<a name="nighttoilet"> </a>
-				<span class="pull-right clickable panel-toggle"><em class="fa fa-toggle-up"></em></span>
+        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['toilet_alerts']|length) }}" style="height:49px; line-height:32px"> <!--Toilet Panel-->
+            <div class="panel-heading" style="font-size:18px">
+                Night Toilet Usage Details<a name="nighttoilet" style="height:37px; font-size:17px"> </a>
+				<span class="pull-right clickable panel-toggle" style="font-size: 14px; width: 32px; height: 32px; line-height:32px;">
+				<em class="fa fa-toggle-up" style="font-size: 16px; line-height:28px"></em></span>
             </div>
 			<div class="clearfix">
-            <div class="panel-body" style="height:490px;background-color:#fff;">
-				<div class="row">
+            <div class="panel-body" style="background-color:#fff;">
                 <div class="col-lg-6 col-md-6 col-xs-12"><!--first night toilet usage graph-->
                     <div class="panel panel-default">
-                        <div class="panel-heading">
+                        <div class="panel-heading" style="font-size:17">
                             <div class="row">
-                                <div class="col-xs-12 text-center" style="font-size:17">
+                                <div class="col-xs-12 text-center">
                                     Percentage of Night Toilet Usage<br/>
                                 </div>
                             </div>
                         </div>
                         <div class="panel-body">
                             <div class="row">
-                                <div class="col-xs-12">
                                     <div id="night_toilet_ratio_chart" class="night_toilet_ratio_chart_class svg_container container-fluid"><!-- Plotly chart will be drawn inside this DIV --></div>
                                     <script>
 
@@ -194,8 +185,6 @@ div.sticky {
 
                                     Plotly.newPlot('night_toilet_ratio_chart', data, layout, {displayModeBar: false});
                                     </script>
-
-                                </div>
                                 <div class="col-xs-12">
                                     <div class="panel panel-{{ 'red' if resident['check_indicator_night_toilet_ratio'] else 'info' }}">
                                         <div class="panel-heading"style="text-align:center; font-size:16px;">
@@ -209,7 +198,6 @@ div.sticky {
                                 </div>
                             </div>
                         </div>
-                    </div>
                 </div><!--first night toilet graph end-->
 
                 <div class="col-lg-6 col-md-6 col-xs-12"><!--second night toilet graph start-->
@@ -440,12 +428,13 @@ div.sticky {
 
 <div class="row"> {# edit here for sleeping patterns #}
     <div class="col-lg-12">
-        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['sleep_alerts']|length) }}"> <!--Toilet Panel-->
-            <div class="panel-heading">
-                Sleeping Pattern Details<a name="sleep"> </a>
-				<span class="pull-right clickable panel-toggle"><em class="fa fa-toggle-up"></em></span>
+        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['sleep_alerts']|length) }}"  style="height:49px; line-height:32px"> <!--Toilet Panel-->
+            <div class="panel-heading" style="font-size:18px">
+                Sleeping Pattern Details<a name="sleep" style="height:37px; font-size:17px"> </a>
+				<span class="pull-right clickable panel-toggle" style="font-size: 14px; width: 32px; height: 32px; line-height:32px;">
+				<em class="fa fa-toggle-up" style="font-size: 16px; line-height:28px"></em></span>
             </div>
-            <div class="panel-body" style="height:880px;background-color:#fff;">
+            <div class="panel-body" style="background-color:#fff;">
                 <div class="col-lg-6 col-md-6 col-xs-12">
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -469,7 +458,7 @@ div.sticky {
 									<div class="panel-heading"style="text-align:center; font-size:16px;">
 										<b>Average Duration :{{ '%0.2f'|format((resident['average_motion_during_sleep'] / 60)|float) }} Mins</b>
 
-										<div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_indicator_sleep_movements'] else 'WhiteSmoke' }} ">
+										<div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_indicator_sleep_movements'] else 'WhiteSmoke' }} ">
 											This is shows <b>{{ 'increase' if resident['average_motion_during_sleep_difference'] >= 0 else 'decrease'}} of
 											<i class="material-icons" style="vertical-align:sup; align-content:center">
 												trending_{{ 'up' if resident['average_motion_during_sleep_difference'] >= 0 else 'down' }}
@@ -506,7 +495,7 @@ div.sticky {
 										<div class="col-xs-12 text-center" >
 											<b> Average Duration: {{ '%0.0f'|format((resident['average_longest_uninterrupted_sleep'] / 3600)|round(0, 'floor')) }} Hours {{ '%0.0f'|format(((resident['average_longest_uninterrupted_sleep'] / 60) % 60)|round(0)) }} Minutes</b>
 
-											<div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400;height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_indicator_uninterrupted_sleep'] else 'WhiteSmoke' }} ">
+											<div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400;width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_indicator_uninterrupted_sleep'] else 'WhiteSmoke' }} ">
 											This is shows <b>{{ 'increase' if resident['average_longest_uninterrupted_sleep_difference'] >= 0 else 'decrease'}} of
 											<i class="material-icons" style="vertical-align:sup; align-content:center">
 												trending_{{ 'up' if resident['average_longest_uninterrupted_sleep_difference'] >= 0 else 'down' }}
@@ -544,7 +533,7 @@ div.sticky {
                                     <div class="panel-heading" style="text-align:center; font-size:16px;">
                                         <div class="row">
 										<b>Average Sleep Quality: {{ '%0.2f'|format((resident['qos_mean'])|float) }}</b>%
-                                            <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:50px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_qos_too_low'] else 'WhiteSmoke' }} ">
+                                            <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400;width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_qos_too_low'] else 'WhiteSmoke' }} ">
                                                 Quality of sleep is {{ 'too low' if resident['check_qos_too_low'] else 'normal' }} </b>based on the past 7 days
                                             </div>
                                         </div>
@@ -560,12 +549,13 @@ div.sticky {
 </div>
 <div class="row"> {# edit here for vital signs #}
     <div class="col-lg-12">
-        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['vitals_alerts']|length) }}">
-            <div class="panel-heading">
-                Vital Signs Details<a name="vitals"> </a>
-				<span class="pull-right clickable panel-toggle"><em class="fa fa-toggle-up"></em></span>
+        <div class="panel panel-{{ getPanelColorFromAlertLength(resident['vitals_alerts']|length) }}" style="height:49px">
+            <div class="panel-heading" style="font-size:18px; line-height:32px height:49px">
+                Vital Signs Details<a name="vitals" style="height:37px; font-size:17px"> </a>
+				<span class="pull-right clickable panel-toggle" style="font-size: 14px; width: 32px; height: 32px; line-height:32px;">
+				<em class="fa fa-toggle-up" style="font-size: 16px; line-height:28px"></em></span>
             </div>
-            <div class="panel-body" style="height:880px;background-color:#fff;">
+            <div class="panel-body" style="background-color:#fff;">
                 <div class="col-lg-6 col-md-6 col-xs-12">
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -589,7 +579,7 @@ div.sticky {
                                     <div class="panel-heading"  style="text-align:center; font-size:16px;">
                                         <div class="row">
 										<b>Average Sleep Respiratory Rate {{ '%0.2f'|format((resident['past_week_average_breathing'])|float) }} /min</b>
-                                            <div class="col-xs-12 text-center"style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_out_of_rr_range'] else 'WhiteSmoke' }} ">
+                                            <div class="col-xs-12 text-center"style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_out_of_rr_range'] else 'WhiteSmoke' }} ">
                                                 Sleep respiratory rates are <b>{{ 'outside of' if resident['check_out_of_rr_range'] else 'within' }} the typical range</b> based on the past 7 days
                                             </div>
                                         </div>
@@ -622,7 +612,7 @@ div.sticky {
                                     <div class="panel-heading" style="text-align:center; font-size:16px;">
                                         <div class="row">
 										<b>Average Sleep Pulse Rate {{ '%0.2f'|format((resident['past_week_average_heart'])|float) }} /min</b>
-                                            <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_out_of_hb_range'] else 'WhiteSmoke' }} ">
+                                            <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_out_of_hb_range'] else 'WhiteSmoke' }} ">
                                                 Sleep pulse rates are <b>{{ 'outside of' if resident['check_out_of_hb_range'] else 'within' }} the typical range</b><br> based on the past 7 days
                                             </div>
                                         </div>
@@ -655,7 +645,7 @@ div.sticky {
                                     <div class="panel-heading" style="text-align:center; font-size:16px;">
                                         <div class="row">
 										<b>Average Pulse Pressure {{ '%0.f'|format((resident['past_week_average_pp'])|float) }} mmHg</b>
-                                            <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_pp_too_high'] else 'Salmon' if resident['check_pp_increase'] else 'Salmon' if resident['check_pp_decrease'] else 'WhiteSmoke' }} ">
+                                            <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_pp_too_high'] else 'Salmon' if resident['check_pp_increase'] else 'Salmon' if resident['check_pp_decrease'] else 'WhiteSmoke' }} ">
                                                 Pulse pressure readings <b>{{ 'are too high' if resident['check_pp_too_high'] else 'have increased significantly' if resident['check_pp_increase'] else 'have decreased significantly' if resident['check_pp_decrease'] else 'are normal' }}
                                             </div>
                                         </div>
@@ -688,7 +678,7 @@ div.sticky {
                                     <div class="panel-heading" style="text-align:center; font-size:16px;">
                                         <div class="row">
 										<b>Average Temperature {{ '%0.1f'|format((resident['past_week_average_temperature'])|float) }} &#8451;</b>
-                                            <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; height:90px; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_temperature_abnormal'] else 'Salmon' if resident['check_temperature_increase'] else 'Salmon' if resident['check_temperature_increase'] else 'WhiteSmoke' }} ">
+                                            <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_temperature_abnormal'] else 'Salmon' if resident['check_temperature_increase'] else 'Salmon' if resident['check_temperature_increase'] else 'WhiteSmoke' }} ">
                                                 Temperature readings <b>{{ 'are abnormal' if resident['check_temperature_abnormal'] else 'have increased significantly' if resident['check_temperature_increase'] else 'have decreased significantly' if resident['check_temperature_decrease'] else 'are normal' }}
                                             </div>
                                         </div>

@@ -7,7 +7,7 @@
 
 {% from "_classconverter.html" import getPanelColorFromDownCountLength %}
 {% extends 'nav_bar.html' %}
-{% block title %}Residents Overview{% endblock %}
+{% block title %}Sensor Status{% endblock %}
 {% block additional_stylesheets %}
 <!--
 <script type="text/javascript" src="{{ url_for('static', filename='overview.js') }}"></script>
@@ -18,94 +18,8 @@
 <link href="static/css/datepicker3.css" rel="stylesheet">
 <link href="static/css/styles.css" rel="stylesheet">
 
-<script>
-function refresh_page() {
-			$.ajax("{{ url_for('refreshOverviewSensors') }}").done(
-				function(ret_json) {
-					// Welcome to indentation hell:
-					residents         = ret_json.residents;
-					noSensorResidents = ret_json.noSensorResidents;
-					
-					// Remake html content
-					var doc_str = "";
-					for (var i = 0; i < residents.length; i++) {
-						var resident = residents[i];
-
-						// Because django macros are dumb
-						var colour = "green";
-						if (resident.downCount > 0) {
-							colour = "red";
-						}
-
-						// Get collapsed state of pannel
-						var collapse_state = document.getElementById(resident.name).style.display;
-
-						doc_str += "" +
-						"<div class=\"panel panel-"+ colour + "\">" +
-							"<div class=\"panel-heading\">" +
-								"<div class=\"col-lg-6 col-xs-4\" align=\"left\"><td style=\"text-align:left;\">" + resident.name + "</td></div>" +
-								"<div class=\"col-lg-6 col-xs-6\" align=\"right\">" +
-								"<td style=\"text-align:right;\">" + resident.downCount + "/" + resident.totalCount + " Sensors Down</td>" +
-								"<span class=\"pull-right clickable panel-toggle panel-collapsed\"><em class=\"fa fa-toggle-down\"></em></span>" +
-							"</div></div>" +
-							"<div id=\"" + resident.name + "\" class=\"panel-body\" style=\"height:300px;background-color:#fff; display:" + collapse_state + ";\">" +
-								"<div class=\"col-xs-12 text-center\">" +
-									"<div class=\"panel panel-default\">" +
-										"<div class=\"panel-heading\">" +
-											"<div class=\"row\">" +
-												"<div class=\"col-xs-12 text-center\">" +
-													"<div class=\"table-responsive\">" +
-														"<table class=\"table\">" +
-															"<thead style = \"text-align:center\">" +
-																"<tr style = \"text-align:center\">" +
-																	"<th style = \"text-align:center\">Sensor ID</th>" +
-																	"<th style = \"text-align:center\">Sensor Type</th>" +
-																	"<th style = \"text-align:center\">Sensor Location</th>" +
-																	"<th style = \"text-align:center\">Sensor Battery Level</th>" +
-																	"<th style = \"text-align:center\">Sensor Status</th>" +
-																"</tr>" +
-															"</thead>" +
-															"<tbody>";
-
-						var resident_info_list = resident.infoList;
-						for (var j= 0; j < resident_info_list.length; j++) {
-							doc_str += "" +
-							"<tr>" +
-							"<td>" + resident_info_list[j][0] + "</td>" +
-							"<td>" + resident_info_list[j][1] + "</td>" +
-							"<td>" + resident_info_list[j][2] + "</td>" +
-							"<td>" + resident_info_list[j][3] + "</td>" +
-							"<td>" + resident_info_list[j][4] + "</td>" +
-							"</tr>";
-						}
-						doc_str += "</tbody></table></div></div></div></div></div></div></div></div>";
-					}
-					for (var i = 0; i < noSensorResidents.length; i++) {
-						doc_str += "" +
-						"<div class=\"panel panel-default\" align=\"left\">" +
-							"<div class=\"panel-heading\">" +
-								"<td>" + noSensorResidents[i].name + "</td>" +
-							"</div>" +
-						"</div>";
-					}
-					// CLear out base_div THEN repopulate content
-					document.getElementById("base_div").innerHTML = "";
-					document.getElementById("base_div").innerHTML += doc_str;
-				}
-			);
-		}
-</script>
-<script>
-	$(document).ready((function() {
-		setInterval(refresh_page, 10000);	// prev 10000
-	}));
-</script>
-
 <style>
-a.deco-none {
-	color: inherit;
-	text-decoration: inherit;
-}
+
 </style>
 {% endblock %}
 {% block content %}
@@ -113,45 +27,48 @@ a.deco-none {
 <h1 class="page-header">Residents Overview</h1>
 </div> -->
 <!-- /.col-lg-12 -->
-<div id="hiddendiv" style="display: none;"></div>
+
 <div class="col-sm-push-0"> <!--overall-->
 	<div class="row">
 		<ol class="breadcrumb">
 			<li><a href="#">
 				<em class="fa fa-home"></em>
 			</a></li>
-			<li class="active">Sensor Management</li>
+			<li class="active">Sensor Status</li>
 		</ol>
 	</div><!--/.row-->
 	<div class="row">
-		<div class="col-lg-12">
-			<h1 class="page-header">Sensor Management</h1>
+		<div class="col-lg-6">
+			<h1 class="page-header">Sensor Status</h1>
 		</div>
+		<div class="col-lg-6"><br>
+			<button class="pull-right btn btn-md btn-primary" type="button""><a href ="admin/sensor/new/" style="color:#fff">Add Sensors</a></button>
+		</div>	
 	</div><!--/.row-->
 
 
 </div><!--overall-->
 <div class="row">
 
-	<div class="col-lg-12" id="base_div">
+	<div class="col-lg-12">
 		{% for resident in residents %}
 		<div class="panel panel-{{ getPanelColorFromDownCountLength(resident['downCount']) }}"> <!--Toilet Panel-->
-			<div class="panel-heading">
-				<div class="col-lg-6 col-xs-4" align="left">
-				<td style="text-align:left;">{{ resident['name']}}</td></div>
+			<div class="panel-heading" style="height:48px; font-size:19px; line-height:28px">
+				<div class="col-lg-6 col-xs-6" align="left">
+				<td style="text-align:left;font-weight:bolder">{{ resident['name']}}</td></div>
 				<div class="col-lg-6 col-xs-6" align="right">
 				<td style="text-align:right;">{{ resident['downCount']}}/{{resident['totalCount']}} Sensors Down</td>
-				<span class="pull-right clickable panel-toggle panel-collapsed"><em class="fa fa-toggle-down"></em></span>
+				<span class="pull-right clickable panel-toggle panel-collapsed" style="height:30px; width: 30px; line-height:28px"><em class="fa fa-toggle-down"></em></span>
 			</div></div>
-			<div id="{{ resident['name'] }}" class="panel-body" style="height:300px;background-color:#fff; display:none;">
+			<div class="panel-body" style="background-color:#fff; display:none;">
 				<div class="col-xs-12 text-center">
 					<div class="panel panel-default">
 						<div class="panel-heading">
 							<div class="row">
 								<div class="col-xs-12 text-center">
-									<div class="table-responsive">
+									<div class="table-responsive" style="font-size:16px">
 										<table class="table">
-											<thead style = "text-align:center">
+											<thead style = "text-align:center; background: whitesmoke">
 												<tr style = "text-align:center">
 													<th style = "text-align:center">Sensor ID</th>
 													<th style = "text-align:center">Sensor Type</th>
@@ -176,22 +93,20 @@ a.deco-none {
 								</div>
 							</div>
 						</div>
-
 					</div>
 				</div>
-
-
 			</div>
 		</div>
 		{% endfor %}
 		{% for noSensorResident in noSensorResidents %}
-		<div class="panel panel-default" align="left">
-			<div class="panel-heading">
-				<td>{{ noSensorResident['name']}}</td>
-
+			<div class="panel panel-default" align="left">
+				<div class="panel-heading" style="height:48px; font-size:19px; line-height:28px">
+					<div class="col-lg-6 col-xs-6" align="left">
+					<td style="text-align:left;font-weight:bolder">{{ noSensorResident['name']}}</td></div>
+					<div class="col-lg-6 col-xs-6" align="right">
+					<td style="text-align:right;">No Sensors Installed</td>
+				</div>
 			</div>
-
-		</div>
 		{% endfor %}
 	</div>
 </div>
