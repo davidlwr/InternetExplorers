@@ -1,0 +1,128 @@
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+
+{% from "_classconverter.html" import getPanelColorFromDownCountLength %}
+{% from "_formhelpers.html" import render_field %}
+{% extends 'nav_bar.html' %}
+{% block title %}Residents Overview{% endblock %}
+{% block additional_stylesheets %}
+<!--
+<script type="text/javascript" src="{{ url_for('static', filename='overview.js') }}"></script>
+-->
+<!--<link rel="stylesheet" href="{{ url_for('static', filename='overview.css') }}"> -->
+<link href="static/css/bootstrap.min.css" rel="stylesheet">
+<link href="static/css/font-awesome.min.css" rel="stylesheet">
+<link href="static/css/datepicker3.css" rel="stylesheet">
+<link href="static/css/styles.css" rel="stylesheet">
+
+<style>
+a.deco-none {
+	color: inherit;
+	text-decoration: inherit;
+}
+.clickable-row {
+    cursor: pointer;
+}
+tr:hover { background: WhiteSmoke; }
+@media only screen and (max-width: 767px) {
+    .not-in-mobile{
+        display: none;
+    }
+}
+</style>
+
+{% endblock %}
+{% block content %}
+<!--<div class="col-lg-12">
+<h1 class="page-header">Residents Overview</h1>
+</div> -->
+<!-- /.col-lg-12 -->
+
+<div class="col-sm-push-0"> 
+<div class="row">
+		<ol class="breadcrumb" style="position:fixed; z-index:1000; padding-top:15px; width:100%">
+			<li><a href="#">
+				<em class="fa fa-home"></em>
+			</a></li>
+			<li class="active">Anomalies</li>
+		</ol>
+	</div><!--/.row-->
+	<div class="row">
+		<ol class="breadcrumb">
+			<li><a href="#">
+				<em class="fa fa-home"></em>
+			</a></li>
+			<li class="active">Anomalies</li>
+		</ol>
+	</div>
+<form role="form" method="POST" action="/anomalies">
+	<div class="panel panel-default" >
+		<div class="panel-body" style="background-color:#f1f4f7">
+		
+			<div class="row"><br>
+				{{ form.csrf_token }}
+				<div class="col-lg-6 col-md-6 col-xs-6">
+				{{ render_field(form.startDate) }}</div>
+				<div class="col-lg-6 col-md-6 col-xs-6">
+				{{ render_field(form.endDate) }}</div>
+				<br>
+				<div class="form-group"> <br>
+				<div class="col-xs-12"><button type=submit class="btn btn-primary">Submit</button><br><br><br></div></div>
+			</div>
+		</div>
+	</div>
+</form>
+
+<div class="row"></div>
+	<div class="col-xs-12">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+			<h4><b>Anomalies</b></h4></div>
+			<div class="panel-body"><br>
+				<div class="table-responsive">
+					<table class="table">
+						<thead style="background:whitesmoke">
+							<tr>
+								<th style = "text-align:center">Date</th>
+								<th style = "text-align:center">Resident Name</th>
+								<th style = "text-align:center">Category</th>
+								<th style = "text-align:center">Type</th>
+								<th style = "text-align:center">Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for anomaly in anomalies %}
+							<tr class='clickable-row' data-href="./overview/{{ anomaly['resident_id'] }}/{{ anomaly['date']}}#{{ anomaly['category']}}">
+							<td style = "text-align:center">{{ anomaly['date']}}</td>
+							<td style = "text-align:center">{{ anomaly['name']}}</td>
+							<td style = "text-align:center">{{ anomaly[category]}}</td>
+							<td style = "text-align:center">{{ anomaly['type']}}</td>
+							<td style = "text-align:center">{{ anomaly['description']}}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+</div>
+</div>
+
+{% endblock %}
+{% block footer%}
+<script>
+$(document).ready(function(){
+	$('[data-toggle="tooltip"]').tooltip();
+});
+
+jQuery(document).ready(function($) {
+	$(".clickable-row").click(function() {
+		window.location = $(this).data("href");
+	});
+});
+</script>
+{% endblock%}

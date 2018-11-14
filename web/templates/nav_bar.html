@@ -107,6 +107,88 @@
             display: none;
         }
     }
+	
+	.sidebar {
+	  display: block;
+	  padding: 0;
+	  display: none;
+	  box-shadow: none;
+	  background: #333; 
+	  color: #fff}
+
+	.sidebar ul {
+		margin: 20px 0px; }
+
+	.sidebar form {
+	  padding: 10px 0 0 0;
+	  margin: 10px 10px 20px 10px; }
+
+	@media (min-width: 768px) {
+	  .sidebar {
+		display: block;
+		position: fixed;
+		top: 60px;
+		bottom: 0;
+		left: 0;
+		z-index: 1000;
+		display: block;
+		margin: 0;
+		padding: 0;
+		overflow-x: hidden;
+		overflow-y: auto; }
+
+	  .navbar-header {
+		width: 100%; } }
+	.sidebar ul.nav a:hover, .sidebar ul.nav li.parent ul li a:hover {
+	  text-decoration: none;
+	  background-color: #30a5ff;
+	  color: #fff; }
+
+	.sidebar ul.nav .active a, .sidebar ul.nav li.parent a.active, .sidebar ul.nav .active > a:hover, .sidebar ul.nav li.parent a.active:hover, .sidebar ul.nav .active > a:focus, .sidebar ul.nav li.parent a.active:focus {
+	  color: #fff;
+	  background-color: #30a5ff; }
+
+	.sidebar ul.nav ul, .sidebar ul.nav ul li {
+	  list-style: none;
+	  list-style-type: none; }
+
+	.sidebar ul.nav li a {
+	  height: 50px;
+	  font-size: 15px;
+	  line-height: 2em;
+	  color: #fff; }
+
+	.sidebar ul.nav ul.children {
+	  width: auto;
+	  padding-top: 3px;
+	  color: #fff;
+	  margin: 0; }
+
+	.sidebar ul.nav ul.children li a {
+	  height: 40px;
+	  background: #333;
+	  padding-top: 3px;
+	  color: #fff; }
+
+	.sidebar ul.nav li.current a {
+	  background-color: #30a5ff;
+	  color: #fff !important; }
+
+	.sidebar ul.nav li.parent ul li a {
+	  border: none;
+	  display: block;
+	  padding-left: 30px;
+	  line-height: 40px;
+	  border-radius: 0; }
+
+	.sidebar ul.nav li.divider {
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		margin: 0px 0; }
+
+	.profile-sidebar {
+		padding: 10px 0;
+		border-bottom: 1px solid #e9ecf2; }
+
     </style>
     {% block additional_stylesheets %}{% endblock %}
 	{% block scripts %}
@@ -148,7 +230,7 @@
 		</div><!-- /.container-fluid -->
 	</nav>
 
-	<div id="sidebar-collapse" class="col-sm-3 col-lg-2 sidebar" seamless="seamless">
+	<div id="sidebar-collapse" class="col-sm-3 col-lg-2 sidebar" seamless="seamless" style="background-color:#333;font-color:#fff">
 		<div class="profile-sidebar">
 			<div class="profile-userpic">
 				<img src="{{ url_for('static', filename='heartbeat.png') }}" class="img-responsive" alt="">
@@ -158,8 +240,8 @@
 			</div>
 			<div class="clear"></div>
 		</div>
-		<div class="divider"></div>
-		<ul class="nav menu">
+		<div class="divider" style="background-color:#333;font-color:#fff"></div>
+		<ul class="nav menu" style="color: #fff">
 		<script type="text/javascript">
 		$(document).ready(function () {
 			var url = window.location;
@@ -171,12 +253,12 @@
 		</script>
 			<li><a href="/overview"><em class="fa fa-dashboard">&nbsp;</em> Dashboard</a></li> <!-- how to make dynamic active classes??? since using standardised navbar across-->
 			<li class="parent"><a data-toggle="collapse" href="#residents-view">
-				<em class="fa fa-navicon">&nbsp;</em>Resident Analysis<span data-toggle="collapse" href="#residents-view" class="icon pull-right"><em class="fa fa-plus"></em></span>
+				<em class="fa fa-navicon">&nbsp;</em> Resident Analysis<span data-toggle="collapse" href="#residents-view" class="icon pull-right"><em class="fa fa-plus"></em></span>
 				</a>
-				<ul class="children collapse" id="residents-view" style="font-color:white">
+				<ul class="children collapse" id="residents-view" style="font-color:white; padding-left:0">
 					<li class="parent"><a data-toggle="collapse" href="#resident-bkttm">
 						<span data-toggle="collapse" href="#residents-bkttm" class="icon"><em class="fa fa-plus"></em></span> Bukit Timah</a>
-						<ul class="children collapse" id="resident-bkttm">
+						<ul class="children collapse" id="resident-bkttm" style="padding-left:5px">
 						   {% for r in all_residents(location_filter='bkttm') %}
 						<li>
 							<a href="/overview/{{ r['resident_id'] }}">{{ r['name'] }}</a>
@@ -189,12 +271,13 @@
 					</li>
 				</ul>
 			</li>
-			<li><a href="/sensor_mgmt"><em class="fa fa-bar-chart">&nbsp;</em> Sensors Status</a></li>
+			<li><a href="/sensor_mgmt"><em class="fa fa-podcast">&nbsp;</em> Sensors Status</a></li>
 			<li><a href="/graphs"><em class="fa fa-bar-chart">&nbsp;</em> Graphs</a></li>
+			<li><a href="/anomalies"><em class="fa fa-exclamation-triangle">&nbsp;</em> Anomalies</a></li>
 			<li class="parent"><a data-toggle="collapse" href="#sub-item-1">
-				<em class="fa fa-wpforms">&nbsp;</em>Forms<span data-toggle="collapse" href="#sub-item-1" class="icon pull-right"><em class="fa fa-plus"></em></span>
+				<em class="fa fa-wpforms">&nbsp;</em> Forms<span data-toggle="collapse" href="#sub-item-1" class="icon pull-right"><em class="fa fa-plus"></em></span>
 				</a>
-				<ul class="children collapse" id="sub-item-1">
+				<ul class="children collapse" id="sub-item-1" style="padding-left:0">
 					<li><a class="" href="/eosforms">
 							End of Shift Forms
 						</a>
@@ -205,7 +288,7 @@
 			</li>
             {% if current_user.staff_type == 'Admin' %}
 			<li class="parent"><a data-toggle="collapse" href="#sub-item-3"><em class="fa fa-wrench fa-fw">&nbsp;</em>Manage<span data-toggle="collapse" href="#sub-item-3" class="icon pull-right"><em class="fa fa-plus"></em></span></a>
-                <ul class="children collapse" id="sub-item-3">
+                <ul class="children collapse" id="sub-item-3" style="padding-left:0">
                     {% for l in get_admin_management_paths() %}
                     <li>
                         <a href="{{ l[0] }}">{{ l[1] }}</a>
@@ -216,7 +299,7 @@
             {% endif %}
             {% if current_user.staff_type == 'Staff' %}
 			<li class="parent"><a data-toggle="collapse" href="#sub-item-3"><em class="fa fa-wrench fa-fw">&nbsp;</em>Manage<span data-toggle="collapse" href="#sub-item-3" class="icon pull-right"><em class="fa fa-plus"></em></span></a>
-                <ul class="children collapse" id="sub-item-3">
+                <ul class="children collapse" id="sub-item-3" style="padding-left:0">
                     {% for l in get_staff_management_paths() %}
                     <li>
                         <a href="{{ l[0] }}">{{ l[1] }}</a>

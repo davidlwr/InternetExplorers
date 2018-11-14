@@ -54,10 +54,11 @@
 		<div class="panel-body" style="background-color:#f1f4f7">
 		<div class="panel-heading">Risk Assessment Form
 <a href="/admin/risk_assessment" class="pull-right"><button type="button" class="btn btn-md btn-info">View / Edit Responses</button></a></div>
-			<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12"><br><br>
+		<div class="panel-body" style="background-color:#fff">
+			<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12"><br>
                 {{ form.csrf_token }}
                 {{ render_name_field(form.resident) }}
-                <br>
+                
 				<div class="form-group">
                     <label>Month</label>
                     <input class="form-control" type="month" name="year_month" value="{{currentDate}}" />
@@ -125,10 +126,8 @@
                         <option value=3>Often/All the Time</option>
                     </select>
 				<br><br>
-                <button type=submit class="btn btn-primary">Submit</button>
-                <button type="reset" class="btn btn-default">Reset Button</button><br><br><br>
             </div>
-            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12"><br>
+            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
 				<br>{{ render_field(form.mobility)  }}
                 <br>{{ render_field(form.weight)  }}
 				<br>{{ render_field(form.medication_amount)  }}
@@ -177,9 +176,15 @@
                 <br>{{ render_field(form.dependent)  }}
                 <br>{{ render_field(form.dependency)  }}
 				<br>
-				</div>        
+				
+				</div> 
+				<div class="col-lg-12">
+                <button type=submit class="btn btn-primary">Submit</button>
+                <button type="reset" class="btn btn-default">Reset Button</button><br><br>
+			</div>				
 			</div>
 		</form>
+		</div>
 	</div>
 </div>
 {% endblock %}
