@@ -29,9 +29,9 @@ USER           = "stbern"                # username
 PASSWORD       = "int3rn3t"              # password
 TOPIC          = "#"        # Wildcard subscribe to everything
 QOS            = 2          
-TXT_FOLDER   = "./logs"
-LOGGING_FILE = f"{TXT_FOLDER}/log.txt"
-CSV_FILE = f"{TXT_FOLDER}/msg.csv"
+TXT_FOLDER     = "./logs"
+LOGGING_FILE   = f"{TXT_FOLDER}/log.txt"
+CSV_FILE       = f"{TXT_FOLDER}/msg.csv"
 
 # DB stuff
 host            = "stbern.cap7ipqft3z9.ap-southeast-1.rds.amazonaws.com"
@@ -133,20 +133,15 @@ def process_msg(topic, message):
     Input:
     message (str) - A single json string
     '''
-    print("yo")
     try:
         # Load JSON
         jdict = json.loads(message)
-        print("hi")
         topic = topic.split("/")
-        print(topic)
         if len(topic) == 1 and topic[0] == "finals" and len(jdict) == 3:         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
-            print("hi2")
             if 'nodeid' in jdict and 'event' in jdict and 'uuid' in jdict:     # Ensure this is the right message
                 nodeid = jdict['nodeid']    # int
                 event  = jdict['event']     # int
                 uuid   = "test-m-01"        # str
-                print("hi3")
                 # Adding to DB
                 insert_sensorlog(uuid, nodeid, datetime.datetime.now(), event)
 
@@ -269,7 +264,7 @@ def on_message(client, userdata, message):
 
 # Loop setup ====================================================================================================================
 try:
-    client = mqttClient.Client("acceptance_client")               #create new instance
+    client = mqttClient.Client("finals_client")               #create new instance
     client.username_pw_set(USER, password=PASSWORD)    #set username and password
 
     # Attach callback functions
