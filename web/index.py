@@ -26,7 +26,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # internal imports
 from app import app, server, db
 from apps import input_data, input_shiftlogs, dashboard, reports, residents_overview, shift_log_form, \
-    risk_assessment_form, change_password_form, sysmon_alerts, sensors_overview, anomaly_notifications
+    risk_assessment_form, change_password_form, sysmon_alerts, sensors_overview, anomaly_notifications, anomalies
 from apps.shift_log_form import Resident, ShiftLogForm
 from apps.create_sensor_form import SensorCreateForm, BedSensorCreateForm
 from apps.risk_assessment_form import RiskAssessmentForm
