@@ -11,9 +11,9 @@ import plotly.plotly as py
 
 # internal imports
 from app import app
-from apps import input_data
+from apps import input_data, input_shiftlogs
 from apps.send_email import EmailCreator
-from apps.input_shiftlogs import input_shiftlogs
+# from apps.input_shiftlogs import input_shiftlogs
 from DAOs import resident_DAO
 from DAOs.sensor_DAO import sensor_DAO
 from sensor_mgmt import JuvoAPI, sensor_mgmt
@@ -318,7 +318,7 @@ app.layout = html.Div([
                     dcc.Dropdown(
                         id='resident_input_logs',
                         options=[{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in
-                                 input_shiftlogs.get_residents_options()],
+                                 input_shiftlogs.input_shiftlogs.get_residents_options()],
                         placeholder='Select resident(s) to view',
                         value=[],
                         multi=True
@@ -339,7 +339,7 @@ app.layout = html.Div([
                     dcc.Dropdown(
                         id='filter_input_temp_bp_pulse',
                         options=[{'label': i, 'value': j} for i, j in
-                                 input_shiftlogs.get_logs_filter_options()],
+                                 input_shiftlogs.input_shiftlogs.get_logs_filter_options()],
                         value='temperature',
                         clearable=False
                     )
@@ -349,14 +349,14 @@ app.layout = html.Div([
                     html.Br(),
                     dcc.DatePickerRange(
                         id='date_picker_logs',
-                        min_date_allowed=input_shiftlogs.input_raw_min_date,
-                        max_date_allowed=input_shiftlogs.input_raw_max_date,
+                        min_date_allowed=input_shiftlogs.input_shiftlogs.input_raw_min_date,
+                        max_date_allowed=input_shiftlogs.input_shiftlogs.input_raw_max_date,
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
-                        start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                        start_date=input_shiftlogs.input_shiftlogs.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                                     microsecond=0) - timedelta(days=60),
                         # need to truncate the dates here
-                        end_date=input_shiftlogs.input_raw_max_date.replace(hour=0, minute=0, second=0,
+                        end_date=input_shiftlogs.input_shiftlogs.input_raw_max_date.replace(hour=0, minute=0, second=0,
                                                                             microsecond=0),
                         # to prevent unconverted data error
                         start_date_placeholder_text='Select start date',
@@ -1510,7 +1510,7 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
         if filter_input == 'None':  # default option
             for r in input_resident:
                 r_name = resident_DAO.get_resident_name_by_resident_id(r)
-                df = input_shiftlogs.get_logs_by_date(start_date, end_date, r)
+                df = input_shiftlogs.input_shiftlogs.get_logs_by_date(start_date, end_date, r)
                 if filter_type != 'sys_dia':
                     draw_data.append(
                         {'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': r_name})
@@ -1525,7 +1525,7 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
             if filter_input != 'Night':  # if not night means have to display for 'Day'
                 for r in input_resident:
                     r_name = resident_DAO.get_resident_name_by_resident_id(r)
-                    df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Day')
+                    df = input_shiftlogs.input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Day')
                     if filter_type != 'sys_dia':
                         draw_data.append(
                             {'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers',
@@ -1541,7 +1541,7 @@ def update_graph_04(input_resident, filter_input, filter_type, start_date, end_d
             if filter_input != 'Day':  # if not day means have to display for 'Night'
                 for r in input_resident:
                     r_name = resident_DAO.get_resident_name_by_resident_id(r)
-                    df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Night')
+                    df = input_shiftlogs.input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Night')
                     if filter_type != 'sys_dia':
                         draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers',
                                           'name': r_name + ' - Night'})
@@ -1622,7 +1622,7 @@ def update_graph_04_email(n_clicks, input_resident, filter_input, filter_type, s
         if filter_input == 'None':  # default option
             for r in input_resident:
                 r_name = resident_DAO.get_resident_name_by_resident_id(r)
-                df = input_shiftlogs.get_logs_by_date(start_date, end_date, r)
+                df = input_shiftlogs.input_shiftlogs.get_logs_by_date(start_date, end_date, r)
                 if filter_type != 'sys_dia':
                     draw_data.append(
                         {'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers', 'name': r_name})
@@ -1637,7 +1637,7 @@ def update_graph_04_email(n_clicks, input_resident, filter_input, filter_type, s
             if filter_input != 'Night':  # if not night means have to display for 'Day'
                 for r in input_resident:
                     r_name = resident_DAO.get_resident_name_by_resident_id(r)
-                    df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Day')
+                    df = input_shiftlogs.input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Day')
                     if filter_type != 'sys_dia':
                         draw_data.append(
                             {'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers',
@@ -1653,7 +1653,7 @@ def update_graph_04_email(n_clicks, input_resident, filter_input, filter_type, s
             if filter_input != 'Day':  # if not day means have to display for 'Night'
                 for r in input_resident:
                     r_name = resident_DAO.get_resident_name_by_resident_id(r)
-                    df = input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Night')
+                    df = input_shiftlogs.input_shiftlogs.get_logs_by_date(start_date, end_date, r, time_period='Night')
                     if filter_type != 'sys_dia':
                         draw_data.append({'x': df['date_only'], 'y': df[filter_type], 'mode': 'lines+markers',
                                           'name': r_name + ' - Night'})
@@ -2043,7 +2043,7 @@ def set_residents_options_three(selection):
     [Input('resident_input_logs', 'value')])
 def set_residents_options_four(selection):
     return [{'label': resident_DAO.get_resident_name_by_resident_id(i), 'value': i} for i in
-            input_shiftlogs.get_residents_options()]
+            input_shiftlogs.input_shiftlogs.get_residents_options()]
 
 
 @app.callback(
@@ -2068,5 +2068,5 @@ def set_residents_options_six(selection):
 def update_input_data_db():
     # print("Data Update Interval triggered... Running data update")
     input_data.input_data.updateInputData()
-    input_shiftlogs.update_shiftlogs_data()
+    input_shiftlogs.input_shiftlogs.update_shiftlogs_data()
     return ''

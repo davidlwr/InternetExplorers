@@ -473,6 +473,7 @@ def load_user(user_name):
 @flask_login.login_required
 def show_graphs():
     input_data.input_data.updateInputData()
+    input_shiftlogs.input_shiftlogs.update_shiftlogs_data()
     # return app.index()
     return render_template('detailed_graphs.html')
 

@@ -30,8 +30,8 @@ else:
 	
 class AnomalyForm(Form):
 
-	startDate = DateField('Start Date', format='%Y-%m-%d', validators=[InputRequired('Please enter Start Date!')])
-	endDate = DateField('End Date', format='%Y-%m-%d', validators=[InputRequired('Please enter End Date!')])
+	startDate = DateField('Start Date', format='%Y-%m-%d', validators=[InputRequired('Please enter Start Date!')], default=datetime.date.today() + datetime.timedelta(days=-60))
+	endDate = DateField('End Date', format='%Y-%m-%d', validators=[InputRequired('Please enter End Date!')], default=datetime.date.today())
     # weight = FloatField('Monthly weight updates (kg)')
     # num_falls = SelectField('No. of falls for past 6 months',
                             # choices=[(0, '0'), (1, '1'), (2, '2-3'), (3, '>=4')], coerce=int, default=0)
@@ -94,14 +94,33 @@ def showOverviewAnomalies():
 				residentName = resident_DAO.get_resident_name_by_resident_id(anomaly['resident_id'])
 				r['name'] = residentName
 				anomalies.append(r)
-			print(anomalies)
+			# print(anomalies)
 			return render_template('anomalies.html', form=form, anomalies=anomalies)	
 		else:
 			print("error here2")
 			return render_template('anomalies.html', form=form)
 	else:
-		print("error here3")
-		return render_template('anomalies.html', form=form)
+		print("loading default dates from get method for anomalies")
+		currentDate = datetime.date.today()
+		startDate = currentDate + datetime.timedelta(days=-60)
+		endDate = currentDate
+		anomalies_raw = anomaly_DAO.get_list_of_anomalies(startDate, endDate)
+		anomalies = []
+
+		for anomaly in anomalies_raw:
+			r = {}
+			dateRaw = anomaly['date']
+			r['date'] = dateRaw.date()
+			r['resident_id'] = anomaly['resident_id']
+			r['category'] = anomaly['category']
+			r['type'] = anomaly['type']
+			r['description'] = anomaly['description']
+			r['response'] = anomaly['response']
+			residentName = resident_DAO.get_resident_name_by_resident_id(anomaly['resident_id'])
+			r['name'] = residentName
+			anomalies.append(r)
+		
+		return render_template('anomalies.html', form=form, anomalies=anomalies)
 
 if __name__ == '__main__':
 	showOverviewAnomalies()
