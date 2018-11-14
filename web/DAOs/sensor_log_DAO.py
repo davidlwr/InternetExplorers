@@ -176,7 +176,7 @@ class sensor_log_DAO(object):
         Returns all logs in a dataframe
         """
 
-        query = "SELECT * FROM {}".format(sensor_log_DAO.table_name)
+        query = "SELECT * FROM {} WHERE to_ignore IS NULL".format(sensor_log_DAO.table_name)
 
         # Get connection
         factory = connection_manager()
