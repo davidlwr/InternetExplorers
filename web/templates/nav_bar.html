@@ -105,7 +105,7 @@
 				function(anomaly_texts) {
 					set_anomaly_message_count(anomaly_texts.length);
 					document.getElementById("anomaly_alerts").innerHTML = "";
-					for (var i = 0; i < anomaly_texts.length; i++) {
+					for (var i = anomaly_texts.length - 1; i >= Math.max(anomaly_texts.length - 5, 0); i--) {
 						// update dropdown
 						var date_url = new Date(anomaly_texts[i].date).toISOString().split('T')[0]
 						document.getElementById("anomaly_alerts").innerHTML += 
@@ -116,6 +116,7 @@
 								+ "</div></a></li>"
 								+ "<li class=\"divider\"></li>");
 					}
+					document.getElementById("anomaly_alerts").innerHTML += "<li><a href=\"{{ url_for('showOverviewAnomalies') }}\">View all anomalies</a></li>"
 				}
 			)
 		}
