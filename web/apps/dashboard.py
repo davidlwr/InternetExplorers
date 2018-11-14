@@ -189,7 +189,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_toilet_numbers',
                         min_date_allowed=input_data.input_data.input_raw_min_date,
-                        max_date_allowed=input_data.input_data.input_raw_max_date,
+                        max_date_allowed=datetime.date.today(),
                         # start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
@@ -284,7 +284,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_visit_duration',
                         min_date_allowed=input_data.input_data.input_raw_min_date,
-                        max_date_allowed=input_data.input_data.input_raw_max_date,
+                        max_date_allowed=datetime.date.today(),
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
@@ -350,7 +350,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_logs',
                         min_date_allowed=input_shiftlogs.input_shiftlogs.input_raw_min_date,
-                        max_date_allowed=input_shiftlogs.input_shiftlogs.input_raw_max_date,
+                        max_date_allowed=datetime.date.today(),
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_shiftlogs.input_shiftlogs.input_raw_max_date.replace(hour=0, minute=0, second=0,
@@ -407,7 +407,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_vital_signs',
                         min_date_allowed=input_data.input_data.input_raw_min_date,
-                        max_date_allowed=input_data.input_data.input_raw_max_date,
+                        max_date_allowed=datetime.date.today(),
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
@@ -453,7 +453,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_qos',
                         min_date_allowed=input_data.input_data.input_raw_min_date,
-                        max_date_allowed=input_data.input_data.input_raw_max_date,
+                        max_date_allowed=datetime.date.today(),
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
@@ -505,7 +505,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker',
                         min_date_allowed=input_data.input_data.input_raw_min_date,
-                        max_date_allowed=input_data.input_data.input_raw_max_date,
+                        max_date_allowed=datetime.date.today(),
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
