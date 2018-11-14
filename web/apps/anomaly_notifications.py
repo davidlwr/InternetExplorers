@@ -1,10 +1,12 @@
 from datetime import datetime
 from flask import render_template, flash, redirect, url_for, request, g, jsonify, current_app
+import flask_login
 from flask_login import current_user, login_required
 from app import app, server
 from DAOs.connection_manager import connection_manager
 
 @server.route('/anomaly_notifications', methods=['GET', 'POST'])
+@flask_login.login_required
 def anomaly_notifications():
     # need check whether need start date and end dates or not
     factory = connection_manager()
@@ -31,6 +33,7 @@ def anomaly_notifications():
     return jsonify(result)
 
 @server.route('/anomaly_notifications_count', methods=['GET', 'POST'])
+@flask_login.login_required
 def anomaly_notifications_count():
     factory = connection_manager()
     connection = factory.connection
@@ -55,6 +58,7 @@ def anomaly_notifications_count():
     return str(len(result))
     
 @server.route('/anomaly_notifications_read', methods=['POST'])
+@flask_login.login_required
 def mark_anomaly_read():
     input_msg = request.get_json()
     

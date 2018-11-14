@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import render_template, flash, redirect, url_for, request, g, jsonify, current_app
 from flask_login import current_user, login_required
+import flask_login
 from app import app, server
 from DAOs.connection_manager import connection_manager
 
@@ -12,6 +13,7 @@ TYPE_SENSOR = 2
 
 
 @server.route('/notifications', methods=['GET', 'POST'])     # see init in main for example
+@flask_login.login_required
 def notifications():
     # Get connection
     factory = connection_manager()
@@ -63,6 +65,7 @@ def notifications():
 # DONT USE THIS. WRONG. but idk if pat is using this so I didnt remove it.
 # NOTE: Fixed the sql statement to take into account response status
 @server.route('/notifications_count', methods=['GET', 'POST'])
+@flask_login.login_required
 def notifications_count():
     # Get connection
     factory = connection_manager()
