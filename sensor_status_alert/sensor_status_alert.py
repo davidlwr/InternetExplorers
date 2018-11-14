@@ -10,10 +10,10 @@ import alert_DAO
 import schedule
 import time
 
-token = '687512562:AAGEoEH8wpDU3PK5TU0X3lar40FIfDetAHY'
+token = '789766810:AAFOeW6ghhreo8tv6x6cMLSvnlt8nF91NqA'
 teleurl = 'https://api.telegram.org/bot' + token + '/'
 
-DUTY_NURSE_CHAT_ID = -251433967
+DUTY_NURSE_CHAT_ID = -312380619
 
 # RETURN STATUS CODES
 INVALID_SENSOR = -1
@@ -105,7 +105,7 @@ def job():
 				reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 				send_message_with_reply2(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markupBottom)
 
-schedule.every().minute.do(job)
+schedule.every().second.do(job)
 
 while True:
 	schedule.run_pending()

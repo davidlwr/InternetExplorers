@@ -139,7 +139,8 @@ def process_msg(topic, message):
         jdict = json.loads(message)
         print("hi")
         topic = topic.split("/")
-        if len(topic) == 1 and topic[0] == "test" and len(jdict) == 3:         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
+        print(topic)
+        if len(topic) == 1 and topic[0] == "finals" and len(jdict) == 3:         # STBERN LIVE SENSORS Determine Sysmon or Sensor Data
             print("hi2")
             if 'nodeid' in jdict and 'event' in jdict and 'uuid' in jdict:     # Ensure this is the right message
                 nodeid = jdict['nodeid']    # int
