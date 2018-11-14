@@ -107,8 +107,9 @@
 					document.getElementById("anomaly_alerts").innerHTML = "";
 					for (var i = 0; i < anomaly_texts.length; i++) {
 						// update dropdown
+						var date_url = new Date(anomaly_texts[i].date).toISOString().split('T')[0]
 						document.getElementById("anomaly_alerts").innerHTML += 
-								("<li><a href=\"" + "{{ url_for('detailedLayerTwoOverviewResidents', resident_id=-1) }}".replace("-1", anomaly_texts[i].resident_id) + "\"><div style=\"white-space:normal\">"
+								("<li><a href=\"" + "{{ url_for('detailedLayerTwoOverviewResidents', resident_id=-1) }}".replace("-1", anomaly_texts[i].resident_id) + "/" + date_url + "#" + anomaly_texts[i].category + "\"><div style=\"white-space:normal\">"
 								+ "<div><b>" + anomaly_texts[i].type + " Anomaly - " + anomaly_texts[i].name + "</b></div>"
 								+ "<div>" + anomaly_texts[i].description + "</div>"
 								+ "<span class=\"pull-right text-muted small\">" + anomaly_texts[i].date.split(' ', 4).join(' ') + "</span>"
