@@ -30,7 +30,7 @@ class input_shiftlogs(object):
     para_temperature_max = 37.6
     para_temperature_min = 35.5
     para_temperature_sd = 0.66
-    para_pulse_pressure_max = 50
+    para_pulse_pressure_max = 62.5
     para_pulse_pressure_sd = 0.66
 
     @staticmethod
