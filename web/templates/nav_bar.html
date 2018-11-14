@@ -97,6 +97,16 @@
 	</script>
 	<script>
 		// for anomaly
+		function mark_as_read(anom_date, anom_rid, anom_type, anom_text) {
+			// $.post("{{ url_for('mark_anomaly_read') }}", {date: anom_date, resident_id:anom_rid, type: anom_type, desc_text: anom_text});
+			var xhr = new XMLHttpRequest();
+			var url = "{{ url_for('mark_anomaly_read') }}";
+			xhr.open("POST", url, true);
+			xhr.setRequestHeader("Content-Type", "application/json");
+			var datestring = new Date(anom_date).toISOString().replace('T', ' ');
+			var data = JSON.stringify({"date": datestring.substring(0, datestring.length-5), "resident_id": anom_rid, "type": anom_type, "desc_text": anom_text});
+			xhr.send(data);
+		}
 		function set_anomaly_message_count(n) {
 			$('#anomaly_num').text(n);
 		}
@@ -109,7 +119,7 @@
 						// update dropdown
 						var date_url = new Date(anomaly_texts[i].date).toISOString().split('T')[0]
 						document.getElementById("anomaly_alerts").innerHTML += 
-								("<li><a href=\"" + "{{ url_for('detailedLayerTwoOverviewResidents', resident_id=-1) }}".replace("-1", anomaly_texts[i].resident_id) + "/" + date_url + "#" + anomaly_texts[i].category + "\"><div style=\"white-space:normal\">"
+								("<li onclick=\"mark_as_read('" + anomaly_texts[i].date + "'," + anomaly_texts[i].resident_id + ",'" + anomaly_texts[i].type + "','" + anomaly_texts[i].description + "')\"><a href=\"" + "{{ url_for('detailedLayerTwoOverviewResidents', resident_id=-1) }}".replace("-1", anomaly_texts[i].resident_id) + "/" + date_url + "#" + anomaly_texts[i].category + "\"><div style=\"white-space:normal\">"
 								+ "<div><b>" + anomaly_texts[i].type + " Anomaly - " + anomaly_texts[i].name + "</b></div>"
 								+ "<div>" + anomaly_texts[i].description + "</div>"
 								+ "<span class=\"pull-right text-muted small\">" + anomaly_texts[i].date.split(' ', 4).join(' ') + "</span>"

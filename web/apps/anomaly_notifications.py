@@ -61,6 +61,7 @@ def anomaly_notifications_count():
 @flask_login.login_required
 def mark_anomaly_read():
     input_msg = request.get_json()
+    # print(str(input_msg))
     
     # update the database to mark as read
     factory = connection_manager()
@@ -69,13 +70,14 @@ def mark_anomaly_read():
     
     try:
         # maybe validate the parameters in the JSON here first
-        query_text = 'UPDATE stbern.anomaly SET `response` = 1 WHERE date = %s and rid = %s and type = %s and description = %s'
+        query_text = 'UPDATE stbern.anomaly SET `response` = 1 WHERE date = %s and resident_id = %s and type = %s and description = %s'
         values = (input_msg['date'], input_msg['resident_id'], input_msg['type'], input_msg['desc_text']) # need double check table column names and json keys
         
         cursor.execute(query_text, values)
         connection.commit()
     except:
         print("Exceptions occurred at anomaly_notifications_read")
+        raise
     
     finally:
         factory.close_all(cursor=cursor, connection=connection)
