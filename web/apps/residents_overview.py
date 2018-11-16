@@ -109,6 +109,7 @@ def showOverviewResidents():
 def detailedLayerTwoOverviewResidents(resident_id, currdate=None):
     try:
         input_data.input_data.updateInputData()
+        input_shiftlogs.update_shiftlogs_data()
         if not currdate:
             date_in_use = datetime.datetime.now()
             # date_in_use = datetime.datetime(2018, 4, 18, 23, 34, 12) # TODO: change to current system time once live data is available
