@@ -42,6 +42,7 @@ def showOverviewResidents():
     NOTE: jinja templates do not allow for import of python modules, so all calculation will be done here
     '''
     input_data.input_data.updateInputData()
+    input_shiftlogs.update_shiftlogs_data()
     residents_raw = resident_DAO.get_list_of_residents()
     residents = []
     date_in_use = datetime.datetime.now()
@@ -71,7 +72,7 @@ def showOverviewResidents():
         r['vitals_alerts'], __, __, __, __ = input_data.input_data.get_vital_signs_indicator(resident['resident_id'], juvo_date_in_use)
 
         # check shift logs and extend vital signs alerts if necessary
-        shiftlog_alerts, __, __ = input_shiftlogs.get_shiftlog_indicators(resident['resident_id'], date_in_use)
+        shiftlog_alerts, __, __ = input_shiftlogs.get_shiftlog_indicators(resident['resident_id'], date_in_use + datetime.timedelta(days=1))
         r['vitals_alerts'].extend(shiftlog_alerts)
 
         r['vitals_tooltip'] = []
@@ -396,7 +397,7 @@ def detailedLayerTwoOverviewResidents(resident_id, currdate=None):
         resident['vitals_alerts'], resident['past_week_average_breathing'], resident['previous_weeks_average_breathing'], resident['past_week_average_heart'], resident['previous_weeks_average_heart'] = input_data.input_data.get_vital_signs_indicator(resident_id, juvo_date_in_use)
 
         # check shift logs and extend vital signs alerts if necessary
-        shiftlog_alerts, past_week_data_sl, three_week_data_sl = input_shiftlogs.get_shiftlog_indicators(resident['resident_id'], date_in_use)
+        shiftlog_alerts, past_week_data_sl, three_week_data_sl = input_shiftlogs.get_shiftlog_indicators(resident['resident_id'], date_in_use + datetime.timedelta(days=1))
         resident['vitals_alerts'].extend(shiftlog_alerts)
 
         past_week_breathing_df = input_data.input_data.retrieve_breathing_rate_info(resident_id, juvo_date_in_use + datetime.timedelta(days=-7), juvo_date_in_use)
