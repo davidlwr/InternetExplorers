@@ -79,10 +79,9 @@ def showForms():
 
     shiftLogDAO = shift_log_DAO()
     resident_list = shiftLogDAO.get_incompleted_residents()
+
     form.resident.choices = [(resident_map['resident_id'], resident_map['name']) for resident_map in resident_list]
     resident_dict = {resident_map['resident_id']: resident_map['name'] for resident_map in resident_list}
-
-    form.process()
 
     if request.method == 'POST':
         if form.validate_on_submit():
