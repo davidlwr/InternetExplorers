@@ -63,20 +63,6 @@ class ShiftLogForm(Form):
 def showForms():
     form = ShiftLogForm()
 
-    timeNow = datetime.time(datetime.now())
-    today9pm = timeNow.replace(hour=21, minute=0, second=0, microsecond=0)
-    today10am = timeNow.replace(hour=10, minute=0, second=0, microsecond=0)
-    dayNightSelector = 2
-    default_date = date.today()
-    if today9pm > timeNow > today10am:
-        dayNightSelector = 1
-
-    if timeNow < today10am:
-        default_date = date.today() - timedelta(1)
-
-    form.date.default = default_date
-    form.time.default = dayNightSelector
-
     shiftLogDAO = shift_log_DAO()
     resident_list = shiftLogDAO.get_incompleted_residents()
 
@@ -123,10 +109,22 @@ def showForms():
             response = 'Shift log for ' + name_to_show + ' has been successfully recorded. Click <a href="/admin/shift_log" class="alert-link">here</a> to view/edit responses.'
             flash(Markup(response))
             return redirect(url_for('showForms'))
-        else:
-            return render_template('eosforms.html', form=form)
-    else:
-        return render_template('eosforms.html', form=form)
+
+    timeNow = datetime.time(datetime.now())
+    today9pm = timeNow.replace(hour=21, minute=0, second=0, microsecond=0)
+    today10am = timeNow.replace(hour=10, minute=0, second=0, microsecond=0)
+    dayNightSelector = 2
+    default_date = date.today()
+    if today9pm > timeNow > today10am:
+        dayNightSelector = 1
+
+    if timeNow < today10am:
+        default_date = date.today() - timedelta(1)
+
+    form.date.default = default_date
+    form.time.default = dayNightSelector
+    form.process()
+    return render_template('eosforms.html', form=form)
 
 # @server.route("/donewithform")
 # def processForms():
