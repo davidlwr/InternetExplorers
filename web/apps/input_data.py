@@ -232,10 +232,22 @@ class input_data(object):
         grouped=True to get grouped data for toilet visits
         '''
         # TODO: this part probably is the best to convert to retrieve from DB
-        relevant_data = input_data.input_raw_data.loc[(input_data.input_raw_data['uuid'].str.endswith(input_location))
-                                           & (input_data.input_raw_data['recieved_timestamp'] < end_date)
-                                           & (input_data.input_raw_data['recieved_timestamp'] > start_date)
-                                           & (input_data.input_raw_data['resident_id'] == resident_id)]
+        try:
+            relevant_data = input_data.input_raw_data.loc[(input_data.input_raw_data['uuid'].str.endswith(input_location))
+                                            & (input_data.input_raw_data['recieved_timestamp'] < end_date)
+                                            & (input_data.input_raw_data['recieved_timestamp'] > start_date)
+                                            & (input_data.input_raw_data['resident_id'] == resident_id)]
+        except:
+            print("error with relevant_data")    
+            relevant_data = pd.DataFrame()
+            relevant_data['uuid'] = []
+            relevant_data['node_id'] = []
+            relevant_data['event'] = []
+            relevant_data['recieved_timestamp'] = []
+            relevant_data['to_ignore'] = []
+            relevant_data['resident_id'] = []
+        # print("relevant data info")
+        # print(relevant_data.info())
 
 
         # TODO: for sensors that are still active at the end of the query period, make it inactive at the end date
