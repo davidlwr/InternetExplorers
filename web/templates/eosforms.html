@@ -41,7 +41,7 @@
 	</div><!--/.row-->
 <br>
 {% for message in get_flashed_messages() %}
-<div class="alert bg-danger" role="alert"><em class="fa fa-lg fa-warning">&nbsp;</em>{{ message }}<a href="#" class="pull-right">
+<div class="alert bg-{{ 'success' if 'success' in message else 'danger' }}" role="alert"><em class="fa fa-lg fa-warning">&nbsp;</em>{{ message }}<a href="#" class="pull-right">
     <em class="fa fa-lg fa-close"></em></a>
 	<!--<button type="button" class="close" data-dismiss="alert">&times;</button>-->
 </div>
