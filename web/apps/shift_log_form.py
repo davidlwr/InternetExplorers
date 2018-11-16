@@ -31,19 +31,19 @@ def resident_query():
 class ShiftLogForm(Form):
     resident = SelectField('Name', coerce=int)
 
-    timeNow = datetime.time(datetime.now())
-    today9pm = timeNow.replace(hour=21, minute=0, second=0, microsecond=0)
-    today10am = timeNow.replace(hour=10, minute=0, second=0, microsecond=0)
-    dayNightSelector = 2
-    default_date = date.today()
-    if today9pm > timeNow > today10am:
-        dayNightSelector = 1
+    # timeNow = datetime.time(datetime.now())
+    # today9pm = timeNow.replace(hour=21, minute=0, second=0, microsecond=0)
+    # today10am = timeNow.replace(hour=10, minute=0, second=0, microsecond=0)
+    # dayNightSelector = 2
+    # default_date = date.today()
+    # if today9pm > timeNow > today10am:
+    #     dayNightSelector = 1
+    #
+    # if timeNow < today10am:
+    #     default_date = date.today() - timedelta(1)
 
-    if timeNow < today10am:
-        default_date = date.today() - timedelta(1)
-
-    date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')], default=default_date)
-    time = SelectField('Shift', choices=[(1, 'Day'), (2, 'Night')], coerce=int, default=dayNightSelector)
+    date = DateField('Date', format='%Y-%m-%d', validators=[InputRequired('Please enter date!')])
+    time = SelectField('Shift', choices=[(1, 'Day'), (2, 'Night')], coerce=int)
     falls = IntegerField('Number of Slips/Falls of Resident', default=0)
     near_falls = IntegerField('Number of Near Falls', default=0)
     consumption = SelectField('Food consumption',
@@ -62,10 +62,27 @@ class ShiftLogForm(Form):
 @flask_login.login_required
 def showForms():
     form = ShiftLogForm()
+
+    timeNow = datetime.time(datetime.now())
+    today9pm = timeNow.replace(hour=21, minute=0, second=0, microsecond=0)
+    today10am = timeNow.replace(hour=10, minute=0, second=0, microsecond=0)
+    dayNightSelector = 2
+    default_date = date.today()
+    if today9pm > timeNow > today10am:
+        dayNightSelector = 1
+
+    if timeNow < today10am:
+        default_date = date.today() - timedelta(1)
+
+    form.date.default = default_date
+    form.time.default = dayNightSelector
+
     shiftLogDAO = shift_log_DAO()
     resident_list = shiftLogDAO.get_incompleted_residents()
+
     form.resident.choices = [(resident_map['resident_id'], resident_map['name']) for resident_map in resident_list]
     resident_dict = {resident_map['resident_id']: resident_map['name'] for resident_map in resident_list}
+
     if request.method == 'POST':
         if form.validate_on_submit():
             # handle submitted data here

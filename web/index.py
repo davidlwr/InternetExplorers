@@ -19,7 +19,7 @@ from flask import render_template, Flask, request, flash, redirect, url_for, abo
 from flask_sqlalchemy import SQLAlchemy
 from urllib.parse import urlparse, urljoin
 from dash_flask_login import FlaskLoginAuth
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -328,6 +328,22 @@ class FormView(ModelView):
         shiftLogDAO = shift_log_DAO()
         resident_list = shiftLogDAO.get_incompleted_residents()
         form.resident.choices = [(resident_map['resident_id'], resident_map['name']) for resident_map in resident_list]
+
+        timeNow = datetime.time(datetime.now())
+        today9pm = timeNow.replace(hour=21, minute=0, second=0, microsecond=0)
+        today10am = timeNow.replace(hour=10, minute=0, second=0, microsecond=0)
+        dayNightSelector = 2
+        default_date = date.today()
+        if today9pm > timeNow > today10am:
+            dayNightSelector = 1
+
+        if timeNow < today10am:
+            default_date = date.today() - timedelta(1)
+
+        form.date.default = default_date
+        form.time.default = dayNightSelector
+
+        form.process()
         return render_template('eosforms.html', form=form)
 
     # def get_create_form(self):
