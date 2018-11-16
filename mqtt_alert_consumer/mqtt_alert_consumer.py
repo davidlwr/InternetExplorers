@@ -11,9 +11,8 @@ import pymysql
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 # from dbhelper import DBHelper
-import alert_DAO
-import resident_DAO
-from DAOs import sensor_hist_DAO
+from DAOs import alert_DAO
+from DAOs import resident_DAO
 
 from pprint import pprint
 import time
@@ -164,20 +163,12 @@ def process_msg(topic, message):
                 # Adding to DB
                 insert_sensorlog(uuid, nodeid, datetime.datetime.now(), event)
                 insert_sysmonlog(uuid, nodeid, 100, "Battery Level")
-
+                rname = resident_DAO.get_resident_name_by_node_id(nodeid)
                 # Get resident details
-                raw_resident_id = sensor_hist_DAO.get_id_by_uuid(uuid)
-                print("test1")
-                residentid = raw_resident_id[0]['resident_id']
-                print("test2")
-                residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
-                print("test3")
-                rname = residentNameRaw[0]['name']
-                print("test4")
+                
                 
                 # trigger telegram shit
                 if nodeid == NODEID_MOTION and rname != None:
-                    print("test5")
                     action_motion(event=event, rname=rname)
 
     except Exception as e:
@@ -311,21 +302,8 @@ except KeyboardInterrupt:
     client.disconnect()
     client.loop_stop()
 
-def main():
-    nodeid = 2
-    uuid = 'test-m-02'
-    # insert_sensorlog('test-m-02', 2, '2018-11-14 23:17:52', 0)
-    # insert_sysmonlog(uuid, nodeid, 100, "Battery Level")
+# def main():
 
-    raw_resident_id = sensor_hist_DAO.get_id_by_uuid(uuid)
-    residentid = raw_resident_id[0]['resident_id']
-    residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
-    rname = residentNameRaw[0]['name']
-    print(rname)
-    # trigger telegram shit
-    if nodeid == NODEID_MOTION and rname != None:
-        print("detect2")
-        action_motion(event=255, rname=rname)
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+    # main()

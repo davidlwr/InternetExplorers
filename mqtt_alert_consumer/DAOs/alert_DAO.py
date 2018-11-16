@@ -1,5 +1,5 @@
 import datetime, os, sys
-from connection_manager import connection_manager
+from DAOs.connection_manager import connection_manager
 import secrets
 import string
 
@@ -30,8 +30,8 @@ def get_latest_alert_by_id(chat_id, rname):
     '''
     Returns alert_text and rname by id
     '''
-    query = "SELECT alert_text, response_status FROM {} WHERE chat_id = %s AND alert_type = %s AND date = (select max(date) from {} where rname = %s)".format(table_name, table_name)
-    values = (chat_id, "Assistance", rname)
+    query = "SELECT alert_text, response_status FROM {} WHERE chat_id = %s AND alert_type = %s AND date = (select max(date) from {} where rname = %s AND alert_type = %s)".format(table_name, table_name)
+    values = (chat_id, "Assistance", rname, "Assistance")
     # chat_id = {} AND 
     # Get connection
     factory = connection_manager()

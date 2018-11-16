@@ -169,3 +169,37 @@ def update_resident_fall_risk(resident_id, status):
         raise
     finally:
         factory.close_all(cursor=cursor, connection=connection)
+
+def get_list_of_residentNames(filter_active=True, location_filter=None):
+    '''
+    Returns list of residentNames (each resident is a dictionary)
+    NOTE: returned node_id is in string
+    Default selects only active residents
+    '''
+    query = 'SELECT distinct(name) FROM {}'.format(table_name)
+    if filter_active:
+        query += " WHERE status = 'Active'"
+
+    # if location_filter:
+    # TODO:
+    # NOTE: not implemented yet
+    # pass
+    # query +=
+
+    # Get connection
+    factory = connection_manager()
+    connection = factory.connection
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(query)
+        results = cursor.fetchall()
+        # have to try printing this
+        if results:
+            return results
+        else:
+            return None
+    except:
+        raise
+    finally:
+        factory.close_all(cursor=cursor, connection=connection)
