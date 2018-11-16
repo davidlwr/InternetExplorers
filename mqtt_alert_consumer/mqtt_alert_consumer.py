@@ -77,7 +77,26 @@ def get_connection(read_timeout=30, write_timeout=30, connect_timeout=30, local_
                             local_infile=local_infile,        # Allows SQL "LOAD DATA LOCAL INFILE" command to be used
                             user=username, passwd=password,
                             cursorclass=cursorclass, autocommit=True)
-    # Note: Cursors are what pymysql uses interact with databases, its the equivilant to a Statement in java
+     # Note: Cursors are what pymysql uses interact with databases, its the equivilant to a Statement in java
+def insert_sysmonlog(uuid, node_id, event, key):
+    '''
+    INSERTs a log entry into the database
+
+    Returns success boolean
+    '''
+    query = "INSERT INTO stbern.sysmon_log VALUES('{}', '{}', '{}', '{}', '{}')"                        \
+                   .format(uuid, node_id, event, key, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+    # Get connection
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(query)
+    except: raise
+    finally: 
+        cursor.close()
+        connection.close()
 
 def insert_sensorlog(sensor_uuid, node_id, gw_timestamp, value):
     '''
@@ -88,7 +107,7 @@ def insert_sensorlog(sensor_uuid, node_id, gw_timestamp, value):
     value (int)
     '''
     query = """
-            INSERT INTO stbern.SENSOR_LOG (`uuid`, `node_id`, `event`, `recieved_timestamp`)
+            INSERT INTO stbern.sensor_log (`uuid`, `node_id`, `event`, `recieved_timestamp`)
             VALUES (%s, %s, %s, %s)
             """
     connection = get_connection()
@@ -141,18 +160,24 @@ def process_msg(topic, message):
             if 'nodeid' in jdict and 'event' in jdict and 'uuid' in jdict:     # Ensure this is the right message
                 nodeid = jdict['nodeid']    # int
                 event  = jdict['event']     # int
-                uuid   = "test-m-01"        # str
+                uuid   = "test-m-02"        # str
                 # Adding to DB
                 insert_sensorlog(uuid, nodeid, datetime.datetime.now(), event)
+                insert_sysmonlog(uuid, nodeid, 100, "Battery Level")
 
                 # Get resident details
                 raw_resident_id = sensor_hist_DAO.get_id_by_uuid(uuid)
+                print("test1")
                 residentid = raw_resident_id[0]['resident_id']
+                print("test2")
                 residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
+                print("test3")
                 rname = residentNameRaw[0]['name']
+                print("test4")
                 
                 # trigger telegram shit
                 if nodeid == NODEID_MOTION and rname != None:
+                    print("test5")
                     action_motion(event=event, rname=rname)
 
     except Exception as e:
@@ -169,6 +194,7 @@ def action_motion(event, rname):
         date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         text=f'*Assistance Alert:* {rname} at ' + date_time
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
+        text=f'Assistance Alert: {rname} at ' + date_time
         alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, rname, text, "Assistance", "No")
         
         residentNameList = resident_DAO.get_list_of_residentNames()
@@ -264,7 +290,7 @@ def on_message(client, userdata, message):
 
 # Loop setup ====================================================================================================================
 try:
-    client = mqttClient.Client("finals_client")               #create new instance
+    client = mqttClient.Client("finals_clientxx")               #create new instance
     client.username_pw_set(USER, password=PASSWORD)    #set username and password
 
     # Attach callback functions
@@ -285,9 +311,21 @@ except KeyboardInterrupt:
     client.disconnect()
     client.loop_stop()
 
-# def main():
-   # residentNameList = resident_DAO.get_list_of_residentNames()
-   # print(get_latest_alerts(residentNameList))
+def main():
+    nodeid = 2
+    uuid = 'test-m-02'
+    # insert_sensorlog('test-m-02', 2, '2018-11-14 23:17:52', 0)
+    # insert_sysmonlog(uuid, nodeid, 100, "Battery Level")
 
-# if __name__ == '__main__':
-    # main()
+    raw_resident_id = sensor_hist_DAO.get_id_by_uuid(uuid)
+    residentid = raw_resident_id[0]['resident_id']
+    residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
+    rname = residentNameRaw[0]['name']
+    print(rname)
+    # trigger telegram shit
+    if nodeid == NODEID_MOTION and rname != None:
+        print("detect2")
+        action_motion(event=255, rname=rname)
+
+if __name__ == '__main__':
+    main()

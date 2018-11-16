@@ -30,8 +30,27 @@ def get_latest_alert_by_id(chat_id, rname):
     '''
     Returns alert_text and rname by id
     '''
+    query = "SELECT alert_text, response_status FROM {} WHERE chat_id = %s AND alert_type = %s AND date = (select max(date) from {} where rname = %s AND alert_type = %s)".format(table_name, table_name)
+    values = (chat_id, "Assistance", rname, "Assistance")
+    # chat_id = {} AND 
+    # Get connection
+    factory = connection_manager()
+    connection = factory.connection
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(query, values)
+        results = cursor.fetchall()
+        return results
+    except: raise
+    finally: factory.close_all(cursor=cursor, connection=connection)
+
+def get_latest_sensor_alert_by_id(chat_id, rname):
+    '''
+    Returns alert_text and rname by id
+    '''
     query = "SELECT alert_text, response_status FROM {} WHERE chat_id = %s AND alert_type = %s AND date = (select max(date) from {} where rname = %s)".format(table_name, table_name)
-    values = (chat_id, "Assistance", rname)
+    values = (chat_id, "Sensor", rname)
     # chat_id = {} AND 
     # Get connection
     factory = connection_manager()

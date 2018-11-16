@@ -12,7 +12,7 @@ class connection_manager(object):
     def __init__(self, read_timeout=30, write_timeout=30, connect_timeout=30, local_infile=True, cursorclass=pymysql.cursors.DictCursor):
 
         host            = "127.0.0.1"
-        if sys.platform == 'linux': host = "stbern.cap7ipqft3z9.ap-southeast-1.rds.amazonaws.com:3306"
+        if sys.platform == 'linux': host = "stbern.cap7ipqft3z9.ap-southeast-1.rds.amazonaws.com"
         port            = 3306
         database        = "stbern"
         username        = "internetexplorer"

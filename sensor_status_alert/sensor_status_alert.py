@@ -52,26 +52,26 @@ Sensor_mgmt = Sensor_mgmt()
 
 def job():
 	downList = {}
-	for ss in Sensor_mgmt.get_all_sensor_status_v2(True):
-		id = ss[0]
-		loc = sensor_DAO.get_location_by_node_id(id)
-		location = loc[0]['location']
-		rawtype = sensor_DAO.get_type_by_node_id(id)
-		type = rawtype[0]['type']
-		rawuuid = sensor_hist_DAO.get_id_by_uuid(id)
-		if len(rawuuid)> 0:
-			residentid = rawuuid[0]['resident_id']
-			residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
-			residentName = residentNameRaw[0]['name']
-			if 1 in ss[1]:
-				error = "Sensor Issue: Disconnected" + "\nLocation: " + residentName + " " + location + "\nType: " + type
-				downList.update({error : residentName})
-			elif 2 in ss[1]:
-				error = "Sensor Issue: Low Battery" + "\nLocation: " + residentName + " " + location + "\nType: " + type
-				downList.update({error : residentName})
-			elif 3 in ss[1]:
-				error = "Sensor Issue: Warning"+ "\nLocation: " + residentName + " " + location + "\nType: " + type
-				downList.update({error : residentName})
+	ss = Sensor_mgmt.get_sensor_status_v2('test-m-02', True)
+	id = 'test-m-02'
+	loc = sensor_DAO.get_location_by_node_id(id)
+	location = loc[0]['location']
+	rawtype = sensor_DAO.get_type_by_node_id(id)
+	type = rawtype[0]['type']
+	rawuuid = sensor_hist_DAO.get_id_by_uuid(id)
+	if len(rawuuid)> 0:
+		residentid = rawuuid[0]['resident_id']
+		residentNameRaw = resident_DAO.get_resident_name_by_resident_id(residentid)
+		residentName = residentNameRaw[0]['name']
+		if 1 in ss[0]:
+			error = "Sensor Issue: Disconnected" + "\nLocation: " + residentName + " " + location + "\nType: " + type
+			downList.update({error : residentName})
+		elif 2 in ss[0]:
+			error = "Sensor Issue: Low Battery" + "\nLocation: " + residentName + " " + location + "\nType: " + type
+			downList.update({error : residentName})
+		elif 3 in ss[0]:
+			error = "Sensor Issue: Warning"+ "\nLocation: " + residentName + " " + location + "\nType: " + type
+			downList.update({error : residentName})
 	sensor_alerts = alert_DAO.get_sensor_alerts(DUTY_NURSE_CHAT_ID, "sensor")
 	sensorAlertList = []
 	for sensor_alert in sensor_alerts:
