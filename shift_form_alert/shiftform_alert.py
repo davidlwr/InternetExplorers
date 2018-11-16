@@ -2,10 +2,11 @@ import requests
 import json
 from datetime import datetime, timedelta
 import datetime
-import shift_log_DAO
-import resident_DAO
 import schedule
 import time
+from DAOs import shift_log_DAO
+from DAOs import resident_DAO
+
 
 token = '687512562:AAGEoEH8wpDU3PK5TU0X3lar40FIfDetAHY'
 teleurl = 'https://api.telegram.org/bot' + token + '/'
