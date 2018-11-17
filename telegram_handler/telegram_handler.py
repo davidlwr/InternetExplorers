@@ -64,7 +64,7 @@ def button(bot, update):
 		resident_name = alert_clean['rname']
 		received_timestamp = alert_clean['date']
 		resident_id_raw = resident_DAO.get_resident_id_by_resident_name(resident_name)
-		resident_id = resident_id_raw[0]['resident_id']
+		resident_id = resident_id_raw['resident_id']
 		rawuuids = sensor_hist_DAO.get_uuids_by_id(resident_id)
 		for rawuuid in rawuuids:
 			uuid = rawuuid['uuid']
