@@ -95,7 +95,7 @@ tr:hover { background: WhiteSmoke; }
 							</tr>
 						</thead>
 						<tbody>
-							{% for anomaly in anomalies %}
+							{% for anomaly in anomalies|reverse %}
 							<tr class='clickable-row' data-href="./overview/{{ anomaly['resident_id'] }}/{{ anomaly['date']}}#{{ anomaly['category']}}">
 							<td style = "text-align:center">{{ anomaly['date']}}</td>
 							<td style = "text-align:center">{{ anomaly['name']}}</td>
