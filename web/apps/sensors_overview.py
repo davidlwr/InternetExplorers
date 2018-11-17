@@ -96,7 +96,7 @@ def showOverviewSensors():
 					status = ""
 					if statusNum == Sensor_mgmt.OK:           status = "Up"
 					elif statusNum == Sensor_mgmt.CHECK_WARN: status = "Warning"
-					if batt_status == Sensor_mgmt.LOW_BATT:   status = "Low batt"
+					elif batt_status == Sensor_mgmt.LOW_BATT: status = "Low batt"
 
 					if status == "Up" or status == "Low batt": upCount += 1
 					else: downCount += 1
@@ -179,7 +179,7 @@ def refreshOverviewSensors():
 					status = ""
 					if statusNum == Sensor_mgmt.OK:           status = "Up"
 					elif statusNum == Sensor_mgmt.CHECK_WARN: status = "Warning"
-					if batt_status == Sensor_mgmt.LOW_BATT:   status = "Low batt"
+					elif batt_status == Sensor_mgmt.LOW_BATT: status = "Low batt"
 
 					if status == "Up" or status == "Low batt": upCount += 1
 					else: downCount += 1

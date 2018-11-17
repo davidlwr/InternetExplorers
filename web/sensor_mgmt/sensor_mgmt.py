@@ -273,6 +273,7 @@ class Sensor_mgmt(object):
 
         # get all sysmon battery readings within start_dt and end_dt
         records = sysmon_log_DAO.get_logs(uuid=uuid, key=Sysmon_Log.key_battery, start_dt=start_dt_buff, end_dt=end_dt_buff, descDT=False, limit=0)
+        
         # CHECK 1: If no records found, sensor is confirmed down during the period, but just
         if records == None: return [(start_dt, end_dt)]
         if len(records) == 0: return [(start_dt, end_dt)]
@@ -334,7 +335,6 @@ class Sensor_mgmt(object):
         ret_codes = []
         down = False
         for p in down_periods:          # Check if current time is within a down period
-            # print(p)
             if p[0] <= now and now <= p[1]:
                 down = True
                 break
@@ -494,10 +494,12 @@ class Sensor_mgmt(object):
 
         # Treat bathroom and main door differently
         location = sensor_DAO.get_sensors(uuid=uuid)[0].location
+
         if location == "toilet":
             if logs == None or len(logs) == 0: # No readings since, send warning
                 return [[start_date.replace(hour=0, minute=0), end_date.replace(hour=23, minute=59)]]
-            else: return []
+            else: 
+                return []
 
         # if no records, consider down
         if len(logs) == 0:
@@ -522,45 +524,52 @@ class Sensor_mgmt(object):
             if max_dt < end_dt:   ownerless += [max_dt + timedelta(x) for x in range((end_dt - max_dt).days)]
             missing_dates = sorted(set(missing_dates) - set(ownerless))
 
-        # Fine tune periods without logs, it may just be the case where no one uses the door at all
-        # Assumption: reisdents sleep with doors closed. Therefore use Juvo to fine-tune
+        # Version 1: Juvo sucks
         down_periods = []
         for missing in missing_dates:
-            missing_end   = missing.replace(hour=12)
-            missing_start = missing_end - timedelta(days=1)
-
-            # Get owner by period
-            door_ownership = sensor_DAO.get_ownership_hist(uuid=uuid, start_dt=missing_start, end_dt=missing_end)
-            rid_owners = [v[0][0] for k,v in door_ownership.items()]
-
-            # Get Juvo owner by period ERROR HERE MAKE NEW QUERY
-            juvo_ownership = sensor_DAO.get_ownership_hist(start_dt=missing_start, end_dt=missing_end, type="bed sensor")
-            juvo_uuid = None
-            for k,v in juvo_ownership.items():
-                if v[0][0] in rid_owners:
-                    juvo_uuid = k
-                    break
-
-            if juvo_uuid == None: # This resident didnt own a bed sensor this day
-                down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
-
-            if juvo_uuid != None:   # Attempt to find if owner slept this period
-                target = None
-                for s in sensor_DAO.get_sensors(uuid=juvo_uuid):
-                    target = s.juvo_target
-                    break
-
-                if target == None:  # This resident didnt own a bed sensor this day
-                    down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
-
-                # Check if sleep was detected
-                juvo_offset_dt = missing - timedelta(days=1)    # i.e. Sleep for 10th = 10th 12pm to 11th 12pm
-                records = JuvoAPI.get_target_sleep_summaries(target, juvo_offset_dt, juvo_offset_dt)['sleep_summaries']
-                for r in records:
-                    total_sleep = r['light'] + r['deep'] + r['awake']
-                    if total_sleep < 0:     # Sleep detected, no door detected. assume door is down
-                        down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
+            down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
         return down_periods
+
+        # Version 2: trusting Juvo
+        # Fine tune periods without logs, it may just be the case where no one uses the door at all
+        # Assumption: reisdents sleep with doors closed. Therefore use Juvo to fine-tune
+        # down_periods = []
+        # for missing in missing_dates:
+        #     missing_end   = missing.replace(hour=12)
+        #     missing_start = missing_end - timedelta(days=1)
+
+        #     # Get owner by period
+        #     door_ownership = sensor_DAO.get_ownership_hist(uuid=uuid, start_dt=missing_start, end_dt=missing_end)
+        #     rid_owners = [v[0][0] for k,v in door_ownership.items()]
+
+        #     # Get Juvo owner by period
+        #     juvo_ownership = sensor_DAO.get_ownership_hist(start_dt=missing_start, end_dt=missing_end, type="bed sensor")
+        #     juvo_uuid = None
+        #     for k,v in juvo_ownership.items():
+        #         if v[0][0] in rid_owners:
+        #             juvo_uuid = k
+        #             break
+
+        #     if juvo_uuid == None: # This resident didnt own a bed sensor this day
+        #         down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
+
+        #     if juvo_uuid != None:   # Attempt to find if owner slept this period
+        #         target = None
+        #         for s in sensor_DAO.get_sensors(uuid=juvo_uuid):
+        #             target = s.juvo_target
+        #             break
+
+        #         if target == None:  # This resident didnt own a bed sensor this day
+        #             down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
+
+        #         # Check if sleep was detected
+        #         juvo_offset_dt = missing - timedelta(days=1)    # i.e. Sleep for 10th = 10th 12pm to 11th 12pm
+        #         records = JuvoAPI.get_target_sleep_summaries(target, juvo_offset_dt, juvo_offset_dt)['sleep_summaries']
+        #         for r in records:
+        #             total_sleep = r['light'] + r['deep'] + r['awake']
+        #             if total_sleep < 0:     # Sleep detected, no door detected. assume door is down
+        #                 down_periods.append([missing.replace(hour=0, minute=0), missing.replace(hour=23, minute=59)])
+        # return down_periods
 
 
     @classmethod
@@ -574,11 +583,9 @@ class Sensor_mgmt(object):
         # Get down periods
         now = datetime.datetime.now()
         down_periods = cls.get_down_periods_door(uuid=uuid, start_dt=now, end_dt=now)
-
         ret_codes = []
         down = False
         for p in down_periods:          # Check if current time is within a down period
-            # print(p)
             if p[0] <= now and now <= p[1]:
                 down = True
                 break
