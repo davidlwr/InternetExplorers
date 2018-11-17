@@ -91,7 +91,11 @@ def showOverviewResidents():
     for r_dict in residents:
         if r_dict['alert_highest'] == 0:
             num_good_health += 1
-    information['health_percentage'] = num_good_health / information['num_residents'] * 100 # in percentage
+    if information['num_residents'] > 0:
+        information['health_percentage'] = num_good_health / information['num_residents'] * 100 # in percentage
+    else:
+        information['health_percentage'] = 0
+
     sldao = shift_log_DAO.shift_log_DAO()
     information['num_shift_forms'] = sldao.get_today_logs()
     sensor_statuses = sensor_mgmt.Sensor_mgmt.get_all_sensor_status_v2(retBatteryLevel=True)
