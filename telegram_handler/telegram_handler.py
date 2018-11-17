@@ -174,7 +174,8 @@ def shiftform(bot, update):
 	for patient_ID in patientIDList[:]:
 		checkList.remove(patient_ID)
 	for id in checkList:
-		patientName = resident_DAO.get_resident_name_by_resident_id(id)[0]['name']
+		patientName = resident_DAO.get_resident_name_by_resident_id(id)
+		
 		nameList.append(patientName)
 	if(len(nameList) > 0):
 			text = "\n".join(nameList)
