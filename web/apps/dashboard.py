@@ -29,7 +29,7 @@ graph_update_interval = 10 * 1000
 # TODO: can return the bank plotly graph output after the exception so that the graph is still there
 app.layout = html.Div([
     dcc.Interval(id='data-update', interval=data_update_interval),
-    html.P(id='data_update_placeholder', style={'dispaly': 'none'}),
+    html.P(id='data_update_placeholder', style={'display': 'none'}),
     # html.Nav([
     #     html.Div([
     #         html.Button([
