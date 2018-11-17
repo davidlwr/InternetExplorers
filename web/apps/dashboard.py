@@ -200,7 +200,8 @@ app.layout = html.Div([
                         # to prevent unconverted data error
                         start_date_placeholder_text='Select start date',
                         end_date_placeholder_text='Select end date',
-                        minimum_nights=0
+                        minimum_nights=0,
+                        display_format='DD/MM/YYYY'
                     )
                 ], className='row')
             ], className='col-md-5 col-xs-12'),
@@ -295,7 +296,8 @@ app.layout = html.Div([
                         # to prevent unconverted data error
                         start_date_placeholder_text='Select start date',
                         end_date_placeholder_text='Select end date',
-                        minimum_nights=0
+                        minimum_nights=0,
+                        display_format='DD/MM/YYYY'
                     )
                 ], className='col-md-4')
             ], className='row'),
@@ -361,7 +363,8 @@ app.layout = html.Div([
                         # to prevent unconverted data error
                         start_date_placeholder_text='Select start date',
                         end_date_placeholder_text='Select end date',
-                        minimum_nights=0
+                        minimum_nights=0,
+                        display_format='DD/MM/YYYY'
                     )
                 ], className='col-md-4')
             ], className='row'),
@@ -418,7 +421,8 @@ app.layout = html.Div([
                         # to prevent unconverted data error
                         start_date_placeholder_text='Select start date',
                         end_date_placeholder_text='Select end date',
-                        minimum_nights=0
+                        minimum_nights=0,
+                        display_format='DD/MM/YYYY'
                     )
                 ], className='col-md-4')
             ], className='row'),
@@ -464,7 +468,8 @@ app.layout = html.Div([
                         # to prevent unconverted data error
                         start_date_placeholder_text='Select start date',
                         end_date_placeholder_text='Select end date',
-                        minimum_nights=0
+                        minimum_nights=0,
+                        display_format='DD/MM/YYYY'
                     )
                 ], className='col-md-6')
             ], className='row'),
@@ -516,7 +521,8 @@ app.layout = html.Div([
                         # to prevent unconverted data error
                         start_date_placeholder_text='Select start date',
                         end_date_placeholder_text='Select end date',
-                        minimum_nights=0
+                        minimum_nights=0,
+                        display_format='DD/MM/YYYY'
                     )
                 ], className='col-md-4 col-xs-12')
             ], className='row'),
