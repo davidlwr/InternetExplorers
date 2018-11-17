@@ -12,73 +12,77 @@
 <!--<link href="static/css/datepicker3.css" rel="stylesheet">-->
 <!--<link href="static/css/styles.css" rel="stylesheet">-->
 <!--<link href="https://fonts.googleapis.com/css?family=Montserrat:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">-->
+
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-    body {font-family: Montserrat;}
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<style>
+		body {font-family: Montserrat;}
     .panel > .panel-body {
     background-image: none;
     color: black;
     }
     </style>
 </head>
-<div class="col-sm-push-0"> <!--overall-->
-<div class="row">
+<div class="col-sm-push-0">
+	<!--overall-->
+	<div class="row">
 		<ol class="breadcrumb" style="position:fixed; z-index:1000; padding-top:15px; width:100%">
 			<li><a href="#">
-				<em class="fa fa-home"></em>
-			</a></li>
-			<li class="active">Forms  >  <b> End of Shift Form</b></li>
+					<em class="fa fa-home"></em>
+				</a></li>
+			<li class="active">Forms > <b> End of Shift Form</b></li>
 		</ol>
-	</div><!--/.row-->
+	</div>
+	<!--/.row-->
 	<div class="row">
 		<ol class="breadcrumb">
 			<li><a href="#">
-				<em class="fa fa-home"></em>
-			</a></li>
-			<li class="active">Forms  >  <b> End of Shift Form</b></li>
+					<em class="fa fa-home"></em>
+				</a></li>
+			<li class="active">Forms > <b> End of Shift Form</b></li>
 		</ol>
-	</div><!--/.row-->
-<br>
-{% for message in get_flashed_messages() %}
-<div class="alert bg-{{ 'success' if 'success' in message else 'danger' }}" role="alert"><em class="fa fa-lg fa-warning">&nbsp;</em>{{ message }}<a href="#" class="pull-right">
-    <em class="fa fa-lg fa-close"></em></a>
-	<!--<button type="button" class="close" data-dismiss="alert">&times;</button>-->
-</div>
-{% endfor %}
+	</div>
+	<!--/.row-->
+	<br>
+	{% for message in get_flashed_messages() %}
+	<div class="alert bg-{{ 'success' if 'success' in message else 'danger' }}" role="alert"><em class="fa fa-lg fa-warning">&nbsp;</em>{{
+		message }}<a href="#" class="pull-right">
+			<em class="fa fa-lg fa-close"></em></a>
+		<!--<button type="button" class="close" data-dismiss="alert">&times;</button>-->
+	</div>
+	{% endfor %}
 
-<div class="panel panel-default" style="background-color:#f1f4f7" >
-    <div class="panel-body">
-	<div class="panel-heading">End of Shift Form
-<a href="/admin/shift_log" style="color:black;" class="pull-right"><button type="button" class="btn btn-md btn-info">View/Edit Responses</button></a></div>
-		<div class="panel-body" style="background-color:#fff">
-		<form role="form" method="POST" action="/eosforms">
-			<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-                {{ form.csrf_token }}
-				<br>
-                {{ render_name_field(form.resident) }}
-                <br>{{ render_field(form.falls) }}
-                <br>{{ render_field(form.near_falls) }}
-				<br>{{ render_field(form.temperature) }}
-				<br>{{ render_field(form.pulse) }}
+	<div class="panel panel-default" style="background-color:#f1f4f7">
+		<div class="panel-body">
+			<div class="panel-heading">End of Shift Form
+				<a href="/admin/shift_log" style="color:black;" class="pull-right"><button type="button" class="btn btn-md btn-info">View/Edit
+						Responses</button></a></div>
+			<div class="panel-body" style="background-color:#fff">
+				<form role="form" method="POST" action="/eosforms">
+					<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+						{{ form.csrf_token }}
+						<br>
+						{{ render_name_field(form.resident) }}
+						<br>{{ render_field(form.falls) }}
+						<br>{{ render_field(form.near_falls) }}
+						<br>{{ render_field(form.temperature) }}
+						<br>{{ render_field(form.pulse) }}
+					</div>
+
+					<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+						<br>{{ render_field(form.time) }}
+						<br>{{ render_field(form.date) }}
+						<br>{{ render_field(form.sbp) }}
+						<br>{{ render_field(form.dbp) }}
+						<br>{{ render_field(form.consumption) }}
+
+					</div>
+					<div class="form-group"> <br><button type=submit class="btn btn-primary">Submit</button>
+						<button type="reset" class="btn btn-default">Reset Button</button><br></div>
+				</form>
 			</div>
-			
-			<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-			<br>{{ render_field(form.time) }}
-			<br>{{ render_field(form.date) }}
-			<br>{{ render_field(form.sbp) }}
-			<br>{{ render_field(form.dbp) }}
-			<br>{{ render_field(form.consumption) }}
-			
-			</div>
-			<div class="col-lg-12">
-            <div class="form-group"> <br><button type=submit class="btn btn-primary">Submit</button>
-			<button type="reset" class="btn btn-default">Reset Button</button><br></div>
-		</form>
 		</div>
-		</div>
-    </div>
+	</div>
 </div>
 
 {% endblock %}
-</div>
