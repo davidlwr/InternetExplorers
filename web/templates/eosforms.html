@@ -59,23 +59,25 @@
 						Responses</button></a></div>
 			<div class="panel-body" style="background-color:#fff">
 				<form role="form" method="POST" action="/eosforms">
-					<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-						{{ form.csrf_token }}
-						<br>
-						{{ render_name_field(form.resident) }}
-						<br>{{ render_field(form.falls) }}
-						<br>{{ render_field(form.near_falls) }}
-						<br>{{ render_field(form.temperature) }}
-						<br>{{ render_field(form.pulse) }}
-					</div>
+					<div class="row">
+						<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+							{{ form.csrf_token }}
+							<br>
+							{{ render_name_field(form.resident) }}
+							<br>{{ render_field(form.falls) }}
+							<br>{{ render_field(form.near_falls) }}
+							<br>{{ render_field(form.temperature) }}
+							<br>{{ render_field(form.pulse) }}
+						</div>
 
-					<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-						<br>{{ render_field(form.time) }}
-						<br>{{ render_field(form.date) }}
-						<br>{{ render_field(form.sbp) }}
-						<br>{{ render_field(form.dbp) }}
-						<br>{{ render_field(form.consumption) }}
+						<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+							<br>{{ render_field(form.time) }}
+							<br>{{ render_field(form.date) }}
+							<br>{{ render_field(form.sbp) }}
+							<br>{{ render_field(form.dbp) }}
+							<br>{{ render_field(form.consumption) }}
 
+						</div>
 					</div>
 					<div class="form-group"> <br><button type=submit class="btn btn-primary">Submit</button>
 						<button type="reset" class="btn btn-default">Reset Button</button><br></div>
