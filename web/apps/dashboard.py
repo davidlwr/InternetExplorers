@@ -250,7 +250,7 @@ app.layout = html.Div([
                 html.Div(id='toilet_numbers_output', className='col-md-12')
             ], className='row'),
             html.Div([
-                html.Button('Save Graph', id='toilet_save_button', className='col-md-1'),
+                html.Button('Save Graph', id='toilet_save_button', className='col-md-2 button', style={'white-space':'normal'}),
                 html.Div(id='toilet_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='toilet_numbers_graph'),
@@ -305,7 +305,7 @@ app.layout = html.Div([
                 html.Div(id='visit_duration_output', className='col-md-12')
             ], className='row'),
             html.Div([
-                html.Button('Save Graph', id='visitDuration_save_button', className='col-md-1'),
+                html.Button('Save Graph', id='visitDuration_save_button', className='col-md-2 button', style={'white-space':'normal'}),
                 html.Div(id='visitDuration_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='visit_duration_graph'),
@@ -372,7 +372,7 @@ app.layout = html.Div([
                 html.Div(id='logs_output', className='col-md-12')
             ], className='row'),
             html.Div([
-                html.Button('Save Graph', id='logs_save_button', className='col-md-1'),
+                html.Button('Save Graph', id='logs_save_button', className='col-md-2 button', style={'white-space':'normal'}),
                 html.Div(id='logs_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='logs_graph'),
@@ -430,7 +430,7 @@ app.layout = html.Div([
                 html.Div(id='vital_signs_output', className='col-md-12')
             ], className='row'),
             html.Div([
-                html.Button('Save Graph', id='vitals_save_button', className='col-md-1'),
+                html.Button('Save Graph', id='vitals_save_button', className='col-md-2 button', style={'white-space':'normal'}),
                 html.Div(id='vitals_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='vital_signs_graph'),
@@ -477,7 +477,7 @@ app.layout = html.Div([
                 html.Div(id='qos_output', className='col-md-12')
             ], className='row'),
             html.Div([
-                html.Button('Save Graph', id='sleep_save_button', className='col-md-1'),
+                html.Button('Save Graph', id='sleep_save_button', className='col-md-2 button', style={'white-space':'normal'}),
                 html.Div(id='sleep_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='qos_graph'),
@@ -540,7 +540,7 @@ app.layout = html.Div([
                 html.Div(id='location_output', className='col-md-12')
             ], className='row'),
             html.Div([
-                html.Button('Save Graph', id='activity_save_button', className='col-md-1'),
+                html.Button('Save Graph', id='activity_save_button', className='col-md-2 button', style={'white-space':'normal'}),
                 html.Div(id='activity_graph_save_output', className='col-md-4')
             ], className='row')
         ], id='activity_graph'),
