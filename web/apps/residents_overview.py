@@ -799,7 +799,8 @@ def detailedLayerTwoOverviewResidents(resident_id, currdate=None):
                         title = "",#'%',
                         scaleanchor = 'x',
                         scaleratio = 0.5,
-                        hoverformat = '.2f'
+                        hoverformat = '.2f',
+                        automargin = True
                     ),
                     xaxis = dict(
                         title = "",#"Day",

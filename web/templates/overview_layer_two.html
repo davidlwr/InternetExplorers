@@ -646,7 +646,7 @@
                                         <div class="row">
 										<b>Average Pulse Pressure {{ '%0.f'|format((resident['past_week_average_pp'])|float) }} mmHg</b>
                                             <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_pp_too_high'] else 'Salmon' if resident['check_pp_increase'] else 'Salmon' if resident['check_pp_decrease'] else 'WhiteSmoke' }} ">
-                                                Pulse pressure readings <b>{{ 'are too high' if resident['check_pp_too_high'] else 'have increased significantly' if resident['check_pp_increase'] else 'have decreased significantly' if resident['check_pp_decrease'] else 'are normal' }}
+                                                Pulse pressure readings <b>{{ 'are too high' if resident['check_pp_too_high'] else 'have increased significantly' if resident['check_pp_increase'] else 'have decreased significantly' if resident['check_pp_decrease'] else 'are normal' }}</b>
                                             </div>
                                         </div>
                                     </div>
@@ -679,7 +679,7 @@
                                         <div class="row">
 										<b>Average Temperature {{ '%0.1f'|format((resident['past_week_average_temperature'])|float) }} &#8451;</b>
                                             <div class="col-xs-12 text-center" style="display:inline-block;padding:6px 12px; margin-bottom:0px; font-size:16px; font-weight:400; width:100%; vertical-align:middle;border:1px solid transparent; border-radius:4px;background-color:{{ 'Salmon' if resident['check_temperature_abnormal'] else 'Salmon' if resident['check_temperature_increase'] else 'Salmon' if resident['check_temperature_increase'] else 'WhiteSmoke' }} ">
-                                                Temperature readings <b>{{ 'are abnormal' if resident['check_temperature_abnormal'] else 'have increased significantly' if resident['check_temperature_increase'] else 'have decreased significantly' if resident['check_temperature_decrease'] else 'are normal' }}
+                                                Temperature readings <b>{{ 'are abnormal' if resident['check_temperature_abnormal'] else 'have increased significantly' if resident['check_temperature_increase'] else 'have decreased significantly' if resident['check_temperature_decrease'] else 'are normal' }}</b>
                                             </div>
                                         </div>
                                     </div>
