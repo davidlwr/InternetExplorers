@@ -6,4 +6,4 @@ stbern-20180302-20180523-csv
 stbern-20180523-20180801
 /mqtt_alert_consumer/logs
 /web/config.py
-*/.vscode/*
+.vscode
