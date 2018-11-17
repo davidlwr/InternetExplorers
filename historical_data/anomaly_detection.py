@@ -4,7 +4,7 @@ import datetime
 from DAOs import resident_DAO, anomaly_DAO
 from sensor_mgmt import overstay_alert
 
-debug_current_time = datetime.datetime(2018, 9, 29) # NOTE: set to None for production
+debug_current_time = None # datetime.datetime(2018, 9, 29) # NOTE: set to None for production
 category_strings = {}
 category_strings['temperature'] = "vitals"
 category_strings['pulse_pressure'] = "vitals"
