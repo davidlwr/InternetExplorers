@@ -172,16 +172,18 @@ def shiftform(bot, update):
 	patientIDList = check_shift_form(shifttime)
 	nameList = []
 	checkList = []
+	
 	checkList.extend(range(9, 10))
 	for patient_ID in patientIDList[:]:
 		checkList.remove(patient_ID)
 	for id in checkList:
+		print(resident_DAO.get_resident_name_by_resident_id(id))
 		patientName = resident_DAO.get_resident_name_by_resident_id(id)
 		
 		nameList.append(patientName)
 	if(len(nameList) > 0):
 			text = "\n".join(nameList)
-			link = "http://13.228.71.248/eosforms"
+			link = "http://52.221.241.44/eosforms"
 			bot.send_message(DUTY_NURSE_CHAT_ID, "*You have not completed your shift form for the following residents:*\n\n" + text + "\n\n*Click here to access the shift form:*\n" + link, parse_mode = 'markdown')
 	
 def help(bot, update):

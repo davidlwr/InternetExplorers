@@ -367,4 +367,3 @@ if __name__ == '__main__':
     print(sysmon_log_DAO.get_all_logs()[-5:])
     print("break")
     print(sysmon_log_DAO.get_all_logs(uuid="2006-m-01")[-5:])
-    sysmon_log_DAO.delete_log(uuid = "test-m-02")

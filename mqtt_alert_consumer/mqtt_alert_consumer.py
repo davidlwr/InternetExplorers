@@ -22,7 +22,7 @@ from urllib.request import urlopen
 
 # Global Vars ==========================================================
 # MQTT Stuff
-BROKER_ADDRESS = "13.228.71.248"  # Broker address
+BROKER_ADDRESS = "52.221.241.44"  # Broker address
 PORT           = 1883                    # Broker port
 USER           = "stbern"                # username
 PASSWORD       = "int3rn3t"              # password
@@ -33,7 +33,7 @@ LOGGING_FILE   = f"{TXT_FOLDER}/log.txt"
 CSV_FILE       = f"{TXT_FOLDER}/msg.csv"
 
 # DB stuff
-host            = "stbern.cap7ipqft3z9.ap-southeast-1.rds.amazonaws.com"
+host            = "stbern.caaexaab9wbk.ap-southeast-1.rds.amazonaws.com"
 port            = 3306
 database        = "stbern"
 username        = "internetexplorer"
