@@ -698,20 +698,21 @@ class input_data(object):
         para_SD_threshold = 0.66 # changeable: if difference in moving averages is higher than this multiplied by the std, alert
         # get standard deviation for the past 3 weeks first
         std_calc_data = input_data.get_num_visits_by_date(start_date=three_weeks_ago, end_date=calculation_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
+        one_week_calc_data = input_data.get_num_visits_by_date(start_date=one_week_ago, end_date=calculation_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
         # print(std_calc_data)
         three_week_std = std_calc_data['event'].std()
         # print("3 week std", three_week_std)
 
         # get calculation data
-        calculation_data = input_data.get_num_visits_by_date(start_date=max(three_weeks_ago + datetime.timedelta(days=-29),
-                input_data.input_raw_min_date), end_date=calculation_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
+        # calculation_data = input_data.get_num_visits_by_date(start_date=max(three_weeks_ago + datetime.timedelta(days=-29),
+        #         input_data.input_raw_min_date), end_date=calculation_sys_time, resident_id=resident_id, time_period='Night', offset=True, grouped=True)
 
         # print(calculation_data)
         # compare difference in MA with 0.66 * SD (for ~75% confidence)
-        three_week_MA = input_data.get_visit_numbers_moving_average(resident_id, time_period='Night',
-                offset=True, grouped=True, days=28, result_data=calculation_data)
-        one_week_MA = input_data.get_visit_numbers_moving_average(resident_id, time_period='Night',
-                offset=True, grouped=True, days=7, result_data=calculation_data)
+        # three_week_MA = input_data.get_visit_numbers_moving_average(resident_id, time_period='Night',
+        #         offset=True, grouped=True, days=28, result_data=calculation_data)
+        # one_week_MA = input_data.get_visit_numbers_moving_average(resident_id, time_period='Night',
+        #         offset=True, grouped=True, days=7, result_data=calculation_data)
         # print(one_week_MA)
         # print(three_week_MA)
         current_date = current_sys_time.date()
@@ -719,10 +720,12 @@ class input_data(object):
         # print(three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'])
         # print(one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'])
         try:
-            current_MA = one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
+            # current_MA = one_week_MA.loc[one_week_MA['gw_date_only'] == current_date]['moving_average'].values[0]
+            current_MA = one_week_calc_data['event'].mean()
             difference_MA = (current_MA
-                    - three_week_MA.loc[three_week_MA['gw_date_only'] == current_date]['moving_average'].values[0])
+                    - std_calc_data['event'].mean())
         except IndexError as e:
+            print("Index error in inputdata nightly toilet indicators for resident id" + str(resident_id))
             difference_MA = 0
             current_MA = 0
         # print("difference_MA", difference_MA)
