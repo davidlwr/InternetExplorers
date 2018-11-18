@@ -6,10 +6,10 @@ from itertools import islice, count
 import numpy as np
 from numpy import linspace, loadtxt, ones, convolve
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from matplotlib import style
-style.use('fivethirtyeight')
+# import matplotlib.pyplot as plt
+# import matplotlib.dates as mdates
+# from matplotlib import style
+# style.use('fivethirtyeight')
 
 if __name__ == '__main__': sys.path.append("..")
 if __name__ == '__main__': 
@@ -705,13 +705,13 @@ class overstay_alert(object):
             text_ylabel (str): label for annotatin the Y Axis
             applying_rolling_std (boolean): True/False for using rolling vs stationary standard deviation
         """
-        plt.figure(figsize=(15, 8))
-        plt.plot(x, y, "k.")
+        # plt.figure(figsize=(15, 8))
+        # plt.plot(x, y, "k.")
         y_av = overstay_alert.moving_average(y, window_size)
         
-        plt.plot(x, y_av, color='green')
-        plt.xlabel(text_xlabel)
-        plt.ylabel(text_ylabel)
+        # plt.plot(x, y_av, color='green')
+        # plt.xlabel(text_xlabel)
+        # plt.ylabel(text_ylabel)
 
         # Query for the anomalies and plot the same
         events = {}
@@ -723,11 +723,11 @@ class overstay_alert(object):
         # x_anomaly = np.fromiter(events['anomalies_dict'].keys(), dtype=int, count=len(events['anomalies_dict'])) # treats x values as idx WRONG BEHAVIOUR
         x_anomaly = [x for x in events['anomalies_dict'].keys()]
         y_anomaly = np.fromiter(events['anomalies_dict'].values(), dtype=float, count=len(events['anomalies_dict']))
-        plt.plot(x_anomaly, y_anomaly, "r*", markersize=12)
+        # plt.plot(x_anomaly, y_anomaly, "r*", markersize=12)
 
         # add grid and lines and enable the plot
-        plt.grid(True)
-        plt.show()
+        # plt.grid(True)
+        # plt.show()
 
     @staticmethod
     def get_anomalies(rids, sdt, edt, mm_pure=True, tm_pure=True, window=7, room_sigma=2.0, bath_sigma=2.0, visit_sigma=2.0, night_filter=False):
@@ -829,9 +829,9 @@ class overstay_alert(object):
                 print(x_hours[i], y_values[i])
         
         # Plot
-        plt.plot(x_hours,y_values)
-        plt.gcf().autofmt_xdate()        # beautify the x-labels
-        plt.show()
+        # plt.plot(x_hours,y_values)
+        # plt.gcf().autofmt_xdate()        # beautify the x-labels
+        # plt.show()
 
     @staticmethod
     def test_plot_in_room_check(rid, sdt, edt, jump_mins=5):
@@ -851,13 +851,13 @@ class overstay_alert(object):
             if counter%10 == 0: print(f"sanity check: ", tdt, value)
 
         # Plot
-        fig,ax1 = plt.subplots()
-        plt.plot(x_hours,y_values)
+        # fig,ax1 = plt.subplots()
+        # plt.plot(x_hours,y_values)
         # beautify the x-labels
         ax1.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
         ax1.xaxis.set_minor_formatter(mdates.DateFormatter("%H-%M:%S"))
-        _ = plt.xticks(rotation=45)
-        plt.show()
+        # _ = plt.xticks(rotation=45)
+        # plt.show()
         
     @staticmethod
     def test_check_activities_by_date(rids, sdt, edt, print_summary=None, mm_pure=False, tm_pure=True, plot=False):
