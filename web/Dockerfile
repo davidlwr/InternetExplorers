@@ -16,6 +16,8 @@ RUN pip3 install plotly==2.7.0 Flask==1.0.2
 RUN pip3 install Jinja2==2.10 dash==0.21.1
 RUN pip3 install mysqlclient==1.3.12 Flask-Login==0.4.1
 RUN pip3 install dash-renderer==0.13.0
+RUN apt-get install -y tzdata
+RUN echo Asia/Singapore >/etc/timezone && ln -sf /usr/share/zoneinfo/Asia/Singapore /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
 COPY . /app
 WORKDIR /app
 EXPOSE 80
