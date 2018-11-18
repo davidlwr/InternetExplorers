@@ -9,6 +9,7 @@ from DAOs import alert_DAO
 from DAOs import shift_log_DAO
 from DAOs import resident_DAO
 from DAOs.sensor_log_DAO import sensor_log_DAO
+from DAOs.sysmon_log_DAO import sysmon_log_DAO
 from DAOs import sensor_hist_DAO
 
 
@@ -70,8 +71,7 @@ def button(bot, update):
 		
 		alert_DAO.update_alert(DUTY_NURSE_CHAT_ID, query['message']['text'], query.data)
 		
-		#i need retrieve resident name and time_stamp from alerts
-		# print(query['message']['text'])
+		#update to_ignore on sensor_log
 		alert_raw = alert_DAO.get_alert_by_id(DUTY_NURSE_CHAT_ID, query['message']['text'])
 		alert_clean = alert_raw[0]
 		resident_name = alert_clean['rname']
@@ -82,6 +82,8 @@ def button(bot, update):
 		for rawuuid in rawuuids:
 			uuid = rawuuid['uuid']
 			sensor_log_DAO.update_log(uuid, received_timestamp)
+		
+		#retrieve for to-do list for bottom keyboard
 		residentNameList = resident_DAO.get_list_of_residentNames()
 		latest_list = get_latest_alerts(residentNameList)
 		latest_sensor_list = get_latest_sensor_alerts(residentNameList)
@@ -210,7 +212,12 @@ def sensoralert(bot, update):
 	reply_markupBottom = {"keyboard":keyboardBottom, "one_time_keyboard": True}
 	bot.send_message(DUTY_NURSE_CHAT_ID, "Your task has been added to the to-do list:", reply_markup=reply_markupBottom)
 
+#rectify sensor down issue 
 def rectify(bot, update):
+	print("hi")
+	sysmon_log_DAO.delete_log("test-m-02")
+	date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	sysmon_log_DAO.insert_log("test-m-02", 2, '100', 'Battery Level',date_time)
 	residentNameList = resident_DAO.get_list_of_residentNames()
 	latest_list = get_latest_alerts(residentNameList)
 	latest_sensor_list = get_latest_sensor_alerts(residentNameList)
