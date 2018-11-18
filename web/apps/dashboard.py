@@ -583,7 +583,8 @@ app.layout = html.Div([
                 dcc.ConfirmDialogProvider(
                     children=html.Button(
                         'Send Email',
-                        className='col-md-1'
+                        className='col-md-2 button',
+                        style={'white-space':'normal'}
                     ),
                     id='send_email',
                     message='Are you sure you want to send the email?'
