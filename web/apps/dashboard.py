@@ -25,6 +25,9 @@ graphs_saved = []
 data_update_interval = 10 * 1000
 graph_update_interval = 10 * 1000
 
+def get_current_date():
+    return datetime.date.today()
+
 # define page layout
 # TODO: can return the bank plotly graph output after the exception so that the graph is still there
 app.layout = html.Div([
@@ -189,7 +192,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_toilet_numbers',
                         min_date_allowed=input_data.input_data.input_raw_min_date,
-                        max_date_allowed=datetime.date.today(),
+                        max_date_allowed=get_current_date(),
                         # start_date=input_data.input_data.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
@@ -285,7 +288,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_visit_duration',
                         min_date_allowed=input_data.input_data.input_raw_min_date,
-                        max_date_allowed=datetime.date.today(),
+                        max_date_allowed=get_current_date(),
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
@@ -352,7 +355,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_logs',
                         min_date_allowed=input_shiftlogs.input_shiftlogs.input_raw_min_date,
-                        max_date_allowed=datetime.date.today(),
+                        max_date_allowed=get_current_date(),
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_shiftlogs.input_shiftlogs.input_raw_max_date.replace(hour=0, minute=0, second=0,
@@ -410,7 +413,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_vital_signs',
                         min_date_allowed=input_data.input_data.input_raw_min_date,
-                        max_date_allowed=datetime.date.today(),
+                        max_date_allowed=get_current_date(),
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
@@ -457,7 +460,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker_qos',
                         min_date_allowed=input_data.input_data.input_raw_min_date,
-                        max_date_allowed=datetime.date.today(),
+                        max_date_allowed=get_current_date(),
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
@@ -510,7 +513,7 @@ app.layout = html.Div([
                     dcc.DatePickerRange(
                         id='date_picker',
                         min_date_allowed=input_data.input_data.input_raw_min_date,
-                        max_date_allowed=datetime.date.today(),
+                        max_date_allowed=get_current_date(),
                         # start_date=input_shiftlogs.input_raw_min_date.replace(hour=0, minute=0, second=0,
                         #                                                  microsecond=0),
                         start_date=input_data.input_data.input_raw_max_date.replace(hour=0, minute=0, second=0,
