@@ -6,7 +6,7 @@ import datetime
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 from DAOs import alert_DAO
-from DAOs import shift_log_DAO
+from DAOs.shift_log_DAO import shift_log_DAO
 from DAOs import resident_DAO
 from DAOs.sensor_log_DAO import sensor_log_DAO
 from DAOs.sysmon_log_DAO import sysmon_log_DAO
@@ -156,31 +156,41 @@ def button(bot, update):
 						  message_id=query.message.message_id, 
 						  reply_markup=reply_markupDefault)
 						  
-def check_shift_form(shifttime):
-	idQuery = shift_log_DAO.retrieveCountPerShift(shifttime)
-	patientIDList = []
-	# print(test)
-	for item in idQuery[:]:
-		patientID = item['patient_id']
-		patientIDList.append(patientID)
-	return patientIDList
+#def check_shift_form(shifttime):
+#	idQuery = shift_log_DAO.retrieveCountPerShift(shifttime)
+#	patientIDList = []
+#	# print(test)
+#	for item in idQuery[:]:
+#		patientID = item['patient_id']
+#		patientIDList.append(patientID)
+#	return patientIDList
 
 def shiftform(bot, update):
 	date = datetime.date.today()
 	time = datetime.datetime.strptime('1200','%H%M').time()
-	shifttime = datetime.datetime.combine(date, time)
-	patientIDList = check_shift_form(shifttime)
 	nameList = []
-	checkList = []
+	sl_DAO = shift_log_DAO()
+	DAO_out = sl_DAO.get_incompleted_residents()
 	
-	checkList.extend(range(9, 10))
-	for patient_ID in patientIDList[:]:
-		checkList.remove(patient_ID)
-	for id in checkList:
-		print(resident_DAO.get_resident_name_by_resident_id(id))
-		patientName = resident_DAO.get_resident_name_by_resident_id(id)
+	# print(DAO_out)
+	
+	for d in DAO_out:
+		nameList.append(d['name'])
+	
+	
+	# shifttime = datetime.datetime.combine(date, time)
+	# patientIDList = check_shift_form(shifttime)
+	# nameList = []
+	# checkList = []
+	
+	# checkList.extend(range(9, 10))
+	# for patient_ID in patientIDList[:]:
+		# checkList.remove(patient_ID)
+	# for id in checkList:
+		# print(resident_DAO.get_resident_name_by_resident_id(id))
+		# patientName = resident_DAO.get_resident_name_by_resident_id(id)
 		
-		nameList.append(patientName)
+		# nameList.append(patientName)
 	if(len(nameList) > 0):
 			text = "\n".join(nameList)
 			link = "http://52.221.241.44/eosforms"
