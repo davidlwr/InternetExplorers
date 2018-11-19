@@ -161,7 +161,7 @@ def process_msg(topic, message):
                 event  = jdict['event']     # int
                 uuid   = "test-m-02"        # str
                 # Adding to DB
-                date_now = datetime.datetime.now()
+                date_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 insert_sensorlog(uuid, nodeid, date_now, event)
                 insert_sysmonlog(uuid, nodeid, 100, "Battery Level")
                 rname = resident_DAO.get_resident_name_by_node_id(nodeid)
@@ -183,11 +183,11 @@ def action_motion(event, rname, date_now):
         print("called action motion")
         # ts = time.time()
         reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
-        date_time = date_now.strftime("%Y-%m-%d %H:%M:%S")
-        text=f'*Assistance Alert:* {rname} at ' + date_time
+        # date_time = date_now.strftime("%Y-%m-%d %H:%M:%S")
+        text=f'*Assistance Alert:* {rname} at ' + date_now
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
-        text=f'Assistance Alert: {rname} at ' + date_time
-        alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, rname, text, "Assistance", "No")
+        text=f'Assistance Alert: {rname} at ' + date_now
+        alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_now, rname, text, "Assistance", "No")
         
         residentNameList = resident_DAO.get_list_of_residentNames()
         latest_list = get_latest_alerts(residentNameList)
