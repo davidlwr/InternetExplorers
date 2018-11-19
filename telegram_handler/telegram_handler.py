@@ -202,6 +202,7 @@ def testing(message):
 		sensor_log_DAO.update_log(uuid, received_timestamp)
 	
 def sensoralert(bot, update):
+	sysmon_log_DAO.delete_log("test-m-02")
 	message = "*Sensor Issue:* Warning"+ "\n*Location:* " + 'Squid Ward' + " " + "toilet" + "\n*Type:* " + "motion"
 	bot.send_message(DUTY_NURSE_CHAT_ID, message, parse_mode = 'markdown')
 	date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -217,7 +218,6 @@ def sensoralert(bot, update):
 #rectify sensor down issue 
 def rectify(bot, update):
 	print("hi")
-	sysmon_log_DAO.delete_log("test-m-02")
 	date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	sysmon_log_DAO.insert_log("test-m-02", 2, '100', 'Battery Level',date_time)
 	residentNameList = resident_DAO.get_list_of_residentNames()
