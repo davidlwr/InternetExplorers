@@ -206,6 +206,7 @@ def sensoralert(bot, update):
 	message = "*Sensor Issue:* Warning"+ "\n*Location:* " + 'Squid Ward' + " " + "toilet" + "\n*Type:* " + "motion"
 	bot.send_message(DUTY_NURSE_CHAT_ID, message, parse_mode = 'markdown')
 	date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+	message = "Sensor Issue: Warning"+ "\nLocation: " + 'Squid Ward' + " " + "toilet" + "\nType: " + "motion"
 	alert_DAO.insert_alert(DUTY_NURSE_CHAT_ID, date_time, 'Squid Ward', message, "Sensor", "No")
 	residentNameList = resident_DAO.get_list_of_residentNames()
 	latest_list = get_latest_alerts(residentNameList)
