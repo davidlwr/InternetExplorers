@@ -161,7 +161,8 @@ def process_msg(topic, message):
                 event  = jdict['event']     # int
                 uuid   = "test-m-02"        # str
                 # Adding to DB
-                insert_sensorlog(uuid, nodeid, datetime.datetime.now(), event)
+                date_now = datetime.datetime.now()
+                insert_sensorlog(uuid, nodeid, date_now, event)
                 insert_sysmonlog(uuid, nodeid, 100, "Battery Level")
                 rname = resident_DAO.get_resident_name_by_node_id(nodeid)
                 # Get resident details
@@ -169,20 +170,20 @@ def process_msg(topic, message):
                 
                 # trigger telegram shit
                 if nodeid == NODEID_MOTION and rname != None:
-                    action_motion(event=event, rname=rname)
+                    action_motion(event=event, rname=rname, date_now= date_now)
 
     except Exception as e:
         msg = f"PROCESS MESSAGE FAILURE >> Exception: '{str(e)}, Msg: {message}'"
         log_msg(LOGGING_FILE, msg)
 
 
-def action_motion(event, rname):
+def action_motion(event, rname, date_now):
     if event == 255:
         
         print("called action motion")
         # ts = time.time()
         reply_markup = {"inline_keyboard": [[{"text": "Yes, using toilet", "callback_data": "Using Toilet"}, {"text": "False Alarm", "callback_data": "False Alarm"}]]}
-        date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        date_time = date_now.strftime("%Y-%m-%d %H:%M:%S")
         text=f'*Assistance Alert:* {rname} at ' + date_time
         send_message_with_reply(DUTY_NURSE_CHAT_ID, text, reply_markup)
         text=f'Assistance Alert: {rname} at ' + date_time
