@@ -176,13 +176,17 @@ class sensor_log_DAO(object):
         Returns all logs in a dataframe
         """
 
-        query = "SELECT * FROM {}".format(sensor_log_DAO.table_name)
+        query = "SELECT * FROM {} WHERE to_ignore IS NULL".format(sensor_log_DAO.table_name)
 
         # Get connection
         factory = connection_manager()
         connection = factory.connection
-
-        return pd.read_sql_query(query, connection)
+        try:
+            return pd.read_sql_query(query, connection)
+        except:
+            raise
+        finally:
+            factory.close_all(connection=connection)
 
 
     @staticmethod
@@ -311,23 +315,7 @@ class sensor_log_DAO(object):
 
         except: raise
         finally: factory.close_all(cursor=cursor, connection=connection)
-    
-    def update_log(uuid, node_id, received_timestamp):
-    
-    '''
-    Update the status of the alert if successful
-    '''
-        query = "UPDATE {} SET to_ignore = %s WHERE uuid = %s AND node_id = %s and received_timestamp = %s".format(table_name)
-        values = ('Yes', uuid, node_id, received_timestamp)
-        factory = connection_manager()
-        connection = factory.connection
-        cursor = connection.cursor()
-        print("updating")
-        try:
-            cursor.execute(query, values)
-            return cursor.lastrowid
-        except: raise
-        finally: factory.close_all(cursor=cursor, connection=connection)
+
 
 # TESTS ======================================================================================
 if __name__ == '__main__':

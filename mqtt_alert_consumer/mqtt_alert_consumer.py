@@ -11,6 +11,7 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 # from dbhelper import DBHelper
 from DAOs import alert_DAO
 from DAOs import resident_DAO
+from DAOs.sensor_DAO import sensor_DAO
 
 from pprint import pprint
 import time
@@ -48,7 +49,7 @@ MOTION_END   = 0
 DOOR_CLOSE = 0
 DOOR_OPEN  = 225
 
-token = '687512562:AAGEoEH8wpDU3PK5TU0X3lar40FIfDetAHY'
+token = '791066367:AAHoFqezcLxJM6zEcKAmZukh8e_OuQ3fXik'
 teleurl = 'https://api.telegram.org/bot' + token + '/'
 
 DUTY_NURSE_CHAT_ID = -251433967
@@ -271,8 +272,8 @@ except KeyboardInterrupt:
     client.disconnect()
     client.loop_stop()
 
-# def main():
-   # print(resident_DAO.get_resident_name_by_node_id('2005'))
+def main():
+   print(sensor_DAO.get_current_owner('2005'))
 
-# if __name__ == '__main__':
-    # main()
+if __name__ == '__main__':
+    main()
