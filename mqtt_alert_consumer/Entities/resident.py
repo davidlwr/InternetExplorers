@@ -6,13 +6,13 @@ class Resident(object):
 
     name_tname          = "name"
     node_id_tname       = "node_id"
-    dob_tname           = "dob"
+    age_tname           = "age"
     fall_risk_tname     = "fall_risk"
     status_tname        = "status"
     stay_location_tname = "stay_location"
     resident_id_tname   = "resident_id"
 
-    def __init__(self, name, node_id, dob, fall_risk=None, status="Active", stay_location="STB", resident_id=None):
+    def __init__(self, name, node_id, age, fall_risk=None, status="Active", stay_location="STB", resident_id=None):
         '''
         Constructor method
 
@@ -28,7 +28,7 @@ class Resident(object):
 
         self.name = name
         self.node_id = node_id
-        self.dob = dob
+        self.age = age
         self.fall_risk = fall_risk
         self.status = status
         self.stay_location = stay_location
@@ -40,7 +40,7 @@ class Resident(object):
         String representation of object
         '''
 
-        return f"Residen - id: {self.resident_id}, name: {self.name}, node_id: {self.node_id}, age: {self.dob}, fall_risk: {self.fall_risk}, fall: {self.fall_risk}, status: {self.status}, loc: {self.stay_location}"
+        return f"Residen - id: {self.resident_id}, name: {self.name}, node_id: {self.node_id}, age: {self.age}, fall_risk: {self.fall_risk}, fall: {self.fall_risk}, status: {self.status}, loc: {self.stay_location}"
 
     def __repr__(self):
         '''
