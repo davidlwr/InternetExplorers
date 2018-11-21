@@ -6,11 +6,14 @@ class Sysmon_Log(object):
     '''
 
     # Table col names
-    uuid_tname               = "uuid"
+    uuid_tname               = "uuid"           # Correct format should be "2005-d-01" for example
     node_id_tname            = "node_id"
     event_tname              = "event"
     key_tname                = "key"
     recieved_timestamp_tname = "recieved_timestamp"
+
+    key_burglar = "Burglar"
+    key_battery = "Battery Level"
 
     # write param defs
     def __init__(self, uuid, node_id, event, key, recieved_timestamp):
@@ -18,10 +21,10 @@ class Sysmon_Log(object):
         Constructor method
 
         Input:
-        uuid (str)
-        node_id (int)
-        event (float)
-        key (str)
+        uuid (str)      -- "2005-m-01"
+        node_id (int)   -- "2005"
+        event (float)   -- "255"
+        key (str)       -- "Burglar", "Battery Level"
         recieved_timestamp (datetime)
         '''        
         self.uuid               = uuid

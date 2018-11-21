@@ -12,10 +12,10 @@ class Shift_log(object):
     num_near_falls_tname = "num_near_falls"
     food_consumption_tname = "food_consumption"
     num_toilet_visit_tname = "num_toilet_visit"
-    temp_tname = "temp"
-    sbp_tname = "sbp"
-    dbp_tname = "sbp"
-    pulse_tname = "pulse"
+    temp_tname = "temperature"
+    sbp_tname = "systolic_bp"
+    dbp_tname = "diastolic_bp"
+    pulse_tname = "pulse_rate"
 
     FOOD_CONSUMPTION_MAPPING = {0: "Insufficient",
                                 1: "Moderate",
@@ -39,14 +39,19 @@ class Shift_log(object):
         dbp (float)      -- default None
         pulse (float)      -- default None
         '''
-
-        datetime = date.strftime('%Y-%m-%d')
+        datetime = None
         if day_night == 1:
+            datetime = date.strftime('%Y-%m-%d')
             datetime += " 12:00:00"
-        else:
+        elif day_night == 2:
+            datetime = date.strftime('%Y-%m-%d')
             datetime += " 20:00:00"
 
-        self.datetime = datetime
+        if datetime is None:
+            self.datetime = date.strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            self.datetime = datetime
+
         self.patient_id = patient_id
         self.num_falls = num_falls
         self.num_near_falls = num_near_falls
@@ -57,7 +62,7 @@ class Shift_log(object):
         self.dbp = dbp
         self.pulse = pulse
 
-        self.var_list = [self.datetime, self.patient_id, self.num_falls, \
+        self.var_list = [self.datetime, self.patient_id, self.num_falls,
                          self.num_near_falls, self.food_consumption, self.num_toilet_visit, self.temp,
                          self.sbp, self.dbp, self.pulse]
 
