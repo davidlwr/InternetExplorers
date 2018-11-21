@@ -131,10 +131,12 @@ def process_msg(topic, message):
             rname = None
             if project_id=="stb" and hub_id=="2100" and dwelling_id in dwelling_to_nodeid:
                 uuid = f"{dwelling_to_nodeid[dwelling_id]}-{sensor_id}"
-                rname = resident_DAO.get_resident_name_by_node_id(dwelling_to_nodeid[dwelling_id])
+                resident_id = sensor_DAO.get_current_owner(uuid)
+                rname = resident_DAO.get_resident_name_by_resident_id(resident_id)
             else:
                 uuid = f"{hub_id}-{dwelling_id}-{sensor_id}"
-            # SPLIT INTO SYSMON AND DATA
+                resident_id = sensor_DAO.get_current_owner(uuid)
+                rname = resident_DAO.get_resident_name_by_resident_id(resident_id)            
 
             
 
@@ -272,8 +274,9 @@ except KeyboardInterrupt:
     client.disconnect()
     client.loop_stop()
 
-def main():
-   print(sensor_DAO.get_current_owner('2005'))
+# def main():
+   # resident_id = sensor_DAO.get_current_owner('2100-room 3-d-01')
+   # print(resident_DAO.get_resident_name_by_resident_id(resident_id))
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+    # main()
