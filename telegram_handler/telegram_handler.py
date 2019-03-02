@@ -1,6 +1,8 @@
 # simple python to use long polling for getting messages sent to telegram bots
 # simple python to use long polling for getting messages sent to telegram bots
 
+
+
 import logging
 import datetime
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardRemove
@@ -10,6 +12,7 @@ from DAOs.shift_log_DAO import shift_log_DAO
 from DAOs import resident_DAO
 from DAOs.sensor_log_DAO import sensor_log_DAO
 from DAOs.sysmon_log_DAO import sysmon_log_DAO
+from DAOs.connection_manager import connection_manager
 from DAOs import sensor_hist_DAO
 
 
@@ -215,11 +218,48 @@ def toilet(bot,update):
     print("test")
     keyboardDefault = [[InlineKeyboardButton("Yes, using toilet", callback_data='Using Toilet'), InlineKeyboardButton("False Alarm", callback_data='False Alarm')]]
     reply_markupDefault = InlineKeyboardMarkup(keyboardDefault)
-    hitext = "Assistance Alert: Squidward at room 6"
+    date_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    hitext = "Assistance Alert: Squidward at room 6 at " + date_now
     bot.send_message(DUTY_NURSE_CHAT_ID, hitext, reply_markup=reply_markupDefault, parse_mode = 'markdown')
+    insert_sensorlog('test-m-02', 2, date_now, 255)
+    print("succes")
 
-    reply_markupDefault = InlineKeyboardMarkup(keyboardDefault)
+# dwelling_to_nodeid = {"room 1": 2005, "room 2": 2006}
+def insert_sensorlog(dwelling_id, sensor_id, gw_timestamp, value):
+    '''
+    Inputs:
+    dwelling_id (str)
+    sensor_id (str)
+    gw_timestamp (datetime)
+    value (int)
+    '''
+    
+    query = """
+            INSERT INTO stbern.sensor_log (`uuid`, `node_id`, `event`, `recieved_timestamp`)
+            VALUES (%s, %s, %s, %s)
+            """
+    node_id = sensor_id
+    uuid = dwelling_id
+    event = value
+    recieved_timestamp = gw_timestamp
+    factory = connection_manager()
+    connection = factory.connection
+    
+    cursor = connection.cursor()
+    
+    try:
+        print("ded")
+        cursor.execute(query, [uuid, node_id, event, recieved_timestamp])
+        print("ded")
+    except Exception as error:
+        log_msg(LOGGING_FILE, 'INSERT SENSORLOG'.ljust(25) + f" >> Exception: {str(error)}")
+    finally:
+        cursor.close()
+        connection.close()
 
+    
+    
+    
 def sensoralert(bot, update):
     sysmon_log_DAO.delete_log("test-m-02")
     message = "*Sensor Issue:* Warning"+ "\n*Location:* " + 'Squid Ward' + " " + "toilet" + "\n*Type:* " + "motion"
